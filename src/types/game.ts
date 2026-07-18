@@ -96,6 +96,55 @@ export interface BossBehaviorConfig {
   enrageAnnouncementMs: number;
 }
 
+export interface BossSpecialAttackConfig {
+  intervalMs: number;
+  windupMs: number;
+  animationDurationMs: number;
+  windupPeakProgress: number;
+  slamPeakProgress: number;
+  windupRotationDeg: number;
+  slamRotationDeg: number;
+  windupLiftPixels: number;
+  slamDropPixels: number;
+  windupScale: number;
+  slamScaleX: number;
+  slamScaleY: number;
+  impactWidthMultiplier: number;
+  impactHeightMultiplier: number;
+  impactTopRatio: number;
+  impactLayerIndex: number;
+  impactViewBox: string;
+  impactCenterX: number;
+  impactCenterY: number;
+  impactOuterRadiusX: number;
+  impactOuterRadiusY: number;
+  impactInnerRadiusX: number;
+  impactInnerRadiusY: number;
+  impactStartScale: number;
+  impactEndScale: number;
+  impactStrokeWidth: number;
+  impactGlowStrokeMultiplier: number;
+  impactCrackStrokeWidth: number;
+  impactFillColor: string;
+  impactRingColor: string;
+  impactGlowColor: string;
+  impactCrackColor: string;
+  impactCrackPaths: string[];
+  dustPrimaryColor: string;
+  dustSecondaryColor: string;
+  dustParticles: Array<{ x: number; y: number; radius: number }>;
+  screenFlashColor: string;
+  screenFlashMaximumOpacity: number;
+  screenShakePixels: number;
+  screenShakeCycles: number;
+  projectileScale: number;
+  projectileBorderColor: string;
+  projectileBackgroundColor: string;
+  projectileTrailColor: string;
+  projectileGlowColor: string;
+  projectileGlowRadius: number;
+}
+
 export interface BattleMapConfig {
   id: string;
   name: string;

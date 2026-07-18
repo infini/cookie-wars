@@ -3,6 +3,7 @@ import {
   BATTLE_RULES,
   BOSS_BALANCE,
   BOSS_BEHAVIOR,
+  BOSS_SPECIAL_ATTACK,
   GIANT_DISC,
   getEnemyDisc,
   getEnemyWave,
@@ -21,6 +22,7 @@ export type BattleEventKind =
   | 'castleHit'
   | 'disc'
   | 'enemyDisc'
+  | 'bossSpecialAttack'
   | 'bossEnraged'
   | 'enemyDefeated'
   | 'victory'
@@ -43,8 +45,11 @@ export interface BattleEnemy {
   spawnAt: number;
   lastShotAt: number;
   lastMeleeAt: number;
+  lastSpecialAttackAt: number;
   enraged: boolean;
 }
+
+export type BattleAttackKind = 'projectile' | 'melee' | 'special';
 
 export interface BattleProjectile {
   id: string;
@@ -55,6 +60,7 @@ export interface BattleProjectile {
   sourceEnemyId?: string;
   sourceBotId?: string;
   source?: 'castle' | 'bot' | 'giant';
+  attackKind?: BattleAttackKind;
   level: number;
   damage: number;
   size: number;
@@ -70,7 +76,7 @@ export interface BattleEvent {
   x?: number;
   y?: number;
   sourceEnemyId?: string;
-  attackKind?: 'projectile' | 'melee';
+  attackKind?: BattleAttackKind;
   attackSource?: 'castle' | 'bot' | 'giant';
 }
 
@@ -279,6 +285,7 @@ export function createBattleEnemies(
         - enemyDisc.cooldownMs * BOSS_BEHAVIOR.globalAttackCooldownMultiplier
         + rules.enemyFirstShotDelayMs,
       lastMeleeAt: spawnAt,
+      lastSpecialAttackAt: spawnAt,
       enraged: false,
     };
   });
@@ -329,7 +336,8 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
   let eventId = state.lastEvent?.id ?? 0;
   let frameEvent: BattleEvent | null = null;
   const eventPriority = (kind: BattleEventKind): number => {
-    if (kind === 'victory' || kind === 'defeat' || kind === 'enemyDefeated') return 4;
+    if (kind === 'victory' || kind === 'defeat' || kind === 'enemyDefeated') return 5;
+    if (kind === 'bossSpecialAttack') return 4;
     if (kind === 'bossEnraged' || kind === 'enemyHit' || kind === 'castleHit') return 3;
     if (kind === 'enemyDisc') return 2;
     return 1;
@@ -477,10 +485,13 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
       enemy.enraged ? BOSS_BEHAVIOR.enrageAttackCooldownMultiplier : 1
     );
     if (alreadyFlying || now - enemy.lastShotAt < attackCooldownMs) continue;
+    const specialAttackDue = now - enemy.lastSpecialAttackAt
+      >= BOSS_SPECIAL_ATTACK.intervalMs;
     enemyProjectiles.push({
       id: `enemy-disc-${enemy.id}-${now}`,
       owner: 'enemy',
       sourceEnemyId: enemy.id,
+      attackKind: specialAttackDue ? 'special' : 'projectile',
       x: enemy.x,
       y: enemy.y + rules.enemyProjectileStartOffsetY,
       level: enemyDisc.level,
@@ -492,9 +503,18 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
       createdAt: now,
     });
     enemies = enemies.map((item) => item.id === enemy.id
-      ? { ...item, lastShotAt: now }
+      ? {
+        ...item,
+        lastShotAt: now,
+        lastSpecialAttackAt: specialAttackDue ? now : item.lastSpecialAttackAt,
+      }
       : item);
-    lastEvent = event('enemyDisc', { x: enemy.x, y: enemy.y });
+    lastEvent = event(specialAttackDue ? 'bossSpecialAttack' : 'enemyDisc', {
+      x: enemy.x,
+      y: enemy.y,
+      sourceEnemyId: enemy.id,
+      attackKind: specialAttackDue ? 'special' : 'projectile',
+    });
   }
 
   const coreHits = enemyProjectiles.filter(
@@ -517,7 +537,7 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
       x: rules.playerStartX,
       y: rules.playerStartY,
       sourceEnemyId: coreHits[0].sourceEnemyId,
-      attackKind: 'projectile',
+      attackKind: coreHits[0].attackKind ?? 'projectile',
     });
   }
 

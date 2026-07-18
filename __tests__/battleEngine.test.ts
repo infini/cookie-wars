@@ -2,6 +2,7 @@ import {
   BATTLE_RULES,
   BOSS_BALANCE,
   BOSS_BEHAVIOR,
+  BOSS_SPECIAL_ATTACK,
   BOTS,
   DIFFICULTIES,
   DISCS,
@@ -43,6 +44,7 @@ function activeBattle(): BattleState {
       spawnAt: 0,
       lastShotAt: 1000,
       lastMeleeAt: 1000,
+      lastSpecialAttackAt: 1000,
       enraged: false,
     }],
     enemyProjectiles: [],
@@ -266,6 +268,52 @@ describe('전투 엔진', () => {
     expect(fired.lastEvent?.kind).toBe('enemyDisc');
   });
 
+  test('보스는 설정 주기마다 기존 원거리 공격 한 발을 강공격으로 연출한다', () => {
+    const difficulty = DIFFICULTIES[0];
+    const enemyDisc = getEnemyDisc(difficulty.enemyDiscLevel);
+    const battle = activeBattle();
+    battle.playerProjectiles = [];
+    const fired = advanceBattle(battle, {
+      difficulty,
+      enemyDisc,
+      playerDisc: DISCS[0].levels[0],
+      bots: [],
+      now: battle.enemies[0].lastSpecialAttackAt + BOSS_SPECIAL_ATTACK.intervalMs,
+      deltaMs: 0,
+    });
+
+    expect(fired.enemyProjectiles).toHaveLength(1);
+    expect(fired.enemyProjectiles[0].attackKind).toBe('special');
+    expect(fired.enemyProjectiles[0].damage).toBe(
+      enemyDisc.damage * battle.enemies[0].discDamageMultiplier,
+    );
+    expect(fired.lastEvent?.kind).toBe('bossSpecialAttack');
+    expect(fired.lastEvent?.sourceEnemyId).toBe(battle.enemies[0].id);
+    expect(fired.enemies[0].lastSpecialAttackAt).toBe(fired.now);
+  });
+
+  test('강공격 주기 전에는 같은 보스 원반이 일반 공격으로 유지된다', () => {
+    const difficulty = DIFFICULTIES[0];
+    const enemyDisc = getEnemyDisc(difficulty.enemyDiscLevel);
+    const battle = activeBattle();
+    battle.playerProjectiles = [];
+    const fired = advanceBattle(battle, {
+      difficulty,
+      enemyDisc,
+      playerDisc: DISCS[0].levels[0],
+      bots: [],
+      now: battle.enemies[0].lastSpecialAttackAt + BOSS_SPECIAL_ATTACK.intervalMs - 1,
+      deltaMs: 0,
+    });
+
+    expect(fired.enemyProjectiles).toHaveLength(1);
+    expect(fired.enemyProjectiles[0].attackKind).toBe('projectile');
+    expect(fired.lastEvent?.kind).toBe('enemyDisc');
+    expect(fired.enemies[0].lastSpecialAttackAt).toBe(
+      battle.enemies[0].lastSpecialAttackAt,
+    );
+  });
+
   test('보스는 성 앞에 도착하면 2배 속도로 근접 공격한다', () => {
     const difficulty = DIFFICULTIES[0];
     const battle = activeBattle();
@@ -340,6 +388,44 @@ describe('전투 엔진', () => {
     );
     expect(next.baseHealth).toBe(battle.baseHealth - expectedDamage);
     expect(next.lastEvent?.kind).toBe('castleHit');
+    expect(next.lastEvent?.amount).toBe(expectedDamage);
+  });
+
+  test('보스 강공격은 추가 피해 없이 기존 원반 피해 공식을 그대로 쓴다', () => {
+    const difficulty = DIFFICULTIES[0];
+    const battle = activeBattle();
+    battle.playerProjectiles = [];
+    battle.enemyProjectiles = [{
+      id: 'enemy-special-disc-test',
+      owner: 'enemy',
+      sourceEnemyId: battle.enemies[0].id,
+      attackKind: 'special',
+      x: BATTLE_RULES.playerStartX,
+      y: BATTLE_RULES.coreProjectileHitY,
+      level: 1,
+      damage: 20,
+      size: 20,
+      speed: 90,
+      createdAt: 0,
+    }];
+    const next = advanceBattle(battle, {
+      difficulty,
+      enemyDisc: getEnemyDisc(difficulty.enemyDiscLevel),
+      playerDisc: DISCS[0].levels[0],
+      bots: [],
+      now: 1050,
+      deltaMs: 0,
+    });
+    const expectedDamage = Math.round(
+      20
+        * difficulty.attackMultiplier
+        * BOSS_BEHAVIOR.globalAttackDamageMultiplier
+        * BOSS_BEHAVIOR.globalDifficultyMultiplier,
+    );
+
+    expect(next.baseHealth).toBe(battle.baseHealth - expectedDamage);
+    expect(next.lastEvent?.kind).toBe('castleHit');
+    expect(next.lastEvent?.attackKind).toBe('special');
     expect(next.lastEvent?.amount).toBe(expectedDamage);
   });
 

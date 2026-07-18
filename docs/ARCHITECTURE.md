@@ -37,6 +37,7 @@ services/storage          engine/useBattleEngine
 - `battle-maps.json`, `battle-map-rules.json`: 지형·건축이 다른 전투 테마와 5전투 단위 순환
 - `boss-balance.json`: 고성장 자동 공격 DPS에 따른 단일 보스 HP 하한과 즉사 방지
 - `boss-behavior.json`: 보스 전역 공격력·공격 간격·이동 배율과 HP 분노 페이즈
+- `boss-special-attack.json`: 주기 보스 망치 강공격의 시간·몸 동작·지면 충격·발사체·플래시 연출
 - `battle-rules.json`: 좌표, 충돌 거리, 공격·AI 타이밍 등 전투 규칙
 - `battle-ui.json`: 개체 렌더 크기, 상단 보스 HP, 체력 게이지 색상·외곽선
 - `battle-feedback.json`: 공격 예고·돌진, 피격 흔들림, 다중 충격·전장 충격파·피해 숫자
@@ -52,7 +53,9 @@ services/storage          engine/useBattleEngine
 
 ## 상태와 저장
 
-`GameContext`는 영구 상태와 의미 있는 사용자 명령을 제공하고, `gameReducer`가 모든 상태 변경 규칙과 가격 검증을 처리합니다. AsyncStorage 저장은 `services/storage.ts`로 분리되어 있습니다. 저장 지연 시간도 `progression.json`에서 읽습니다.
+`GameContext`는 영구 상태와 의미 있는 사용자 명령을 제공하고, `gameReducer`가 모든 상태 변경 규칙과 가격 검증을 처리합니다. AsyncStorage 저장은 `services/storage.ts`로 분리되어 있습니다. 저장 지연 시간과 생산 주기도 `progression.json`에서 읽습니다.
+
+저장할 때마다 `lastSavedAt`을 함께 기록합니다. 다음 실행에서는 저장 데이터를 먼저 이전·정규화하고, `domain/offlineProduction.ts`가 저장 당시 자동 생산 능력과 `lastSavedAt → 현재 시각`의 완료 생산 주기를 계산합니다. 현재 쿠키와 누적 쿠키에 같은 양을 더하고 소비한 체크포인트를 즉시 AsyncStorage에 기록한 다음 화면을 엽니다. 따라서 로딩 직후 앱이 다시 종료되어도 같은 시간이 중복 지급되지 않습니다. 기기 시계가 뒤로 간 경우에는 0개를 지급하고 더 최신 체크포인트를 유지합니다. 실행 중 타이머도 실제 경과 시간을 기준으로 누락된 주기를 따라잡으며 Android가 백그라운드로 갈 때 즉시 저장합니다.
 
 전투 승리 시 `rewardClaimedStageIds`의 `난이도ID:전투번호` 키를 확인합니다. 각 난이도의 1~20 전투는 처음 클리어할 때 각각 거대 원반 1개를 주고, 이미 완료한 전투를 다시 이겼을 때만 추가하지 않습니다. 전투 승리는 현재 쿠키나 누적 쿠키를 변경하지 않습니다. `difficultyWinCounts`는 난이도별 진행 단계, `clearedDifficultyIds`는 최소 한 번 승리한 기록, `highestUnlockedDifficultyIndex`는 순차 해금에 사용합니다. 재도전, 보상, 해금이 서로 독립된 상태입니다.
 
@@ -80,6 +83,8 @@ services/storage          engine/useBattleEngine
 
 엔진은 프레임당 가장 중요한 전투 이벤트에 `kind`, `at`, `x`, `y`, `amount`, `attackKind`, `attackSource`를 담아 UI에 전달합니다. `BattleScreen`은 이 이벤트와 `battle-feedback.json`만으로 원거리·근접 공격 예고, 보스 돌진, 개체별 피격 흔들림, 서로 다른 다섯 위치의 시간차 충격, 강타용 전장 충격파, 피해 숫자와 성 피격 플래시를 그립니다. 판정 로직은 연출 컴포넌트를 모르고 UI도 HP를 직접 변경하지 않습니다.
 
+보스의 `lastSpecialAttackAt`은 `boss-special-attack.json`의 주기를 지난 다음 발사 가능한 기존 원거리 공격 한 발을 `special`로 표시합니다. 새 공격이나 피해 배율을 더하지 않고 같은 발사체 피해 공식을 사용합니다. 보스 기본 이미지 자체가 망치를 들고 있으므로 공격 사이에 무기가 나타나거나 사라지지 않습니다. `domain/bossSpecialAttack.ts`는 망치를 들어 올리는 준비, 빠른 내려찍기, 압축과 복귀를 순수 계산하고, `BossHammerSmashEffect`는 내려찍는 시점부터 테이블의 타원 충격파·지면 균열·먼지 입자를 짧게 그립니다. 화면 흔들림·플래시와 특수 적 원반도 같은 테이블을 읽습니다.
+
 보스 공격 피해, 공격 간격, 이동 속도는 `boss-behavior.json`에서 마지막으로 보정합니다. 현재 기본 피해 배율 2, 쿨타임 배율 0.5, 이동 배율 0.8이므로 원거리·근접 기본 공격력은 2배, 공격 속도는 2배, 이동 속도는 20% 감소됩니다. 전체 난이도 배율 1.2는 최종 HP와 피해에 추가 적용됩니다. 보스는 `enemyAttackRadius`에 들어오면 근접 범위 전부터 적 전용 원반을 발사하고, 근접 범위에서는 별도 쿨타임으로 직접 타격합니다. HP 50% 하향 교차 시 `enraged` 상태를 단 한 번 활성화하고 이후 원반·근접 피해와 공격 간격에 분노 배율을 추가 적용합니다.
 
 `BattleScreen`은 `getBattleMapForBattle`로 초원·빙하·사막·화산 네 배경을 5전투마다 순환합니다. `BattleMapImage.ts`는 JSON 이미지 키를 정적 `require`에 연결하므로 APK 번들에 모두 포함됩니다. 네 이미지는 성을 그대로 둔 색 변형이 아니라 건축·지형·진영 요새가 각각 다르고, 중앙만 낮은 대비로 비워 유닛과 원반을 분리합니다. HUD에는 난이도·전투 번호·남은 보스와 화면 폭 88%의 상단 보스 HP 바를 표시합니다. 보스 최대 렌더 크기는 `battle-ui.json`의 112이고 성과 봇은 아래쪽 좁은 슬롯에 배치합니다. 아군 원반은 파랑·금색, 보스 원반은 빨강·검붉은색입니다.
@@ -96,6 +101,8 @@ services/storage          engine/useBattleEngine
 - `__tests__/gameReducer.test.ts`: 스테이지별 거대 원반 최초 보상·재도전 차단, 쿠키 무지급, 거대 원반 소모, 정확한 20승 해금, 저장 이전, 테이블 기반 구매, 100레벨 이후 강화, 강화 가능 우선 정렬
 - `__tests__/battleEngine.test.ts`: 모든 난이도의 단일 보스 생성, 고성장 군단 즉사 방지 HP, 정지 보스 명중, 공격 반경 제한, 중첩 발사, 봇 자동 발사, 근접 범위 전 보스 원거리 공격, 원거리·근접 피해·속도 2배·이동 20% 감소, 성의 자동 공격 금지, 성 원반 2배·강한 봇 기준 거대 원반 30배 피해
 - `__tests__/battleAudio.test.ts`: 전투 액션음 최소 재생 간격
+- `__tests__/bossSpecialAttack.test.ts`: 주기 강공격의 표시 수명과 망치 들기·내려찍기·복귀 보간
+- `__tests__/offlineProduction.test.ts`: 종료 시간 정산, 중복 방지, 시계 역행, 백그라운드 따라잡기, 무제한 기간
 - `npm run verify`: TypeScript, Jest, Expo 프로젝트 진단을 연속 실행
 
 ## 다음 확장 지점

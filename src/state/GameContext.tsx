@@ -9,6 +9,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { AppState } from 'react-native';
 import { DIFFICULTIES, PROGRESSION } from '../config';
 import {
   calculateCookieStats,
@@ -18,6 +19,7 @@ import {
   getDiscProgress,
   getUpgradeProgress,
 } from '../domain/gameSelectors';
+import { calculateProductionForElapsedTime } from '../domain/offlineProduction';
 import { loadGame, saveGame } from '../services/storage';
 import {
   BattleRewardResult,
@@ -25,7 +27,7 @@ import {
   GameState,
   SoundVolumeLevel,
 } from '../types/game';
-import { gameReducer, initialGameState } from './gameReducer';
+import { gameReducer, initialGameState, restoreSavedGame } from './gameReducer';
 
 interface GameContextValue {
   state: GameState;
@@ -57,9 +59,18 @@ export function GameProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     let mounted = true;
-    loadGame().then((saved) => {
+    loadGame().then(async (saved) => {
       if (!mounted) return;
-      if (saved) dispatch({ type: 'HYDRATE', payload: saved });
+      if (saved) {
+        const restored = restoreSavedGame(saved, Date.now());
+        await saveGame(restored, restored.lastSavedAt);
+        if (!mounted) return;
+        dispatch({
+          type: 'HYDRATE',
+          payload: restored,
+          now: restored.lastSavedAt,
+        });
+      }
       setHydrated(true);
     });
     return () => {
@@ -73,12 +84,29 @@ export function GameProvider({ children }: PropsWithChildren) {
     return () => clearTimeout(timer);
   }, [hydrated, state]);
 
+  useEffect(() => {
+    if (!hydrated) return undefined;
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'active') void saveGame(stateRef.current);
+    });
+    return () => subscription.remove();
+  }, [hydrated]);
+
   const stats = useMemo(() => calculateCookieStats(state), [state]);
 
   useEffect(() => {
     if (!hydrated || stats.autoProduction <= 0) return;
+    let lastProductionAt = Date.now();
     const timer = setInterval(() => {
-      dispatch({ type: 'GAIN_COOKIES', amount: stats.autoProduction });
+      const now = Date.now();
+      const production = calculateProductionForElapsedTime(
+        stats.autoProduction,
+        now - lastProductionAt,
+      );
+      if (production.completedIntervals <= 0) return;
+      lastProductionAt += production.completedIntervals
+        * PROGRESSION.autoProductionIntervalMs;
+      dispatch({ type: 'GAIN_COOKIES', amount: production.cookiesEarned });
     }, PROGRESSION.autoProductionIntervalMs);
     return () => clearInterval(timer);
   }, [hydrated, stats.autoProduction]);

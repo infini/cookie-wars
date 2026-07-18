@@ -7,7 +7,7 @@ const monsterImages: Record<string, ImageSourcePropType> = {
   'sugar-guard': require('../../assets/images/enemies/sugar-guard.png'),
   'chocolate-brute': require('../../assets/images/enemies/chocolate-brute.png'),
   'wafer-sorcerer': require('../../assets/images/enemies/wafer-sorcerer.png'),
-  'cookie-tyrant': require('../../assets/images/enemies/cookie-tyrant.png'),
+  'cookie-tyrant': require('../../assets/images/enemies/cookie-tyrant-hammer.png'),
 };
 
 interface MonsterSpriteProps {

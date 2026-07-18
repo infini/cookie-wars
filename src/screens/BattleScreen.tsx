@@ -14,6 +14,7 @@ import {
   BATTLE_FEEDBACK,
   BATTLE_UI,
   BOSS_BEHAVIOR,
+  BOSS_SPECIAL_ATTACK,
   DIFFICULTIES,
   GIANT_DISC,
   getBattleMapForBattle,
@@ -30,6 +31,7 @@ import {
 } from '../domain/gameSelectors';
 import { BattleEvent, useBattleEngine } from '../engine/useBattleEngine';
 import { BotImage } from '../components/BotImage';
+import { BossHammerSmashEffect } from '../components/BossHammerSmashEffect';
 import { getBattleMapImageSource } from '../components/BattleMapImage';
 import { CookieCastle } from '../components/CookieCastle';
 import { DiscImage } from '../components/DiscImage';
@@ -37,6 +39,11 @@ import { GameButton } from '../components/GameButton';
 import { MonsterSprite } from '../components/MonsterSprite';
 import { useFeedback } from '../services/FeedbackContext';
 import { getLightHitSoundName } from '../services/battleAudio';
+import {
+  getBossSpecialAttackPose,
+  getBossSpecialAttackProgress,
+  getBossSpecialAttackImpactProgress,
+} from '../domain/bossSpecialAttack';
 import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
@@ -352,7 +359,10 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
     if (kind === 'disc') {
       feedback.play(event.attackSource === 'giant' ? 'giantDisc' : 'friendlyDisc');
     }
-    if (kind === 'enemyDisc') feedback.play('enemyDisc');
+    if (kind === 'enemyDisc' || kind === 'bossSpecialAttack') {
+      feedback.play('enemyDisc');
+    }
+    if (kind === 'bossSpecialAttack') feedback.play('bossMelee');
     if (kind === 'enemyHit') {
       if (event.attackSource === 'giant' || event.attackSource === 'castle') {
         feedback.play('hitHeavy');
@@ -400,6 +410,36 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
       castleHitProgress * Math.PI * BATTLE_FEEDBACK.enemyHitShakeCycles,
     ) * BATTLE_FEEDBACK.castleHitShakePixels * (1 - castleHitProgress)
     : 0;
+  const specialAttackingBoss = engine.state.enemies.find((enemy) => (
+    getBossSpecialAttackProgress(
+      enemy.lastSpecialAttackAt,
+      enemy.spawnAt,
+      engine.state.now,
+    ) !== null
+  ));
+  const bossSpecialAttackProgress = specialAttackingBoss
+    ? getBossSpecialAttackProgress(
+      specialAttackingBoss.lastSpecialAttackAt,
+      specialAttackingBoss.spawnAt,
+      engine.state.now,
+    )
+    : null;
+  const bossSpecialAttackFlashOpacity = bossSpecialAttackProgress === null
+    ? 0
+    : getBossSpecialAttackPose(bossSpecialAttackProgress).effectOpacity
+      * BOSS_SPECIAL_ATTACK.screenFlashMaximumOpacity;
+  const bossSpecialAttackImpactProgress = bossSpecialAttackProgress === null
+    ? null
+    : getBossSpecialAttackImpactProgress(bossSpecialAttackProgress);
+  const bossSpecialAttackScreenShake = bossSpecialAttackImpactProgress === null
+    ? 0
+    : Math.sin(
+      bossSpecialAttackImpactProgress
+        * BOSS_SPECIAL_ATTACK.screenShakeCycles
+        * Math.PI,
+    )
+      * BOSS_SPECIAL_ATTACK.screenShakePixels
+      * (1 - bossSpecialAttackImpactProgress);
 
   useEffect(() => {
     if (engine.state.status === 'victory' && !handledResult.current) {
@@ -446,7 +486,15 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
       <ImageBackground
         source={getBattleMapImageSource(battleMap.imageKey)}
         resizeMode="cover"
-        style={styles.field}
+        style={[
+          styles.field,
+          {
+            transform: [
+              { translateX: bossSpecialAttackScreenShake },
+              { translateY: Math.abs(bossSpecialAttackScreenShake) },
+            ],
+          },
+        ]}
         imageStyle={styles.mapImage}
       >
         <View style={styles.compactHud} pointerEvents="none">
@@ -508,6 +556,8 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
             * (enemy.enraged ? BOSS_BEHAVIOR.enrageAttackCooldownMultiplier : 1);
           const timeUntilMeleeMs = effectiveMeleeCooldownMs
             - (engine.state.now - enemy.lastMeleeAt);
+          const timeUntilSpecialAttackMs = BOSS_SPECIAL_ATTACK.intervalMs
+            - (engine.state.now - enemy.lastSpecialAttackAt);
           const projectileWindupVisible = engine.state.status === 'active'
             && distanceToCastle <= BATTLE_RULES.enemyAttackRadius
             && !alreadyFlying
@@ -517,7 +567,14 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
             && enemy.y >= BATTLE_RULES.enemyMeleeTriggerY
             && timeUntilMeleeMs > 0
             && timeUntilMeleeMs <= BATTLE_FEEDBACK.enemyAttackWindupMs;
-          const windupVisible = projectileWindupVisible || meleeWindupVisible;
+          const specialWindupVisible = engine.state.status === 'active'
+            && distanceToCastle <= BATTLE_RULES.enemyAttackRadius
+            && !alreadyFlying
+            && timeUntilSpecialAttackMs > 0
+            && timeUntilSpecialAttackMs <= BOSS_SPECIAL_ATTACK.windupMs;
+          const windupVisible = projectileWindupVisible
+            || meleeWindupVisible
+            || specialWindupVisible;
           const windupProgress = Math.max(
             projectileWindupVisible
               ? 1 - timeUntilAttackMs / BATTLE_FEEDBACK.enemyAttackWindupMs
@@ -525,7 +582,17 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
             meleeWindupVisible
               ? 1 - timeUntilMeleeMs / BATTLE_FEEDBACK.enemyAttackWindupMs
               : 0,
+            specialWindupVisible
+              ? 1 - timeUntilSpecialAttackMs / BOSS_SPECIAL_ATTACK.windupMs
+              : 0,
           );
+          const specialAttackProgress = getBossSpecialAttackProgress(
+            enemy.lastSpecialAttackAt,
+            enemy.spawnAt,
+            engine.state.now,
+          );
+          const specialAttackVisible = specialAttackProgress !== null;
+          const specialAttackPose = getBossSpecialAttackPose(specialAttackProgress ?? 1);
           const targetsThisEnemy = lastEvent?.sourceEnemyId === enemy.id || (
             lastEvent?.x !== undefined
             && lastEvent.y !== undefined
@@ -562,12 +629,17 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
                 attackProgress * Math.PI * BATTLE_FEEDBACK.enemyAttackShakeCycles,
               ) * BATTLE_FEEDBACK.enemyAttackLungePixels * (1 - attackProgress)
               : 0;
-          const translateY = attackWave * BATTLE_FEEDBACK.enemyAttackLungePixels;
-          const scale = hitVisible
+          const translateY = specialAttackVisible
+            ? specialAttackPose.translateY
+            : attackWave * BATTLE_FEEDBACK.enemyAttackLungePixels;
+          const scaleX = specialAttackVisible
+            ? specialAttackPose.scaleX
+            : hitVisible
             ? 1 - (1 - BATTLE_FEEDBACK.enemyHitScale) * hitWave
             : attackVisible
               ? 1 + (BATTLE_FEEDBACK.enemyAttackScale - 1) * attackWave
               : 1 + (BATTLE_FEEDBACK.enemyAttackWindupScale - 1) * windupProgress;
+          const scaleY = specialAttackVisible ? specialAttackPose.scaleY : scaleX;
           const enragePulse = enemy.enraged
             ? 1 + Math.sin(
               engine.state.now / BATTLE_FEEDBACK.enemyAttackDurationMs * Math.PI * 2,
@@ -586,14 +658,20 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
                   marginLeft: -BATTLE_UI.enemyLabelWidth / 2,
                   marginTop: -(renderSize + BATTLE_UI.enemyAnchorLabelOffset),
                   zIndex: Math.round(enemy.y * 1000),
-                  transform: [{ translateX }, { translateY }, { scale }],
+                  transform: [
+                    { translateX },
+                    { translateY },
+                    { rotate: `${specialAttackVisible ? specialAttackPose.rotationDeg : 0}deg` },
+                    { scaleX },
+                    { scaleY },
+                  ],
                 },
               ]}
             >
               <Text style={styles.enemyName} numberOfLines={1}>{enemy.name}</Text>
               <HealthBar value={enemy.hp} max={enemy.maxHp} width={BATTLE_UI.enemyHealthWidth} />
               <View style={[styles.enemySpriteFrame, { width: renderSize, height: renderSize }]}>
-                {enemy.enraged || windupVisible || attackVisible ? (
+                {enemy.enraged || windupVisible || attackVisible || specialAttackVisible ? (
                   <View
                     style={[
                       styles.enemyAttackAura,
@@ -615,17 +693,31 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
                   />
                 ) : null}
                 <MonsterSprite imageKey={enemy.imageKey} size={renderSize} grounded />
+                {specialAttackProgress !== null ? (
+                  <BossHammerSmashEffect size={renderSize} progress={specialAttackProgress} />
+                ) : null}
               </View>
             </View>
           );
         })}
 
-        {engine.state.enemyProjectiles.map((projectile) => (
+        {engine.state.enemyProjectiles.map((projectile) => {
+          const isSpecialAttack = projectile.attackKind === 'special';
+          return (
           <View
             key={projectile.id}
             style={[
               styles.projectile,
               styles.enemyProjectile,
+              isSpecialAttack && {
+                borderColor: BOSS_SPECIAL_ATTACK.projectileBorderColor,
+                backgroundColor: BOSS_SPECIAL_ATTACK.projectileBackgroundColor,
+                shadowColor: BOSS_SPECIAL_ATTACK.projectileGlowColor,
+                shadowRadius: BOSS_SPECIAL_ATTACK.projectileGlowRadius,
+                shadowOpacity: 1,
+                elevation: 12,
+                transform: [{ scale: BOSS_SPECIAL_ATTACK.projectileScale }],
+              },
               {
                 left: `${projectile.x * 100}%`,
                 top: `${projectile.y * 100}%`,
@@ -644,9 +736,15 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
                   height: projectile.size * BATTLE_FEEDBACK.enemyProjectileTrailLengthMultiplier,
                   top: -projectile.size * BATTLE_FEEDBACK.enemyProjectileTrailLengthMultiplier,
                   opacity: BATTLE_FEEDBACK.enemyProjectileTrailOpacity,
-                  backgroundColor: BATTLE_FEEDBACK.attackAuraBorderColor,
-                  shadowColor: BATTLE_FEEDBACK.screenFlashColor,
-                  shadowRadius: BATTLE_FEEDBACK.enemyProjectileGlowRadius,
+                  backgroundColor: isSpecialAttack
+                    ? BOSS_SPECIAL_ATTACK.projectileTrailColor
+                    : BATTLE_FEEDBACK.attackAuraBorderColor,
+                  shadowColor: isSpecialAttack
+                    ? BOSS_SPECIAL_ATTACK.projectileGlowColor
+                    : BATTLE_FEEDBACK.screenFlashColor,
+                  shadowRadius: isSpecialAttack
+                    ? BOSS_SPECIAL_ATTACK.projectileGlowRadius
+                    : BATTLE_FEEDBACK.enemyProjectileGlowRadius,
                 },
               ]}
             />
@@ -656,7 +754,8 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
               <DiscImage size={projectile.size - BATTLE_FEEDBACK.impactRingBorderWidth} team="enemy" />
             </View>
           </View>
-        ))}
+          );
+        })}
 
         <BattleImpactEffect event={lastEvent} now={engine.state.now} />
 
@@ -668,6 +767,19 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
               {
                 backgroundColor: BATTLE_FEEDBACK.screenFlashColor,
                 opacity: BATTLE_FEEDBACK.screenFlashMaximumOpacity * castleHitWave,
+              },
+            ]}
+          />
+        ) : null}
+
+        {bossSpecialAttackProgress !== null ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.bossSpecialAttackFlash,
+              {
+                backgroundColor: BOSS_SPECIAL_ATTACK.screenFlashColor,
+                opacity: bossSpecialAttackFlashOpacity,
               },
             ]}
           />
@@ -901,6 +1013,7 @@ const styles = StyleSheet.create({
   impactInner: { borderRadius: 999 },
   damageText: { position: 'absolute', top: 0, fontFamily: fonts.display, textAlign: 'center', zIndex: 3 },
   castleHitFlash: { ...StyleSheet.absoluteFill, zIndex: 900 },
+  bossSpecialAttackFlash: { ...StyleSheet.absoluteFill, zIndex: 850 },
   bossHealthHud: { position: 'absolute', alignSelf: 'center', zIndex: 2300 },
   bossHealthLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 3 },
   bossHealthName: { fontFamily: fonts.extraBold, fontSize: 10, color: colors.red, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 5, paddingHorizontal: 5 },

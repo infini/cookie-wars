@@ -13,13 +13,21 @@ export async function loadGame(): Promise<Partial<GameState> | null> {
   }
 }
 
-export async function saveGame(state: GameState): Promise<void> {
+export async function saveGame(
+  state: GameState,
+  savedAt: number = Date.now(),
+): Promise<boolean> {
   try {
+    const normalizedSavedAt = Number.isFinite(savedAt)
+      ? Math.max(0, Math.floor(savedAt))
+      : Date.now();
     await AsyncStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ ...state, lastSavedAt: Date.now() }),
+      JSON.stringify({ ...state, lastSavedAt: normalizedSavedAt }),
     );
+    return true;
   } catch (error) {
     console.warn('게임을 저장하지 못했습니다.', error);
+    return false;
   }
 }

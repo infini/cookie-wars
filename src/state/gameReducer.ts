@@ -18,10 +18,11 @@ import {
   makeInitialDiscLevels,
   makeInitialUpgradeLevels,
 } from '../domain/gameSelectors';
+import { settleOfflineProduction } from '../domain/offlineProduction';
 import { GameState, SoundVolumeLevel } from '../types/game';
 
 export type GameAction =
-  | { type: 'HYDRATE'; payload: Partial<GameState> }
+  | { type: 'HYDRATE'; payload: Partial<GameState>; now: number }
   | { type: 'GAIN_COOKIES'; amount: number }
   | { type: 'BUY_UPGRADE'; upgradeId: string }
   | { type: 'BUY_DISC'; discId: string }
@@ -218,6 +219,10 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     ...currentSaved,
     saveVersion: initialGameState.saveVersion,
     cookies: Math.max(0, Math.floor(saved.cookies ?? initialGameState.cookies)),
+    lifetimeCookies: Math.max(
+      0,
+      Math.floor(saved.lifetimeCookies ?? initialGameState.lifetimeCookies),
+    ),
     upgradeLevels: normalizeUpgradeLevels(saved.upgradeLevels),
     botCounts: normalizeBotCounts(saved.botCounts),
     ownedDiscIds,
@@ -232,13 +237,20 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     discoveredMonsterIds,
     newMonsterIds,
     soundVolumeLevel: normalizeSoundVolumeLevel(saved.soundVolumeLevel),
+    lastSavedAt: Number.isFinite(saved.lastSavedAt)
+      ? Math.max(0, Math.floor(saved.lastSavedAt ?? 0))
+      : 0,
   };
+}
+
+export function restoreSavedGame(saved: Partial<GameState>, now: number): GameState {
+  return settleOfflineProduction(mergeSavedGame(saved), now);
 }
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'HYDRATE':
-      return mergeSavedGame(action.payload);
+      return restoreSavedGame(action.payload, action.now);
     case 'GAIN_COOKIES':
       return {
         ...state,

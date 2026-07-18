@@ -16,6 +16,7 @@
 | `difficulties.json` | 난이도 순서, 보스 HP·공격 배율·이동 속도 |
 | `boss-balance.json` | 성장한 쿠키봇 군단에 대한 보스 최소 생존 시간·즉사 방지 |
 | `boss-behavior.json` | 보스 전역 공격력·공격 간격·이동 배율과 HP 분노 페이즈 |
+| `boss-special-attack.json` | 보스 주기 망치 강공격의 시간·몸 동작·지면 충격·발사체·플래시 |
 | `battle-stage-rules.json` | 같은 난이도의 승리별 보스 HP·공격·속도·원반 증가식 |
 | `battle-maps.json` | 전투 배경 테마 ID·이름·정적 이미지 키 |
 | `battle-map-rules.json` | 배경 교체 전투 간격과 난이도별 시작 테마 오프셋 |
@@ -195,6 +196,19 @@
 
 전투 엔진은 공격 종류·명중 위치·피해량을 이벤트로 보내고, 화면은 이 테이블을 이용해 동일 좌표에 연출을 그립니다. 원거리와 근접 공격은 같은 피해 경로를 사용하지만 공격 종류 이벤트로 동작을 구분합니다.
 
+### `boss-special-attack.json`
+
+- `intervalMs`: 마지막 강공격 이후 다음 기존 원거리 공격을 강공격으로 표시할 최소 주기. 현재 5초
+- `windupMs`, `animationDurationMs`, `windupPeakProgress`, `slamPeakProgress`: 예고·전체 동작·망치를 들어 올리고 내려찍는 시점
+- `windupRotationDeg`, `slamRotationDeg`, `*Pixels`, `*Scale*`: 망치를 든 보스 전체의 회전·상하 이동·충돌 압축
+- `impact*`: 내려찍는 지점의 타원 충격파, 지면 균열 SVG 경로, 크기·선·색·발광
+- `dust*`: 충돌 좌우로 퍼지는 먼지 입자의 좌표·반경·색
+- `screenFlash*`: 강공격 순간 전장 전체의 짧은 플래시
+- `screenShake*`: 내려찍은 뒤 짧게 감쇠하는 전장 흔들림
+- `projectile*`: 강공격으로 표시된 기존 적 원반의 확대·색·궤적·발광
+
+보스 기본 스프라이트는 항상 망치를 든 별도 이미지입니다. 강공격은 별도 발사나 피해 배율이 아닙니다. 엔진은 주기가 지난 기존 원거리 공격 한 발에 `special` 종류만 기록하며 피해는 `enemy-discs.json`과 `boss-behavior.json`의 일반 공식을 그대로 사용합니다.
+
 ### `giant-disc.json`
 
 - `damageMultiplier`: 현재 최강 쿠키봇이 날리는 일반 원반 피해에 곱하는 값. 현재 정확히 30배. 봇이 없으면 장착 원반 기본 피해가 기준
@@ -230,6 +244,8 @@
 - `giantDiscRewardPerFirstClear`: 전투 번호별 최초 클리어에 지급할 거대 원반 개수
 - `saveDebounceMs`: 상태 변화 후 저장을 합쳐 처리하는 시간
 - `autoProductionIntervalMs`: 자동 쿠키 생산 적용 주기
+
+자동 생산은 이 주기의 완료 횟수에 현재 `개/초` 능력치를 곱합니다. 저장 시 `lastSavedAt`을 기록하고 재실행·백그라운드 복귀 시 같은 계산을 사용하므로 타이머가 멈춘 시간도 누적됩니다. 이전 저장처럼 시각이 없거나 기기 시계가 뒤로 간 경우에는 지급하지 않으며 임의의 최대 오프라인 기간은 두지 않습니다.
 
 `audio-settings.json`:
 

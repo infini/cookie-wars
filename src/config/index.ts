@@ -9,6 +9,7 @@ import battleStageRuleData from './battle-stage-rules.json';
 import battleUiData from './battle-ui.json';
 import bossBalanceData from './boss-balance.json';
 import bossBehaviorData from './boss-behavior.json';
+import bossSpecialAttackData from './boss-special-attack.json';
 import cookieUpgradeData from './cookie-upgrades.json';
 import cookieUpgradeRuleData from './cookie-upgrade-rules.json';
 import cookieData from './cookies.json';
@@ -33,6 +34,7 @@ import {
   BattleUiConfig,
   BossBalanceConfig,
   BossBehaviorConfig,
+  BossSpecialAttackConfig,
   CookieConfig,
   CookieUpgradeRulesConfig,
   DifficultyConfig,
@@ -59,6 +61,7 @@ export const BATTLE_STAGE_RULES = battleStageRuleData as BattleStageRulesConfig;
 export const BATTLE_UI = battleUiData as BattleUiConfig;
 export const BOSS_BALANCE = bossBalanceData as BossBalanceConfig;
 export const BOSS_BEHAVIOR = bossBehaviorData as BossBehaviorConfig;
+export const BOSS_SPECIAL_ATTACK = bossSpecialAttackData as BossSpecialAttackConfig;
 export const DISCS = discData as DiscConfig[];
 export const DISC_UPGRADE_RULES = discUpgradeRuleData as DiscUpgradeRulesConfig;
 export const ENEMY_DISCS = enemyDiscData as EnemyDiscConfig[];

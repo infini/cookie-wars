@@ -7,6 +7,7 @@ import {
   BATTLE_MAP_RULES,
   BOSS_BALANCE,
   BOSS_BEHAVIOR,
+  BOSS_SPECIAL_ATTACK,
   BOTS,
   COOKIE_UPGRADE_RULES,
   COOKIES,
@@ -123,6 +124,13 @@ describe('데이터 테이블', () => {
     expect(BOSS_BEHAVIOR.globalMoveSpeedMultiplier).toBe(0.8);
     expect(BOSS_BEHAVIOR.globalDifficultyMultiplier).toBe(1.2);
     expect(BOSS_BEHAVIOR.enrageHealthRatio).toBe(0.5);
+    expect(BOSS_SPECIAL_ATTACK.intervalMs).toBe(5000);
+    expect(BOSS_SPECIAL_ATTACK.windupMs).toBeGreaterThan(0);
+    expect(BOSS_SPECIAL_ATTACK.animationDurationMs).toBeGreaterThan(0);
+    expect(BOSS_SPECIAL_ATTACK.slamScaleX).toBeGreaterThan(1);
+    expect(BOSS_SPECIAL_ATTACK.slamScaleY).toBeLessThan(1);
+    expect(BOSS_SPECIAL_ATTACK.impactCrackPaths.length).toBeGreaterThan(0);
+    expect(BOSS_SPECIAL_ATTACK.projectileScale).toBeGreaterThan(1);
     expect(BATTLE_FEEDBACK.enemyAttackWindupMs).toBeGreaterThan(0);
     expect(BATTLE_FEEDBACK.impactEffectDurationMs).toBeGreaterThan(0);
     expect(BATTLE_FEEDBACK.impactBursts.length).toBeGreaterThanOrEqual(4);

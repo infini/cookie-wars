@@ -10,6 +10,7 @@
 | `assets/images/cookies/*.png` 20종 진화 이미지 | Google Noto Emoji | Apache License 2.0 |
 | `cookie-castle.png`, `cookie-bot.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 | `assets/images/enemies/*.png` 5종 | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
+| `assets/images/enemies/cookie-tyrant-hammer.png` | 기존 폭군과 신규 쿠키 전쟁망치를 결합한 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 | `assets/images/maps/battle-map-medieval.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 | `assets/images/maps/battle-map-glacier.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 | `assets/images/maps/battle-map-desert.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
@@ -17,6 +18,8 @@
 | `flying-disc.png`, `enemy-disc.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 
 생성 이미지는 특정 상용 게임의 캐릭터나 로고를 복제하지 않고 독자적인 3D 모바일 게임 아트 방향으로 제작했습니다. 아군 원반은 파랑·금색, 적 원반은 빨강·검붉은색입니다. 네 전투 맵은 모두 세로 9:16, 위쪽 적 요새·아래쪽 아군 요새·낮은 대비의 넓은 중앙 전장을 공통 구도로 사용합니다. 초원은 중세 석조 왕국, 빙하는 붉은 북유럽 목조 요새와 자연 얼음 절벽, 사막은 붉은 지구라트·자칼 신전과 오아시스 주둔지, 화산은 흑요석 악마 성채와 푸른 수정 요새로 지형과 건축 자체를 다르게 만들었습니다. 단순 색상·재질 변형 이미지는 프로젝트에 포함하지 않았습니다.
+
+망치 보스는 Codex 내장 `imagegen`으로 제작했습니다. 먼저 `거대한 초콜릿 비스킷 망치 머리, 황금 보강재와 붉은 보석, 긴 코코아 목재 손잡이, 단일 무기, 3D 모바일 게임 렌더` 프롬프트로 망치를 생성했습니다. 이어 기존 `cookie-tyrant.png`를 편집 대상으로, 망치를 보조 입력으로 사용해 `기존 얼굴·왕관·갑옷·비율을 유지하고 왼손으로 망치를 쥔 전투 대기 자세`를 만들었습니다. 균일한 녹색 배경을 로컬 크로마키 처리해 최종 투명 PNG `cookie-tyrant-hammer.png`로 저장했습니다.
 
 ### 전투 맵 생성 기록
 
