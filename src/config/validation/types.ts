@@ -15,6 +15,7 @@ import {
   BotConfig,
   CookieConfig,
   CookieCriticalConfig,
+  CookieFeedbackConfig,
   CookieUpgradeRulesConfig,
   DifficultyConfig,
   DiscConfig,
@@ -46,6 +47,7 @@ export interface GameConfigInput {
   COOKIE_UPGRADE_RULES: unknown;
   COOKIE_UPGRADES: unknown;
   COOKIE_CRITICAL: unknown;
+  COOKIE_FEEDBACK: unknown;
   COOKIES: unknown;
   DIFFICULTIES: unknown;
   DISC_UPGRADE_RULES: unknown;
@@ -76,6 +78,7 @@ export interface ValidatedGameConfig {
   COOKIE_UPGRADE_RULES: CookieUpgradeRulesConfig;
   COOKIE_UPGRADES: UpgradeConfig[];
   COOKIE_CRITICAL: CookieCriticalConfig;
+  COOKIE_FEEDBACK: CookieFeedbackConfig;
   COOKIES: CookieConfig[];
   DIFFICULTIES: DifficultyConfig[];
   DISC_UPGRADE_RULES: DiscUpgradeRulesConfig;

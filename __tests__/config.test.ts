@@ -12,6 +12,7 @@ import {
   BOT_ANIMATION,
   BOTS,
   COOKIE_CRITICAL,
+  COOKIE_FEEDBACK,
   COOKIE_UPGRADES,
   COOKIE_UPGRADE_RULES,
   COOKIES,
@@ -168,9 +169,9 @@ describe('데이터 테이블', () => {
       (upgrade) => typeof upgrade.countsTowardCookieEvolution === 'boolean',
     )).toBe(true);
     expect(Math.max(...cookieSize!.levels.map((level) => level.value))).toBeGreaterThan(0);
-    expect(COOKIES).toHaveLength(30);
+    expect(COOKIES).toHaveLength(50);
     expect(COOKIES.map((cookie) => cookie.requiredTotalUpgradeLevels)).toEqual(
-      Array.from({ length: 30 }, (_, index) => 3 + index * 6),
+      Array.from({ length: 50 }, (_, index) => 3 + index * 6),
     );
     COOKIES.slice(1).forEach((cookie, index) => {
       expect(cookie.requiredTotalUpgradeLevels).toBeGreaterThan(
@@ -180,11 +181,22 @@ describe('데이터 테이블', () => {
       expect(cookie.autoProductionMultiplier).toBe(cookie.clickMultiplier);
       expect(cookie.healthMultiplier).toBe(cookie.clickMultiplier);
     });
+    expect(new Set(COOKIES.map((cookie) => cookie.name)).size).toBe(COOKIES.length);
+    expect(new Set(COOKIES.map((cookie) => cookie.imageKey)).size).toBe(COOKIES.length);
     expect(COOKIES[10].name).toBe('별사탕 쿠키');
-    expect(COOKIES[COOKIES.length - 1].name).toBe('무한 우주 쿠키');
+    expect(COOKIES[29].name).toBe('무한 우주 쿠키');
+    expect(COOKIES[30].name).toBe('혜성 꼬리 쿠키');
+    expect(COOKIES[COOKIES.length - 1].name).toBe('쿠키왕국 심장 쿠키');
     expect(COOKIE_CRITICAL.probabilityScale).toBe(10_000);
     expect(COOKIE_CRITICAL.maximumChanceUnits).toBe(5_000);
     expect(COOKIE_CRITICAL.baseRewardMultiplier).toBe(10);
+    expect(COOKIE_FEEDBACK.audio.voicePlaybackRates).toHaveLength(3);
+    expect(COOKIE_FEEDBACK.audio.voiceVolumeMultipliers).toHaveLength(3);
+    expect(COOKIE_FEEDBACK.audio.minimumFullCriticalIntervalMs)
+      .toBeGreaterThanOrEqual(COOKIE_FEEDBACK.audio.criticalLayerDurationMs);
+    expect(COOKIE_FEEDBACK.criticalEffect.maximumConcurrentFullEffects).toBe(2);
+    expect(COOKIE_FEEDBACK.criticalEffect.durationMs)
+      .toBeLessThanOrEqual(COOKIE_FEEDBACK.floatingGain.durationMs);
     expect(BOSS_BALANCE.playerPowerBaseSurvivalSeconds).toBeGreaterThan(0);
     expect(BOSS_BALANCE.hpMultiplierReference).toBeGreaterThan(0);
     expect(BOSS_BALANCE.maximumPowerScaledSurvivalSeconds)
@@ -548,6 +560,14 @@ describe('데이터 테이블 런타임 검증', () => {
     duplicate.DISCS[1].id = duplicate.DISCS[0].id;
     expect(() => validateGameConfig(duplicate)).toThrow("중복 값 'choco-chip-disc'");
 
+    const duplicateCookieImage = cloneConfig();
+    duplicateCookieImage.COOKIES[1].imageKey = duplicateCookieImage.COOKIES[0].imageKey;
+    expect(() => validateGameConfig(duplicateCookieImage)).toThrow('COOKIES.imageKey[1]');
+
+    const duplicateCookieName = cloneConfig();
+    duplicateCookieName.COOKIES[1].name = duplicateCookieName.COOKIES[0].name;
+    expect(() => validateGameConfig(duplicateCookieName)).toThrow('COOKIES.name[1]');
+
     const invalidReference = cloneConfig();
     invalidReference.DIFFICULTIES[0].enemyWaveId = 'missing-wave';
     expect(() => validateGameConfig(invalidReference)).toThrow(
@@ -642,6 +662,50 @@ describe('데이터 테이블 런타임 검증', () => {
     expect(() => validateGameConfig(invalid)).toThrow(
       'AUDIO_SETTINGS.levels[2].volume',
     );
+  });
+
+  test('쿠키 클릭 보이스의 재생 속도와 음량 설정 개수가 다르면 거부한다', () => {
+    const invalid = cloneConfig();
+    invalid.COOKIE_FEEDBACK.audio.voiceVolumeMultipliers.pop();
+    expect(() => validateGameConfig(invalid)).toThrow(
+      'COOKIE_FEEDBACK.audio.voiceVolumeMultipliers',
+    );
+  });
+
+  test('강한 크리티컬 간격이 오디오 레이어 길이보다 짧으면 거부한다', () => {
+    const invalid = cloneConfig();
+    invalid.COOKIE_FEEDBACK.audio.minimumFullCriticalIntervalMs =
+      invalid.COOKIE_FEEDBACK.audio.criticalLayerDurationMs - 1;
+    expect(() => validateGameConfig(invalid)).toThrow(
+      'COOKIE_FEEDBACK.audio.minimumFullCriticalIntervalMs',
+    );
+  });
+
+  test('크리티컬 연출이 획득 텍스트보다 오래 남도록 설정하면 거부한다', () => {
+    const invalid = cloneConfig();
+    invalid.COOKIE_FEEDBACK.criticalEffect.durationMs =
+      invalid.COOKIE_FEEDBACK.floatingGain.durationMs + 1;
+    expect(() => validateGameConfig(invalid)).toThrow(
+      'COOKIE_FEEDBACK.criticalEffect.durationMs',
+    );
+  });
+
+  test.each([
+    ['COOKIE_FEEDBACK.criticalEffect.ringFadeStartProgress', (config: any) => {
+      config.COOKIE_FEEDBACK.criticalEffect.ringFadeStartProgress =
+        config.COOKIE_FEEDBACK.criticalEffect.secondRingStartProgress;
+    }],
+    ['COOKIE_FEEDBACK.criticalEffect.sparkleFadeStartProgress', (config: any) => {
+      config.COOKIE_FEEDBACK.criticalEffect.sparkleStaggerProgress = 0.2;
+    }],
+    ['COOKIE_FEEDBACK.criticalEffect.compactDurationMs', (config: any) => {
+      config.COOKIE_FEEDBACK.criticalEffect.compactDurationMs =
+        config.COOKIE_FEEDBACK.floatingGain.durationMs + 1;
+    }],
+  ])('%s의 보간 범위가 잘못되면 거부한다', (path, breakRange) => {
+    const invalid = cloneConfig();
+    breakRange(invalid);
+    expect(() => validateGameConfig(invalid)).toThrow(path);
   });
 
   test('보너스·추가 수량·최초 지연처럼 0이 의미 있는 설정은 계속 허용한다', () => {

@@ -1,4 +1,5 @@
 import {
+  assertUnique,
   booleanValue,
   ConfigValidationError,
   UnknownRecord,
@@ -84,35 +85,18 @@ export function validateCookieUpgradeRules(value: unknown): UnknownRecord {
 export function validateCookieCritical(value: unknown): UnknownRecord {
   const path = 'COOKIE_CRITICAL';
   const config = record(value, path);
-  validateStringFields(config, path, [
-    'upgradeId', 'flashColor', 'coreColor', 'coreHighlightColor', 'ringColor',
-    'particleColor', 'particleHighlightColor',
-  ]);
+  validateStringFields(config, path, ['upgradeId']);
   validateNumberFields(config, path, [
     'probabilityScale', 'maximumChanceUnits', 'baseRewardMultiplier',
     'rewardMultiplierIncreasePerLevel', 'displayMaximumFractionDigits',
-    'effectDurationMs', 'effectSizePixels',
-    'flashMaximumOpacity', 'coreStartScale', 'coreEndScale', 'ringStartScale',
-    'coreSizeRatio', 'coreBorderWidth', 'ringEndScale', 'ringBorderWidth', 'particleCount',
-    'particleStartDistancePixels', 'particleEndDistancePixels',
-    'particleWidthPixels', 'particleHeightPixels',
   ], { min: 0 });
   validatePositiveNumberFields(config, path, [
-    'probabilityScale', 'baseRewardMultiplier', 'effectDurationMs', 'effectSizePixels',
-    'coreStartScale', 'coreEndScale', 'coreSizeRatio', 'coreBorderWidth',
-    'ringStartScale', 'ringEndScale',
-    'ringBorderWidth', 'particleCount', 'particleEndDistancePixels',
-    'particleWidthPixels', 'particleHeightPixels',
+    'probabilityScale', 'baseRewardMultiplier',
   ]);
   [
     'probabilityScale', 'maximumChanceUnits', 'baseRewardMultiplier',
     'rewardMultiplierIncreasePerLevel', 'displayMaximumFractionDigits',
-    'effectDurationMs', 'effectSizePixels',
-    'particleCount', 'particleStartDistancePixels', 'particleEndDistancePixels',
-    'particleWidthPixels', 'particleHeightPixels',
   ].forEach((field) => numberField(config, field, path, { integer: true, min: 0 }));
-  numberField(config, 'flashMaximumOpacity', path, { min: 0, max: 1 });
-  numberField(config, 'coreSizeRatio', path, { min: 0, max: 1 });
   numberField(config, 'displayMaximumFractionDigits', path, {
     integer: true,
     min: 0,
@@ -122,24 +106,6 @@ export function validateCookieCritical(value: unknown): UnknownRecord {
     throw new ConfigValidationError(
       `${path}.maximumChanceUnits`,
       'probabilityScale 이하여야 합니다.',
-    );
-  }
-  if (
-    (config.coreEndScale as number) <= (config.coreStartScale as number)
-    || (config.ringEndScale as number) <= (config.ringStartScale as number)
-  ) {
-    throw new ConfigValidationError(
-      `${path}.coreEndScale`,
-      '끝 크기는 시작 크기보다 커야 합니다.',
-    );
-  }
-  if (
-    (config.particleEndDistancePixels as number)
-    <= (config.particleStartDistancePixels as number)
-  ) {
-    throw new ConfigValidationError(
-      `${path}.particleEndDistancePixels`,
-      '시작 거리보다 커야 합니다.',
     );
   }
   return config;
@@ -189,6 +155,14 @@ export function validateCookies(value: unknown): UnknownRecord[] {
     }
     previousCommonMultiplier = clickMultiplier;
   });
+  assertUnique(
+    cookies.map((cookie) => cookie.imageKey as string),
+    `${path}.imageKey`,
+  );
+  assertUnique(
+    cookies.map((cookie) => cookie.name as string),
+    `${path}.name`,
+  );
   return cookies;
 }
 

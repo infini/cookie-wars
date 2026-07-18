@@ -51,6 +51,7 @@ function GameShell() {
 
   const changeTab = (tab: TabId, withFeedback = true) => {
     rememberedLeaves.current = rememberMenuLeaf(rememberedLeaves.current, tab);
+    feedback.stopCookieSounds();
     setActiveTab(tab);
     if (withFeedback) {
       feedback.play('menu');

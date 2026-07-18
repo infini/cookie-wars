@@ -11,6 +11,7 @@ import React, {
 } from 'react';
 import { AUDIO_SETTINGS, BATTLE_AUDIO } from '../config';
 import { useGame } from '../state/GameContext';
+import { CookieFeedbackTier } from '../types/game';
 import {
   BATTLE_ACTION_SOUND_NAMES,
   BattleActionSoundName,
@@ -19,10 +20,9 @@ import {
   getBattleSoundGroup,
   isBattleActionSound,
 } from './battleAudio';
+import { useCookieAudioFeedback } from './useCookieAudioFeedback';
 
 export type SoundName =
-  | 'cookie'
-  | 'critical'
   | 'menu'
   | 'upgrade'
   | 'blocked'
@@ -30,6 +30,8 @@ export type SoundName =
 
 interface FeedbackContextValue {
   play: (name: SoundName) => void;
+  playCookieClick: (critical: boolean) => CookieFeedbackTier;
+  stopCookieSounds: () => void;
   startBattleMusic: () => void;
   stopBattleSounds: () => void;
   tap: () => void;
@@ -41,8 +43,6 @@ const FeedbackContext = createContext<FeedbackContextValue | null>(null);
 
 export function FeedbackProvider({ children }: PropsWithChildren) {
   const { state } = useGame();
-  const cookie = useAudioPlayer(require('../../assets/audio/cookie-click.ogg'));
-  const critical = useAudioPlayer(require('../../assets/audio/cookie-critical-explosion.wav'));
   const menu = useAudioPlayer(require('../../assets/audio/menu-select.ogg'));
   const upgrade = useAudioPlayer(require('../../assets/audio/upgrade.ogg'));
   const blocked = useAudioPlayer(require('../../assets/audio/blocked.ogg'));
@@ -59,8 +59,6 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
 
   const players = useMemo(
     () => ({
-      cookie,
-      critical,
       menu,
       upgrade,
       blocked,
@@ -76,8 +74,6 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
       battleMusic,
     }),
     [
-      cookie,
-      critical,
       menu,
       upgrade,
       blocked,
@@ -93,6 +89,11 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
       battleMusic,
     ],
   );
+  const allPlayers = useMemo(() => Object.values(players), [players]);
+  const { playCookieClick, stopCookieSounds } = useCookieAudioFeedback({
+    soundEnabled: state.soundEnabled,
+    soundVolumeLevel: state.soundVolumeLevel,
+  });
   const playbackEpoch = useRef(0);
   const lastBattleSoundAt = useRef<Partial<Record<BattleSoundGroup, number>>>({});
 
@@ -123,16 +124,16 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
       player.volume = volume * soundMultiplier;
     });
     battleMusic.loop = true;
-  }, [players, state.soundVolumeLevel]);
+  }, [battleMusic, players, state.soundVolumeLevel]);
 
   useEffect(() => {
     if (state.soundEnabled) return;
     playbackEpoch.current += 1;
-    Object.values(players).forEach((player) => {
+    allPlayers.forEach((player) => {
       player.pause();
       void player.seekTo(0).catch(() => undefined);
     });
-  }, [players, state.soundEnabled]);
+  }, [allPlayers, state.soundEnabled]);
 
   const play = useCallback(
     (name: SoundName) => {
@@ -177,8 +178,17 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
   }, [state.vibrationEnabled]);
 
   const value = useMemo(
-    () => ({ play, startBattleMusic, stopBattleSounds, tap, success, error }),
-    [play, startBattleMusic, stopBattleSounds, tap, success, error],
+    () => ({
+      play,
+      playCookieClick,
+      stopCookieSounds,
+      startBattleMusic,
+      stopBattleSounds,
+      tap,
+      success,
+      error,
+    }),
+    [play, playCookieClick, startBattleMusic, stopBattleSounds, stopCookieSounds, tap, success, error],
   );
   return <FeedbackContext.Provider value={value}>{children}</FeedbackContext.Provider>;
 }

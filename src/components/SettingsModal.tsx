@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import React from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AUDIO_SETTINGS } from '../config';
 import { useFeedback } from '../services/FeedbackContext';
@@ -25,13 +25,38 @@ function Toggle({ enabled }: { enabled: boolean }) {
 export function SettingsModal({ visible, onClose }: SettingsModalProps) {
   const { state, toggleSound, setSoundVolume, toggleVibration } = useGame();
   const feedback = useFeedback();
+  const previewTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelPreview = useCallback(() => {
+    if (previewTimeout.current) clearTimeout(previewTimeout.current);
+    previewTimeout.current = null;
+  }, []);
+  useEffect(() => {
+    if (!visible || !state.soundEnabled) cancelPreview();
+    return cancelPreview;
+  }, [cancelPreview, state.soundEnabled, visible]);
   const changeVolume = (level: SoundVolumeLevel) => {
     setSoundVolume(level);
-    setTimeout(() => feedback.play('cookie'), AUDIO_SETTINGS.previewDelayMs);
+    cancelPreview();
+    if (!state.soundEnabled) return;
+    previewTimeout.current = setTimeout(
+      () => {
+        previewTimeout.current = null;
+        feedback.playCookieClick(false);
+      },
+      AUDIO_SETTINGS.previewDelayMs,
+    );
+  };
+  const handleToggleSound = () => {
+    if (state.soundEnabled) cancelPreview();
+    toggleSound();
+  };
+  const handleClose = () => {
+    cancelPreview();
+    onClose();
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={styles.overlay}>
         <Panel style={styles.modal}>
           <View style={styles.header}>
@@ -39,11 +64,11 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
               <Text style={styles.title}>설정</Text>
               <Text style={styles.subtitle}>내가 편한 대로 바꿔요</Text>
             </View>
-            <Pressable accessibilityLabel="설정 닫기" onPress={onClose} style={styles.close}>
+            <Pressable accessibilityLabel="설정 닫기" onPress={handleClose} style={styles.close}>
               <MaterialCommunityIcons name="close" size={28} color={colors.ink} />
             </Pressable>
           </View>
-          <Pressable onPress={toggleSound} style={styles.settingRow}>
+          <Pressable onPress={handleToggleSound} style={styles.settingRow}>
             <MaterialCommunityIcons
               name={state.soundEnabled ? 'volume-high' : 'volume-off'}
               size={28}
@@ -104,8 +129,11 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
           <ScrollView style={styles.creditBox} contentContainerStyle={styles.creditContent}>
             <Text style={styles.creditTitle}>무료 에셋 출처</Text>
             <Text style={styles.creditText}>
-              캐릭터·UI·사운드: Kenney (CC0){'\n'}
-              쿠키·원반 이미지: Google Noto Emoji (Apache 2.0){'\n'}
+              캐릭터·UI: Kenney (CC0){'\n'}
+              쿠키 효과음: Freesound (CC0), Mixkit (Free License){'\n'}
+              전투·메뉴 사운드: Kenney·MintoDog (CC0){'\n'}
+              앱 아이콘·초기 쿠키: Google Noto Emoji (Apache 2.0){'\n'}
+              신규 쿠키·전장·유닛·원반: 프로젝트 생성 원본{'\n'}
               글꼴: Jua (SIL OFL), Android 시스템 글꼴
             </Text>
           </ScrollView>

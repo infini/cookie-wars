@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFeedback } from '../services/FeedbackContext';
 import { useGame } from '../state/GameContext';
@@ -10,12 +10,13 @@ import { CookieImage } from '../components/CookieImage';
 import { CookieCriticalEffect } from '../components/CookieCriticalEffect';
 import { GameButton } from '../components/GameButton';
 import { StatChip } from '../components/StatChip';
-import { getCookie } from '../config';
+import { COOKIE_FEEDBACK, getCookie } from '../config';
 import {
   getBattleMedalBonuses,
   getCookieEvolutionProgress,
 } from '../domain/gameSelectors';
 import { formatCriticalChancePercent } from '../domain/cookieCritical';
+import { CookieFeedbackTier } from '../types/game';
 
 interface FloatingGainProps {
   id: number;
@@ -27,7 +28,15 @@ interface FloatingGainProps {
 function FloatingGain({ id, amount, critical, onDone }: FloatingGainProps) {
   const progress = useRef(new Animated.Value(0)).current;
   React.useEffect(() => {
-    Animated.timing(progress, { toValue: 1, duration: 700, useNativeDriver: true }).start(() => onDone(id));
+    const animation = Animated.timing(progress, {
+      toValue: 1,
+      duration: COOKIE_FEEDBACK.floatingGain.durationMs,
+      useNativeDriver: true,
+    });
+    animation.start(({ finished }) => {
+      if (finished) onDone(id);
+    });
+    return () => animation.stop();
   }, [id, onDone, progress]);
   return (
     <Animated.Text
@@ -35,10 +44,23 @@ function FloatingGain({ id, amount, critical, onDone }: FloatingGainProps) {
         styles.floatingText,
         critical && styles.criticalFloatingText,
         {
-          opacity: progress.interpolate({ inputRange: [0, 0.72, 1], outputRange: [1, 1, 0] }),
+          opacity: progress.interpolate({
+            inputRange: [0, COOKIE_FEEDBACK.floatingGain.holdUntilProgress, 1],
+            outputRange: [1, 1, 0],
+          }),
           transform: [
-            { translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [0, -92] }) },
-            { scale: progress.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0.75, 1.18, 1] }) },
+            { translateY: progress.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, -COOKIE_FEEDBACK.floatingGain.risePixels],
+            }) },
+            { scale: progress.interpolate({
+              inputRange: [0, COOKIE_FEEDBACK.floatingGain.peakAtProgress, 1],
+              outputRange: [
+                COOKIE_FEEDBACK.floatingGain.startScale,
+                COOKIE_FEEDBACK.floatingGain.peakScale,
+                COOKIE_FEEDBACK.floatingGain.endScale,
+              ],
+            }) },
           ],
         },
       ]}
@@ -57,7 +79,11 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
     id: number;
     amount: number;
     critical: boolean;
+    feedbackTier: CookieFeedbackTier;
   }[]>([]);
+  const removeGain = useCallback((id: number) => {
+    setGains((current) => current.filter((item) => item.id !== id));
+  }, []);
   const activeCookie = getCookie(stats.activeCookieId);
   const evolution = getCookieEvolutionProgress(state);
   const medalBonuses = getBattleMedalBonuses(state);
@@ -68,17 +94,34 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
 
   const handleCookiePress = () => {
     const result = clickCookie();
-    feedback.play(result.critical ? 'critical' : 'cookie');
-    if (result.critical) feedback.success();
+    const feedbackTier = feedback.playCookieClick(result.critical);
+    if (feedbackTier === 'criticalFull') feedback.success();
     else feedback.tap();
     const id = nextGainId.current++;
-    setGains((current) => [...current.slice(-4), { id, ...result }]);
+    setGains((current) => {
+      const previousLimit = COOKIE_FEEDBACK.floatingGain.maximumConcurrent - 1;
+      const previous = previousLimit > 0 ? current.slice(-previousLimit) : [];
+      return [...previous, { id, ...result, feedbackTier }];
+    });
     scale.stopAnimation();
     Animated.sequence([
       Animated.spring(scale, { toValue: 0.89, speed: 40, bounciness: 2, useNativeDriver: true }),
       Animated.spring(scale, { toValue: 1, speed: 25, bounciness: 12, useNativeDriver: true }),
     ]).start();
   };
+
+  const fullEffectIds = new Set(
+    gains
+      .filter((gain) => gain.feedbackTier === 'criticalFull')
+      .slice(-COOKIE_FEEDBACK.criticalEffect.maximumConcurrentFullEffects)
+      .map((gain) => gain.id),
+  );
+  const compactEffectIds = new Set(
+    gains
+      .filter((gain) => gain.feedbackTier === 'criticalCompact')
+      .slice(-COOKIE_FEEDBACK.criticalEffect.maximumConcurrentCompactEffects)
+      .map((gain) => gain.id),
+  );
 
   return (
     <View style={styles.root}>
@@ -140,10 +183,15 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
           <View style={styles.ringInner} />
           {gains.map((gain) => (
             <React.Fragment key={gain.id}>
-              {gain.critical ? <CookieCriticalEffect /> : null}
+              {fullEffectIds.has(gain.id) ? (
+                <CookieCriticalEffect mode="criticalFull" />
+              ) : null}
+              {compactEffectIds.has(gain.id) ? (
+                <CookieCriticalEffect mode="criticalCompact" />
+              ) : null}
               <FloatingGain
                 {...gain}
-                onDone={(id) => setGains((current) => current.filter((item) => item.id !== id))}
+                onDone={removeGain}
               />
             </React.Fragment>
           ))}

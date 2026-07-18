@@ -8,7 +8,8 @@
 |---|---|
 | `cookie-upgrades.json` | 쿠키 업그레이드의 초기 레벨, 능력치, 가격 |
 | `cookie-upgrade-rules.json` | 클릭 힘·쿠키 크리티컬·자동 생산·쿠키 성 체력의 무한 강화 증가량 |
-| `cookie-critical.json` | 크리티컬 확률 단위·상한·획득 배수와 붉은 폭발 연출 |
+| `cookie-critical.json` | 크리티컬 확률 단위·상한과 획득 배수 |
+| `cookie-feedback.json` | 쿠키 클릭 사운드 변주·중첩 제한, 획득 텍스트와 크리티컬 시각 연출 |
 | `discs.json` | 5종 원반의 영구 구매 가격과 초기 레벨 능력·강화 가격 |
 | `disc-upgrade-rules.json` | 명시 레벨 이후 무한 강화 증가량과 쿨타임 하한 |
 | `bots.json` | 봇 종류, 최초 가격, 가격 증가율, 피해, 공격 간격 |
@@ -31,7 +32,7 @@
 | `battle-feedback.json` | 보스 공격 예고·돌진, 다중 피격 폭발·전장 충격파·피해 숫자 연출 |
 | `battle-audio.json` | 전투 효과음 그룹별 최소 간격과 음악·효과음 상대 음량 |
 | `audio-settings.json` | 효과음 5단계별 실제 볼륨과 기본 단계 |
-| `cookies.json` | 30종 쿠키의 자동 진화 조건, 이미지, 최종 능력 배율 |
+| `cookies.json` | 50종 쿠키의 자동 진화 조건, 이미지, 최종 능력 배율 |
 | `save-migrations.json` | 현재 저장 스키마 버전과 이전 데이터 ID 호환 규칙 |
 | `../navigation/navigation.json` | 4대 메뉴, 소메뉴 소속·순서·아이콘·제목·기본 화면·배지 |
 
@@ -78,9 +79,27 @@
 - `baseRewardMultiplier`: Lv.1 크리티컬 획득 배수. 현재 10배
 - `rewardMultiplierIncreasePerLevel`: Lv.1 이후 한 단계마다 더할 획득 배수. 현재 +1배
 - `displayMaximumFractionDigits`: 한국어 UI에서 확률을 표시할 최대 소수 자릿수
-- `effectDurationMs`, `effectSizePixels`, `flash*`, `core*`, `ring*`, `particle*`: 붉은 화면 플래시·폭발 중심·확장 링·방사 파편의 시간·크기·색상
 
 `cookie-upgrades.json`의 `levels[].value`와 무한 강화 규칙의 `valueIncreasePerLevel`은 확률 단위로 해석합니다. Lv.1 값 100은 1%, 이후 한 단계당 25는 0.25%p입니다. 계산된 확률 값은 50%에서 제한하지만 강화 단계와 배수는 제한하지 않습니다. 따라서 Lv.1은 1%·10배, Lv.2는 1.25%·11배이며 확률 상한에 도달한 뒤에도 레벨마다 배수가 계속 증가합니다. 클릭마다 0~1 난수 한 번을 정수 단위로 변환해 판정하고, 발동하면 최종 클릭 힘에 해당 배수를 곱합니다. 극단 단계의 결과는 공통 안전 정수 포화 정책을 따릅니다.
+
+### `cookie-feedback.json`
+
+게임 보상 수치는 포함하지 않고 쿠키 클릭의 소리와 화면 연출만 제어합니다.
+
+- `audio.minimumClickIntervalMs`: 빠른 연속 입력에서 기본 깨짐음이 겹치는 최소 간격. 현재 40ms
+- `audio.minimumFullCriticalIntervalMs`: 큰 충격음·반짝임과 전체 크리티컬 이펙트를 다시 허용하는 최소 간격. 현재 1,650ms
+- `audio.criticalLayerDurationMs`: 충격음과 지연 반짝임의 꼬리가 끝나는 최대 길이. 현재 1,620ms이며 전체 크리티컬 최소 간격은 이 값보다 짧을 수 없습니다.
+- `audio.criticalSparkleDelayMs`: 충격음 뒤 반짝임 레이어 지연. 현재 70ms
+- `audio.voicePlaybackRates`, `voiceVolumeMultipliers`: Freesound `Crunch` 원본을 번갈아 재생하는 세 보이스의 속도와 상대 음량
+- `audio.criticalImpactVolumeMultiplier`, `criticalSparkleVolumeMultiplier`: Mixkit 충격·반짝임 레이어의 상대 음량
+- `floatingGain.*`: `+획득량` 텍스트의 동시 표시 상한, 수명, 상승 거리와 크기 키프레임
+- `criticalEffect.durationMs`, `compactDurationMs`, `sizePixels`: 전체·축약 효과의 수명과 기준 크기
+- `criticalEffect.maximumConcurrentFullEffects`, `maximumConcurrentCompactEffects`: 두 효과가 화면에 남을 수 있는 개수 상한
+- `criticalEffect.flash*`, `core*`, `firstRing*`, `secondRing*`: 중앙 섬광, 그라데이션 코어와 이중 링의 크기·시간·색상
+- `criticalEffect.fragment*`: 회전하며 퍼지는 초코칩 쿠키 파편 8개의 개수·거리·크기·색상
+- `criticalEffect.sparkle*`: 전체 5개·축약 3개 십자 별빛의 지연, 거리, 회전과 색상
+
+크리티컬 판정은 `cookie-critical.json`만 사용하고, 판정 결과가 `cookie-feedback.json`의 `normal`, `criticalFull`, `criticalCompact` 표시 정책을 선택합니다. 1,650ms 안에 다시 발생한 크리티컬은 보상 배수를 그대로 지급하면서 긴 충격·반짝임 레이어와 파편을 생략한 축약 효과로 표시합니다. 보이스 속도·음량 배열 길이 불일치, 오디오 꼬리보다 짧은 전체 크리티컬 간격, 0 이하 재생 속도, 0~1 밖 음량·진행률, 잘못된 키프레임 순서와 획득 텍스트보다 긴 효과는 설정 검증에서 거부합니다.
 
 ### `discs.json`과 무한 강화
 
@@ -165,7 +184,7 @@
 
 ## 쿠키 진화
 
-`cookies.json` 배열 순서가 진화 순서입니다. 현재 30종은 클래식 초코칩 → 행운 → 도넛 → 와플 → 컵케이크 → 딸기 케이크 → 달빛 → 파티 → 별빛 쌀쿠키 → 로열 초콜릿 → 별사탕 → 무지개 롤리팝 → 황금 푸딩 → 별빛 쇼트케이크 → 삼색 경단 → 은하수 빙수 → 황금 꿀단지 → 마법 파이 → 다이아몬드 → 천상 왕관 → 오로라 보석 → 심해 진주 → 태양 불꽃 → 달빛 여왕 → 시간 태엽 → 차원 균열 → 용왕 비늘 → 은하 성운 → 창세 수정 → 무한 우주입니다.
+`cookies.json` 배열 순서가 진화 순서입니다. 1~30단계는 클래식 초코칩부터 무한 우주까지이고, 31~50단계는 혜성 꼬리 → 북극성 나침반 → 세계수 잎 → 불사조 깃털 → 천둥 북 → 꿈구름 마카롱 → 영혼 등불 → 태고 룬 → 하늘섬 → 별빛 대장간 → 영원의 모래시계 → 우주 연꽃 → 운명 거울 → 천상의 하프 → 무지개 프리즘 → 황혼 봉인 → 기적의 성배 → 태초의 알 → 세계의 문 → 쿠키왕국 심장 순서입니다.
 
 - `imageKey`: `CookieImage`가 정적으로 포함한 쿠키 이미지 키
 - `requiredTotalUpgradeLevels`: 진화 기여 강화의 현재 레벨 합계와 `legacyCookieEvolutionBonusLevels`를 더한 값의 진화 조건
@@ -173,9 +192,9 @@
 - `autoProductionMultiplier`: 자동 생산량 배율
 - `healthMultiplier`: 전투의 쿠키 성 최대 HP 배율
 
-현재 30종의 요구 조건은 3, 9, 15, …, 177로 6레벨 간격입니다. 진화 기여 강화는 클릭 힘·쿠키 크리티컬·자동 생산·쿠키 성 체력 4종이며 새 게임의 기본 합계는 4입니다. 조건을 만족한 가장 높은 쿠키가 자동 활성화됩니다. 별도 구매나 수동 장착은 없고 능력 배율은 누적하지 않으며 현재 쿠키 행 하나만 적용합니다. 새 쿠키를 추가할 때 요구 총레벨과 배율은 앞 단계보다 크게 설정하고 `CookieImage`의 이미지 키 매핑도 함께 추가합니다.
+현재 50종의 요구 조건은 3, 9, 15, …, 297로 6레벨 간격입니다. 진화 기여 강화는 클릭 힘·쿠키 크리티컬·자동 생산·쿠키 성 체력 4종이며 새 게임의 기본 합계는 4입니다. 조건을 만족한 가장 높은 쿠키가 자동 활성화됩니다. 별도 구매나 수동 장착은 없고 능력 배율은 누적하지 않으며 현재 쿠키 행 하나만 적용합니다. 새 쿠키를 추가할 때 요구 총레벨과 배율은 앞 단계보다 크게 설정하고 `CookieImage`의 이미지 키 매핑도 함께 추가합니다.
 
-신규 10종은 클릭·자동 생산·쿠키 성 체력에 같은 행의 공통 배율을 적용합니다.
+21~50단계 확장 쿠키는 클릭·자동 생산·쿠키 성 체력에 같은 행의 공통 배율을 적용합니다. 31단계 이후에도 직전 단계 대비 약 10%씩 증가해 성장 체감은 유지하되 갑작스러운 배율 급등은 피합니다.
 
 | 순서 | 쿠키 | `imageKey` | 필요 진화 레벨 | 공통 배율 |
 |---:|---|---|---:|---:|
@@ -189,6 +208,26 @@
 | 28 | 은하 성운 쿠키 | `nebula` | 165 | ×7.59 |
 | 29 | 창세 수정 쿠키 | `genesis-crystal` | 171 | ×8.36 |
 | 30 | 무한 우주 쿠키 | `infinite-cosmos` | 177 | ×9.22 |
+| 31 | 혜성 꼬리 쿠키 | `comet-tail` | 183 | ×10.14 |
+| 32 | 북극성 나침반 쿠키 | `polar-compass` | 189 | ×11.15 |
+| 33 | 세계수 잎 쿠키 | `world-tree-leaf` | 195 | ×12.27 |
+| 34 | 불사조 깃털 쿠키 | `phoenix-feather` | 201 | ×13.50 |
+| 35 | 천둥 북 쿠키 | `thunder-drum` | 207 | ×14.85 |
+| 36 | 꿈구름 마카롱 쿠키 | `dream-cloud` | 213 | ×16.34 |
+| 37 | 영혼 등불 쿠키 | `spirit-lantern` | 219 | ×17.97 |
+| 38 | 태고 룬 쿠키 | `ancient-rune` | 225 | ×19.77 |
+| 39 | 하늘섬 쿠키 | `sky-island` | 231 | ×21.75 |
+| 40 | 별빛 대장간 쿠키 | `stellar-forge` | 237 | ×23.93 |
+| 41 | 영원의 모래시계 쿠키 | `eternity-hourglass` | 243 | ×26.32 |
+| 42 | 우주 연꽃 쿠키 | `cosmic-lotus` | 249 | ×28.95 |
+| 43 | 운명 거울 쿠키 | `destiny-mirror` | 255 | ×31.85 |
+| 44 | 천상의 하프 쿠키 | `celestial-harp` | 261 | ×35.04 |
+| 45 | 무지개 프리즘 쿠키 | `rainbow-prism` | 267 | ×38.54 |
+| 46 | 황혼 봉인 쿠키 | `twilight-seal` | 273 | ×42.39 |
+| 47 | 기적의 성배 쿠키 | `miracle-chalice` | 279 | ×46.63 |
+| 48 | 태초의 알 쿠키 | `primordial-egg` | 285 | ×51.29 |
+| 49 | 세계의 문 쿠키 | `world-gate` | 291 | ×56.42 |
+| 50 | 쿠키왕국 심장 쿠키 | `kingdom-heart` | 297 | ×62.06 |
 
 ## 전투 규칙
 
@@ -325,7 +364,7 @@
 - `soundVolumeMultipliers`: 일반 클릭·크리티컬·메뉴·강화·사용 불가 효과음의 상대 음량. 크리티컬은 `critical`
 - `levels[].level`, `volume`: UI 단계와 오디오 엔진 볼륨(0~1)의 대응
 
-`levels`는 정확히 1, 2, 3, 4, 5 순서여야 하고 `volume`은 단계가 오를 때마다 반드시 커야 합니다. 누락·역순·같거나 낮아지는 음량은 설정 검증에서 거부합니다. 크리티컬 플레이어는 `assets/audio/cookie-critical-explosion.wav`의 Mixkit `Short explosion`을 사용하고 일반 클릭음과 독립적으로 처음부터 재생합니다.
+`levels`는 정확히 1, 2, 3, 4, 5 순서여야 하고 `volume`은 단계가 오를 때마다 반드시 커야 합니다. 누락·역순·같거나 낮아지는 음량은 설정 검증에서 거부합니다. 이 단계 음량에 `audio-settings.json`의 용도별 배율과 `cookie-feedback.json`의 보이스·레이어 배율을 차례로 곱합니다. 설정 화면 미리듣기도 실제 일반 쿠키 클릭 경로를 사용합니다.
 
 `battle-audio.json`:
 

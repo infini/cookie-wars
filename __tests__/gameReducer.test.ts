@@ -18,6 +18,7 @@ import {
   getBattleMedalBonuses,
   getCookieEvolutionProgress,
   getBattleStageId,
+  getDifficultyProgress,
   getDiscProgress,
   getMaximumCookieRenderSize,
   getSortedUpgradeProgress,
@@ -209,6 +210,11 @@ describe('게임 저장 상태', () => {
       unlockedNextDifficulty: true,
     });
     expect(completed.state.highestUnlockedDifficultyIndex).toBe(1);
+    expect(completed.state.selectedDifficultyId).toBe(DIFFICULTIES[1].id);
+    expect(getDifficultyProgress(completed.state, DIFFICULTIES[1].id)).toMatchObject({
+      wins: 0,
+      currentBattleNumber: 1,
+    });
     expect(completed.state.giantDiscCount).toBe(
       previousWins + PROGRESSION.giantDiscRewardPerFirstClear,
     );
@@ -224,6 +230,30 @@ describe('게임 저장 상태', () => {
     expect(replayed.state.rewardClaimedStageIds).toEqual(
       completed.state.rewardClaimedStageIds,
     );
+    expect(replayed.state.selectedDifficultyId).toBe(DIFFICULTIES[1].id);
+  });
+
+  test('마지막 난이도의 마지막 스테이지는 다음 난이도 없이 현재 선택을 유지한다', () => {
+    const finalDifficulty = DIFFICULTIES[DIFFICULTIES.length - 1];
+    const previousWins = PROGRESSION.winsToUnlockNextDifficulty - 1;
+    const beforeFinalStage = {
+      ...initialGameState,
+      selectedDifficultyId: finalDifficulty.id,
+      highestUnlockedDifficultyIndex: DIFFICULTIES.length - 1,
+      difficultyWinCounts: Object.fromEntries(DIFFICULTIES.map((difficulty) => [
+        difficulty.id,
+        difficulty.id === finalDifficulty.id
+          ? previousWins
+          : PROGRESSION.winsToUnlockNextDifficulty,
+      ])),
+    };
+
+    const completed = completeBattleTransition(beforeFinalStage, finalDifficulty.id);
+
+    expect(completed.result.difficultyWins).toBe(PROGRESSION.winsToUnlockNextDifficulty);
+    expect(completed.result.unlockedNextDifficulty).toBe(false);
+    expect(completed.state.selectedDifficultyId).toBe(finalDifficulty.id);
+    expect(completed.state.highestUnlockedDifficultyIndex).toBe(DIFFICULTIES.length - 1);
   });
 
   test('완료 진행의 보상 키가 빠져 있어도 마지막 스테이지 재승리에 훈장을 중복 지급하지 않는다', () => {

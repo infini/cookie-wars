@@ -1,5 +1,4 @@
 import { Modal, Text, View } from 'react-native';
-import { DIFFICULTIES } from '../../config';
 import { calculateBattleMedalBonusPercents } from '../../domain/gameSelectors';
 import type { BattleStatus } from '../../engine/useBattleEngine';
 import type { BattleRewardResult } from '../../types/game';
@@ -9,7 +8,6 @@ import { styles } from './battleScreenStyles';
 
 interface BattleResultModalProps {
   status: BattleStatus;
-  difficultyId: string;
   rewardResult: BattleRewardResult | null;
   onLeave: () => void;
   onStart: () => void;
@@ -17,7 +15,6 @@ interface BattleResultModalProps {
 
 export function BattleResultModal({
   status,
-  difficultyId,
   rewardResult,
   onLeave,
   onStart,
@@ -89,7 +86,7 @@ export function BattleResultModal({
           {victory && rewardResult ? (
             <Text style={styles.progressText}>이 난이도 승리 {rewardResult.difficultyWins}/{rewardResult.winsRequired}</Text>
           ) : null}
-          {victory && difficultyId !== DIFFICULTIES[DIFFICULTIES.length - 1].id && rewardResult?.unlockedNextDifficulty ? (
+          {victory && rewardResult?.unlockedNextDifficulty ? (
             <Text style={styles.unlockText}>다음 난이도가 열렸어요!</Text>
           ) : null}
           <View style={styles.resultButtonRow}>

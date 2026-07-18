@@ -15,6 +15,7 @@ import botAnimationData from './bot-animation.json';
 import cookieUpgradeData from './cookie-upgrades.json';
 import cookieUpgradeRuleData from './cookie-upgrade-rules.json';
 import cookieCriticalData from './cookie-critical.json';
+import cookieFeedbackData from './cookie-feedback.json';
 import cookieData from './cookies.json';
 import difficultyData from './difficulties.json';
 import discData from './discs.json';
@@ -58,6 +59,7 @@ export const CONFIG_TABLES = validateGameConfig({
   COOKIE_UPGRADE_RULES: cookieUpgradeRuleData,
   COOKIE_UPGRADES: cookieUpgradeData,
   COOKIE_CRITICAL: cookieCriticalData,
+  COOKIE_FEEDBACK: cookieFeedbackData,
   COOKIES: cookieData,
   DIFFICULTIES: difficultyData,
   DISC_UPGRADE_RULES: discUpgradeRuleData,
@@ -88,6 +90,7 @@ export const {
   COOKIE_UPGRADE_RULES,
   COOKIE_UPGRADES,
   COOKIE_CRITICAL,
+  COOKIE_FEEDBACK,
   COOKIES,
   DIFFICULTIES,
   DISC_UPGRADE_RULES,

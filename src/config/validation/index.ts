@@ -24,6 +24,7 @@ import {
   validateDiscUpgradeRules,
   validateDiscs,
 } from './economy';
+import { validateCookieFeedback } from './feedback';
 import { ConfigValidationError } from './primitives';
 import { validateReferences } from './references';
 import { validateBattleRewards } from './rewards';
@@ -43,6 +44,7 @@ export type { GameConfigInput, ValidatedGameConfig };
 
 export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig {
   validateAudioSettings(input.AUDIO_SETTINGS);
+  validateCookieFeedback(input.COOKIE_FEEDBACK);
   validateBattleAudio(input.BATTLE_AUDIO);
   validateBattleFeedback(input.BATTLE_FEEDBACK);
   const maps = validateBattleMaps(input.BATTLE_MAPS);

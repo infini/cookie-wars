@@ -1,0 +1,21 @@
+Cookie Wars bundled Freesound source record
+
+Asset: Crunch
+Creator: qubodup
+Runtime use: normal cookie click and the base layer of cookie-critical feedback
+Local file: assets/audio/cookie-click-crunch.mp3
+Source page: https://freesound.org/people/qubodup/sounds/816237/
+Downloaded representation: official HQ preview MP3 exposed by the source page
+Downloaded preview: https://cdn.freesound.org/previews/816/816237_71257-hq.mp3
+Source description: first crispy toast bite
+Source metadata: 48 kHz, 16-bit, mono
+Local encoding: MP3, 48 kHz, mono
+SHA-256: b693efa2d24f2ce9dc9adc2403eb1cd440ff6b4ddd5203a7a03cc1b744aed5b9
+
+License: Creative Commons CC0 1.0 Universal
+License deed: https://creativecommons.org/publicdomain/zero/1.0/
+Retrieved and verified: 2026-07-18
+
+The CC0 source page permits copying, modifying, distributing, and commercial
+use without requiring permission. This project still records the creator and
+source so the bundled file remains auditable.

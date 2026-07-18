@@ -62,9 +62,13 @@ export function completeBattleTransition(
   const firstClear = advancedStage
     && !state.rewardClaimedStageIds.includes(stageId);
   const reachedUnlockRequirement = difficultyWins >= progress.requiredWins;
+  const nextDifficulty = DIFFICULTIES[difficultyIndex + 1];
   const unlockedNextDifficulty = difficultyIndex < DIFFICULTIES.length - 1
     && progress.wins < progress.requiredWins
     && reachedUnlockRequirement;
+  const shouldAdvanceSelectedDifficulty = state.selectedDifficultyId === difficulty.id
+    && reachedUnlockRequirement
+    && nextDifficulty !== undefined;
   const giantDiscReward = firstClear
     ? PROGRESSION.giantDiscRewardPerFirstClear
     : 0;
@@ -87,6 +91,9 @@ export function completeBattleTransition(
       },
       clearedDifficultyIds: appendUnique(state.clearedDifficultyIds, difficulty.id),
       rewardClaimedStageIds: appendUnique(state.rewardClaimedStageIds, stageId),
+      selectedDifficultyId: shouldAdvanceSelectedDifficulty
+        ? nextDifficulty.id
+        : state.selectedDifficultyId,
       highestUnlockedDifficultyIndex: reachedUnlockRequirement
         ? Math.max(
             state.highestUnlockedDifficultyIndex,

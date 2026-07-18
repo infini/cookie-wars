@@ -5,6 +5,13 @@ export type {
   SoundVolumeLevel,
 } from './audio';
 export type {
+  CookieAudioFeedbackConfig,
+  CookieCriticalEffectConfig,
+  CookieFeedbackConfig,
+  CookieFeedbackTier,
+  FloatingGainFeedbackConfig,
+} from './cookieFeedback';
+export type {
   BattleFeedbackConfig,
   BattleUiConfig,
   GiantDiscConfig,

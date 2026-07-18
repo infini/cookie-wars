@@ -17,6 +17,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--output-size", type=int, default=512)
+    parser.add_argument("--quality", type=int, default=90)
+    parser.add_argument(
+        "--transparent-input",
+        action="store_true",
+        help="이미 투명한 PNG를 크로마키 제거 없이 런타임 WebP로 변환합니다.",
+    )
     parser.add_argument(
         "--chroma-helper",
         type=Path,
@@ -86,11 +92,16 @@ def process_asset(
     output_dir: Path,
     output_size: int,
     helper: Path,
+    quality: int,
+    transparent_input: bool,
 ) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="cookie-wars-cookie-") as temporary:
-        transparent_path = Path(temporary) / "transparent.png"
-        remove_chroma(helper, source, transparent_path)
+        if transparent_input:
+            transparent_path = source
+        else:
+            transparent_path = Path(temporary) / "transparent.png"
+            remove_chroma(helper, source, transparent_path)
         with Image.open(transparent_path) as transparent_source:
             transparent = transparent_source.convert("RGBA")
         validate_asset(transparent, source)
@@ -99,8 +110,15 @@ def process_asset(
             Image.Resampling.LANCZOS,
         )
         resized = clear_fully_transparent_rgb(resized)
-        output_path = output_dir / source.name
-        resized.save(output_path, "PNG", optimize=True)
+        output_path = output_dir / f"{source.stem}.webp"
+        resized.save(
+            output_path,
+            "WEBP",
+            quality=quality,
+            method=6,
+            lossless=False,
+            exact=True,
+        )
     return output_path
 
 
@@ -108,7 +126,9 @@ def main() -> None:
     args = parse_args()
     if args.output_size <= 0:
         raise ValueError("--output-size는 1 이상이어야 합니다.")
-    if not args.chroma_helper.is_file():
+    if args.quality < 1 or args.quality > 100:
+        raise ValueError("--quality는 1 이상 100 이하여야 합니다.")
+    if not args.transparent_input and not args.chroma_helper.is_file():
         raise FileNotFoundError(args.chroma_helper)
     sources = (
         [args.input_dir / f"{item_id}.png" for item_id in args.ids]
@@ -121,10 +141,17 @@ def main() -> None:
     if missing:
         raise FileNotFoundError(", ".join(str(path) for path in missing))
     outputs = [
-        process_asset(source, args.output_dir, args.output_size, args.chroma_helper)
+        process_asset(
+            source,
+            args.output_dir,
+            args.output_size,
+            args.chroma_helper,
+            args.quality,
+            args.transparent_input,
+        )
         for source in sources
     ]
-    print(f"생성 완료: {len(outputs)}개 쿠키 -> {args.output_dir}")
+    print(f"생성 완료: {len(outputs)}개 쿠키 WebP -> {args.output_dir}")
 
 
 if __name__ == "__main__":

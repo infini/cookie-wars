@@ -46,10 +46,11 @@ services/storage          engine/useBattleEngine
 - `disc-upgrade-rules.json`: 초기 레벨 이후 무한 강화 성장식과 최소 쿨타임
 - `cookie-upgrades.json`: 클릭 힘·쿠키 크리티컬·자동 생산·쿠키 성 체력과 비활성 호환용 쿠키 크기 레벨 및 진화 기여 여부
 - `cookie-upgrade-rules.json`: 네 활성 강화의 명시 레벨 이후 무한 성장
-- `cookie-critical.json`: 크리티컬 확률 단위·50% 상한·기본 10배·레벨당 배수와 붉은 폭발 연출
+- `cookie-critical.json`: 크리티컬 확률 단위·50% 상한·기본 10배·레벨당 배수
+- `cookie-feedback.json`: 쿠키 클릭 보이스 변주·중첩 제한, 획득 텍스트와 전체·축약 크리티컬 연출
 - `monsters.json`, `bots.json`: 추가 가능한 전투 개체 정의와 난이도별 보스 15종
 - `enemy-waves.json`: 각 난이도와 고유 보스를 연결하는 전투 구성
-- `cookies.json`: 30종 쿠키의 진화 총레벨, 이미지 키, 능력 배율
+- `cookies.json`: 50종 쿠키의 진화 총레벨, 이미지 키, 능력 배율
 - `giant-disc.json`: 거대 원반의 30배 피해, 비행 속도, 화면 비율 크기와 이펙트
 - `battle-rewards.json`: 스테이지 진행 승리당 전투 훈장 수와 훈장당 클릭·자동 생산·성 체력 보너스율
 - `progression.json`: 난이도 해금 승수, 최초 클리어 거대 원반 수, 저장·자동 생산 주기
@@ -69,7 +70,7 @@ services/storage          engine/useBattleEngine
 
 게임 결과에 영향을 주는 가격, 능력치, 진행 조건, 시간, 거리와 확률은 JSON에 둡니다. React Native의 글자 크기·여백·모서리 반경처럼 화면 표현만을 위한 값은 각 컴포넌트의 `StyleSheet`에 둡니다. `src/config/index.ts`가 JSON을 TypeScript 계약으로 노출하고 빠른 ID 조회 함수를 제공합니다.
 
-생성 원본을 런타임 에셋으로 바꾸는 과정도 반복 가능한 스크립트로 분리했습니다. `scripts/process_animation_atlases.py`는 3×2 크로마키 atlas를 보스 또는 봇의 정해진 6개 프레임으로 자르고 soft matte·despill, 알파·모서리 검증, 384×384 lossless WebP 변환을 수행합니다. `scripts/process_cookie_assets.py`는 쿠키 크로마키 원본을 같은 방식으로 검증한 뒤 512×512 투명 PNG로 변환하며 쿠키가 캔버스 경계에 닿는 경우도 거부합니다. 두 스크립트 모두 피사체가 사라지거나 모서리 배경이 불투명하면 실패합니다.
+생성 원본을 런타임 에셋으로 바꾸는 과정도 반복 가능한 스크립트로 분리했습니다. `scripts/process_animation_atlases.py`는 3×2 크로마키 atlas를 보스 또는 봇의 정해진 6개 프레임으로 자르고 soft matte·despill, 알파·모서리 검증, 384×384 lossless WebP 변환을 수행합니다. `scripts/process_cookie_assets.py`는 크로마키 원본 또는 `--transparent-input`의 기존 투명 PNG를 검증한 뒤 512×512 투명 WebP quality 90으로 변환하며 쿠키가 캔버스 경계에 닿는 경우도 거부합니다. 두 스크립트 모두 피사체가 사라지거나 모서리 배경이 불투명하면 실패합니다.
 
 `domain/gameSelectors.ts`는 기존 import를 보존하는 얇은 공개 파사드입니다. 실제 순수 계산은 `domain/selectors`에서 업그레이드, 원반, 쿠키봇, 쿠키 진화, 전투 진행, 전투 훈장, 초기값 팩토리로 분리됩니다. 현재/다음 강화, 수량별 가격, 구매 가능 여부, 실효 난이도, 훈장 보너스와 최종 쿠키 능력치를 각 책임에서 한 번만 계산합니다. 업그레이드 목록은 `visible`인 항목만 대상으로 `구매 가능 → 쿠키 부족 → 강화 완료` 우선순위를 매번 계산하고 같은 그룹에서는 원본 순서를 보존합니다. `enabled: false`인 행은 현재 레벨을 복원하지만 다음 구매를 만들지 않습니다.
 
@@ -77,9 +78,9 @@ services/storage          engine/useBattleEngine
 
 쿠키 진화 종류는 별도로 저장하지 않고 `countsTowardCookieEvolution: true`인 업그레이드의 현재 레벨 합계에 저장된 `legacyCookieEvolutionBonusLevels`를 더해 매번 계산합니다. 현재는 클릭 힘·쿠키 크리티컬·자동 생산·쿠키 성 체력의 4종이 기여해 새 게임의 기본 합계가 4이고, `cookieSize`는 `false`이므로 진화 selector가 쿠키 크기 레벨을 읽지 않습니다. `cookies.json`에서 요구 총레벨 이하인 가장 높은 쿠키가 자동 활성화되며 해당 행의 클릭·자동 생산·쿠키 성 체력 배율이 최종 능력치에 적용됩니다. 메인 화면은 같은 selector가 계산한 현재 진화 레벨·다음 쿠키의 필요 레벨·남은 강화 수를 큰 숫자로 표시하고 구간 진행률도 함께 보여 줍니다. 쿠키 이미지는 `cookieSize`의 최고 비율과 JSON의 기준·상한 픽셀 값으로 계산한 기존 최대 크기에 고정합니다.
 
-쿠키 도감은 `FlatList`로 가상화해 30종 이상의 고해상도 이미지를 한꺼번에 마운트하지 않습니다. `assetRegistry.test.ts`는 쿠키·보스·봇 데이터의 모든 이미지 키를 각 정적 `require` 레지스트리와 대조하며, `validateCookies`는 세 공통 배율의 동일성과 진화 순서에 따른 단조 증가를 강제합니다.
+쿠키 도감은 `FlatList`로 가상화해 50종의 고해상도 이미지를 한꺼번에 마운트하지 않습니다. `assetRegistry.test.ts`는 쿠키·보스·봇 데이터의 모든 이미지 키를 각 정적 `require` 레지스트리와 대조하며, `validateCookies`는 세 공통 배율의 동일성과 진화 순서에 따른 단조 증가를 강제합니다. 쿠키 런타임 이미지는 APK 용량을 억제하도록 투명 WebP를 정적 번들합니다.
 
-쿠키 클릭 계산은 `domain/cookieClick.ts`가 담당합니다. `cookieCritical.ts`는 `cookie-critical.json`과 강화 진행에서 확률 단위와 보상 배수를 계산하고, 클릭 도메인은 주입된 0~1 난수 한 번으로 일반/크리티컬을 판정해 최종 지급량을 반환합니다. 확률은 테이블의 50% 상한에서 멈추고 배수는 Lv.1의 10배에서 레벨마다 1씩 안전 정수 범위까지 계속 증가합니다. 화면·효과음은 반환된 `critical` 플래그만 소비하므로 보상 판정과 붉은 폭발 연출이 분리됩니다.
+쿠키 클릭 계산은 `domain/cookieClick.ts`가 담당합니다. `cookieCritical.ts`는 `cookie-critical.json`과 강화 진행에서 확률 단위와 보상 배수를 계산하고, 클릭 도메인은 주입된 0~1 난수 한 번으로 일반/크리티컬을 판정해 최종 지급량을 반환합니다. 확률은 테이블의 50% 상한에서 멈추고 배수는 Lv.1의 10배에서 레벨마다 1씩 안전 정수 범위까지 계속 증가합니다. 화면·효과음은 반환된 `critical` 플래그만 소비하고 `cookie-feedback.json`만 표시 시간·개수·색상·소리 계층을 결정하므로 보상 판정과 연출이 분리됩니다.
 
 `battleRewardSelectors.ts`는 저장된 `battleMedals`를 안전 정수로 정규화하고 `battle-rewards.json`의 능력별 퍼센트를 곱해 세 영구 배율을 만듭니다. `cookieSelectors.ts`는 강화 값과 현재 쿠키 진화 배율을 먼저 계산한 뒤 이 배율을 클릭 힘·자동 생산·쿠키 성 체력에 각각 마지막으로 적용합니다. 훈장 수는 진화 합계에 들어가지 않아 전투 보상과 쿠키 종류 해금 규칙이 서로 결합되지 않습니다.
 
@@ -89,9 +90,9 @@ services/storage          engine/useBattleEngine
 
 저장할 때마다 `lastSavedAt`을 함께 기록합니다. 다음 실행에서는 저장 데이터를 먼저 이전·정규화하고, `domain/offlineProduction.ts`가 저장 당시 자동 생산 능력과 `lastSavedAt → 현재 시각`의 완료 생산 주기를 계산합니다. 현재 쿠키와 누적 쿠키에 같은 양을 더하고 소비한 체크포인트를 즉시 AsyncStorage에 기록한 다음 화면을 엽니다. 따라서 로딩 직후 앱이 다시 종료되어도 같은 시간이 중복 지급되지 않습니다. 기기 시계가 뒤로 간 경우에는 0개를 지급하고 더 최신 체크포인트를 유지합니다. 실행 중 타이머도 실제 경과 시간을 기준으로 누락된 주기를 따라잡으며 Android가 백그라운드로 갈 때 즉시 저장합니다.
 
-전투 승리 시 `completeBattleTransition`이 난이도 진행 단계와 `rewardClaimedStageIds`의 `난이도ID:전투번호` 키를 함께 확인합니다. 새 스테이지로 진행되는 승리는 `battle-rewards.json`에 따라 전투 훈장 1개를 `battleMedals`에 더하고, 진행 단계가 오르면서 해당 키도 없을 때 거대 원반 1개를 지급합니다. 난이도 진행도를 보상 판정의 우선 기준으로 삼으므로 이미 20승을 완료한 전투는 보상 키가 손상되어 누락됐더라도 재승리 보상이 0입니다. 전투 승리는 현재 쿠키나 누적 쿠키를 직접 변경하지 않습니다. `difficultyWinCounts`는 난이도별 진행 단계, `clearedDifficultyIds`는 최소 한 번 승리한 기록, `highestUnlockedDifficultyIndex`는 순차 해금에 사용합니다. 재도전, 보상, 해금이 서로 독립된 상태입니다.
+전투 승리 시 `completeBattleTransition`이 난이도 진행 단계와 `rewardClaimedStageIds`의 `난이도ID:전투번호` 키를 함께 확인합니다. 새 스테이지로 진행되는 승리는 `battle-rewards.json`에 따라 전투 훈장 1개를 `battleMedals`에 더하고, 진행 단계가 오르면서 해당 키도 없을 때 거대 원반 1개를 지급합니다. 난이도 진행도를 보상 판정의 우선 기준으로 삼으므로 이미 20승을 완료한 전투는 보상 키가 손상되어 누락됐더라도 재승리 보상이 0입니다. 20번째 최초 승리에서는 `highestUnlockedDifficultyIndex`와 `selectedDifficultyId`를 같은 순수 전이에서 다음 난이도로 올립니다. 결과 모달이 다시 렌더된 뒤 `다음 전투`는 새 선택값의 승리 수 0을 읽어 1번째 전투를 시작하며, 다음 난이도가 없는 `extreme god`만 현재 선택을 유지합니다. 전투 승리는 현재 쿠키나 누적 쿠키를 직접 변경하지 않습니다. `difficultyWinCounts`는 난이도별 진행 단계, `clearedDifficultyIds`는 최소 한 번 승리한 기록, `highestUnlockedDifficultyIndex`는 순차 해금에 사용합니다. 재도전, 보상, 해금이 서로 독립된 상태입니다.
 
-저장 버전은 `save-migrations.json`의 `currentSaveVersion`에서 읽으며 현재 10입니다. v7 이하 저장은 테이블에 고정한 레거시 ID `cookieSize`의 유효 레벨에서 기본 Lv.1을 뺀 값을 `legacyCookieEvolutionBonusLevels`로 한 번만 이전하고 v8 규칙을 거칩니다. 현재 강화 목록을 순회하지 않으므로 향후 `cookieSize` 행을 제거하거나 진화 기여 플래그를 바꿔도 v7 직행 업데이트가 달라지지 않습니다. 새 저장은 이 보너스를 0으로 시작하며 v8 이상 저장은 쿠키 크기에서 보너스를 다시 계산하지 않습니다. 현재 진화 합계는 기여 강화 4종과 이전 보너스로 계산하고 새 게임의 기본 합계는 4입니다. 쿠키 조건은 3, 9, …, 177이며 `cookieSize`는 진화 계산에서 완전히 분리됩니다.
+저장 버전은 `save-migrations.json`의 `currentSaveVersion`에서 읽으며 현재 10입니다. v7 이하 저장은 테이블에 고정한 레거시 ID `cookieSize`의 유효 레벨에서 기본 Lv.1을 뺀 값을 `legacyCookieEvolutionBonusLevels`로 한 번만 이전하고 v8 규칙을 거칩니다. 현재 강화 목록을 순회하지 않으므로 향후 `cookieSize` 행을 제거하거나 진화 기여 플래그를 바꿔도 v7 직행 업데이트가 달라지지 않습니다. 새 저장은 이 보너스를 0으로 시작하며 v8 이상 저장은 쿠키 크기에서 보너스를 다시 계산하지 않습니다. 현재 진화 합계는 기여 강화 4종과 이전 보너스로 계산하고 새 게임의 기본 합계는 4입니다. 쿠키 조건은 3, 9, …, 297이며 `cookieSize`는 진화 계산에서 완전히 분리됩니다.
 
 v10 상태에는 X1·X2·X3 중 선택한 `battleSpeedMultiplier`를 저장합니다. 이전 저장처럼 값이 없거나 허용 목록 밖·비유한 값이면 `battle-rules.json`의 기본 X1로 복구합니다. 쿠키 크리티컬은 기존 `upgradeLevels` 맵을 그대로 사용하므로 이전 저장에 키가 없으면 `cookie-upgrades.json`의 Lv.1로 초기화되고 이후 강화 단계가 일반 강화와 같은 경로로 저장됩니다.
 
@@ -133,7 +134,9 @@ v8 이하 저장은 정규화된 `difficultyWinCounts`를 모두 합산하고 `b
 
 `BattleScreen`은 `getBattleMapForDifficulty`로 선택 난이도의 고유 배경을 조회합니다. `BattleMapImage.ts`는 JSON 이미지 키를 정적 `require`에 연결하므로 APK 번들에 15개 JPG 전장이 포함됩니다. 이미지는 단순 재색칠이 아니라 초원, 과수원, 설원, 침수 정글, 폭풍 절벽, 악마계 5종, 신계 5종으로 지형과 랜드마크 자체가 다릅니다. 중앙 70%는 낮은 디테일로 비워 유닛과 원반을 분리하고 하단은 동적 쿠키 성을 위한 지면으로 유지합니다. HUD에는 난이도·전투 번호·남은 보스와 화면 폭 88%의 상단 보스 HP 바를 표시합니다. 보스 최대 렌더 크기는 `battle-ui.json`의 112이고 성과 봇은 아래쪽 좁은 슬롯에 배치합니다. 아군 원반은 파랑·금색, 보스 원반은 빨강·검붉은색입니다.
 
-`FeedbackContext`는 일반 쿠키 클릭과 Mixkit `Short explosion` 크리티컬 WAV를 별도 플레이어로 구분합니다. 전투 중에는 CC0 오케스트라 음악을 반복하고 아군·적·거대 원반, 약한 피격 3종, 강한 피격, 근접 공격과 분노를 별도 플레이어로 구분합니다. `battle-audio.json`의 그룹별 최소 간격으로 자동 연사의 소리 중첩을 제한합니다. 전투 종료 시 재생 세대 번호를 올리고 음악과 모든 액션 플레이어를 일시정지·되감기하므로, 종료 전에 시작한 비동기 재생 요청도 결과 화면에서 소리를 다시 시작할 수 없습니다. 결과 팡파르나 박수 소리는 재생하지 않습니다.
+`useCookieAudioFeedback`은 Freesound CC0 `Crunch` MP3의 3보이스 풀을 테이블의 작은 재생 속도 차이로 번갈아 사용하고 직전 보이스를 바로 반복하지 않습니다. 전체 크리티컬에는 Mixkit `Short explosion`과 지연된 `Fairy arcade sparkle`을 계층으로 더하며, 1,650ms 안의 연속 크리티컬은 게임 보상은 그대로 두고 긴 오디오·파편 연출만 축약합니다. `services/cookieFeedback.ts`가 `normal`, `criticalFull`, `criticalCompact` 정책과 보이스 선택·최소 간격을 순수 함수로 담당하고 `GameScreen`과 `CookieCriticalEffect`는 반환된 등급만 소비합니다. 화면을 전환하거나 사운드를 끄거나 Provider가 해제되면 재생 중인 쿠키 레이어를 되감고 예약된 반짝임 타이머도 취소합니다. `FeedbackContext`는 메뉴·전투 사운드와 진동을 조정합니다. 전투 중에는 CC0 오케스트라 음악을 반복하고 아군·적·거대 원반, 약한 피격 3종, 강한 피격, 근접 공격과 분노를 별도 플레이어로 구분합니다. `battle-audio.json`의 그룹별 최소 간격으로 자동 연사의 소리 중첩을 제한합니다. 전투 종료 시 재생 세대 번호를 올리고 음악과 모든 액션 플레이어를 일시정지·되감기하므로, 종료 전에 시작한 비동기 재생 요청도 결과 화면에서 소리를 다시 시작할 수 없습니다. 결과 팡파르나 박수 소리는 재생하지 않습니다.
+
+`CookieCriticalEffect`는 하나의 native-driver 진행값으로 중앙 그라데이션 코어, 두 겹 확장 링, 회전하는 쿠키 파편 8개와 시간차 십자 별빛을 합성합니다. 전체 이펙트가 과도하게 겹치지 않도록 전체·축약 동시 개수와 획득 텍스트 개수를 테이블에서 제한합니다. React Native 레이아웃 View와 `LinearGradient`만 사용하므로 추가 래스터 이펙트 에셋은 번들하지 않습니다.
 
 전투 화면은 50ms 타이머 주기마다 실제 경과 델타를 제한하고, 같은 종류의 다수 봇을 한 개체·한 발의 합산 피해로 처리합니다. 봇 편성, 성, 보스·봇 애니메이션 프레임, 원반·쿠키 이미지는 메모이제이션하고 프레임은 정적 `require`로 번들에서 조회합니다. 순간 피격 연출은 한 이벤트당 짧은 수명의 제한된 View만 만들며 강한 공격에만 넓은 충격파를 사용합니다. 세부 점검 기준은 `PERFORMANCE.md`에 기록합니다.
 
@@ -143,9 +146,10 @@ v8 이하 저장은 정규화된 `difficultyWinCounts`를 모두 합산하고 `b
 
 ## 검증 경계
 
-- `__tests__/config.test.ts`: 게임 설정의 타입·참조·의미 검증, 15개 난이도·맵·보스, 보스·봇 애니메이션 프레임 참조, 30종 쿠키, 크리티컬 상한과 전투 속도 무결성
+- `__tests__/config.test.ts`: 게임 설정의 타입·참조·의미 검증, 15개 난이도·맵·보스, 보스·봇 애니메이션 프레임 참조, 50종 쿠키, 크리티컬 보상·피드백과 전투 속도 무결성
 - `__tests__/gameReducer.test.ts`: 스테이지별 거대 원반·전투 훈장 최초 보상과 재도전 차단, v9 소급·중복 방지, v10 저장 정규화, X1·X2·X3 순환·복구, 네 활성 강화의 무한 성장과 우선 정렬
 - `__tests__/cookieClick.test.ts`: 기본 1%·10배 크리티컬 경계, 50% 확률 상한, 무제한 배수 성장과 극단 수치 포화
+- `__tests__/cookieFeedback.test.ts`: 전체·축약 크리티컬 경계, 직전 클릭 보이스 반복 방지와 최소 클릭 간격
 - `__tests__/battleEngine.test.ts`: 단일 보스 전투, 실제 속도 서브스텝, 공격 반경·중첩 발사·수동 성 공격, 거대 원반 피해, 이벤트 저널과 극단 수치 포화
 - `__tests__/bossAnimation.test.ts`: 15종 보스의 걷기 프레임과 `special` 강공격에만 적용되는 준비·충돌·복귀 전환
 - `__tests__/botCombatMotion.test.ts`: 5종 봇의 순찰·표적 추종 좌표와 달리기·투척 프레임 전환

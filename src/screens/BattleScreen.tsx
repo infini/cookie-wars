@@ -186,7 +186,6 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
 
       <BattleResultModal
         status={engine.state.status}
-        difficultyId={difficulty.id}
         rewardResult={rewardResult}
         onLeave={leaveBattle}
         onStart={startBattle}
