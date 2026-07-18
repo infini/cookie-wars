@@ -1,9 +1,12 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AUDIO_SETTINGS } from '../config';
+import { useFeedback } from '../services/FeedbackContext';
 import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
+import { SoundVolumeLevel } from '../types/game';
 import { Panel } from './Panel';
 
 interface SettingsModalProps {
@@ -20,7 +23,13 @@ function Toggle({ enabled }: { enabled: boolean }) {
 }
 
 export function SettingsModal({ visible, onClose }: SettingsModalProps) {
-  const { state, toggleSound, toggleVibration } = useGame();
+  const { state, toggleSound, setSoundVolume, toggleVibration } = useGame();
+  const feedback = useFeedback();
+  const changeVolume = (level: SoundVolumeLevel) => {
+    setSoundVolume(level);
+    setTimeout(() => feedback.play('cookie'), AUDIO_SETTINGS.previewDelayMs);
+  };
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -46,6 +55,40 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
             </View>
             <Toggle enabled={state.soundEnabled} />
           </Pressable>
+          <View style={styles.volumeCard}>
+            <View style={styles.volumeHeader}>
+              <MaterialCommunityIcons name="volume-medium" size={25} color={colors.orange} />
+              <View>
+                <Text style={styles.settingTitle}>효과음 크기</Text>
+                <Text style={styles.settingDescription}>현재 {state.soundVolumeLevel}단계 · 눌러서 미리 들어보세요</Text>
+              </View>
+            </View>
+            <View style={styles.volumeLevels}>
+              {AUDIO_SETTINGS.levels.map(({ level }) => {
+                const selected = state.soundVolumeLevel === level;
+                return (
+                  <Pressable
+                    key={level}
+                    accessibilityRole="button"
+                    accessibilityLabel={`효과음 볼륨 ${level}단계`}
+                    accessibilityState={{ selected }}
+                    onPress={() => changeVolume(level)}
+                    style={({ pressed }) => [
+                      styles.volumeButton,
+                      selected && styles.volumeButtonSelected,
+                      pressed && styles.volumeButtonPressed,
+                    ]}
+                  >
+                    <Text style={[styles.volumeNumber, selected && styles.volumeNumberSelected]}>{level}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <View style={styles.volumeLabels}>
+              <Text style={styles.volumeLabel}>작게</Text>
+              <Text style={styles.volumeLabel}>크게</Text>
+            </View>
+          </View>
           <Pressable onPress={toggleVibration} style={styles.settingRow}>
             <MaterialCommunityIcons
               name={state.vibrationEnabled ? 'vibrate' : 'vibrate-off'}
@@ -101,6 +144,30 @@ const styles = StyleSheet.create({
   settingText: { flex: 1 },
   settingTitle: { fontFamily: fonts.extraBold, fontSize: 16, color: colors.ink },
   settingDescription: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted },
+  volumeCard: {
+    borderRadius: 18,
+    backgroundColor: '#FFF0D9',
+    padding: 13,
+    marginBottom: 10,
+  },
+  volumeHeader: { flexDirection: 'row', alignItems: 'center', gap: 11, marginBottom: 10 },
+  volumeLevels: { flexDirection: 'row', gap: 7 },
+  volumeButton: {
+    flex: 1,
+    height: 45,
+    borderRadius: 14,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: colors.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  volumeButtonSelected: { backgroundColor: colors.orange, borderColor: colors.orange },
+  volumeButtonPressed: { transform: [{ scale: 0.94 }] },
+  volumeNumber: { fontFamily: fonts.extraBold, fontSize: 17, color: colors.muted },
+  volumeNumberSelected: { color: colors.white },
+  volumeLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+  volumeLabel: { fontFamily: fonts.medium, fontSize: 9, color: colors.muted },
   toggle: {
     width: 52,
     height: 30,

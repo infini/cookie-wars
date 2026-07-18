@@ -2,6 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { COOKIE_UPGRADES } from '../config';
+import { getUpgradeProgress } from '../domain/gameSelectors';
 import { useFeedback } from '../services/FeedbackContext';
 import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
@@ -21,10 +22,9 @@ export function UpgradeScreen() {
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <Text style={styles.help}>쿠키를 사용해서 더 강해져요!</Text>
       {COOKIE_UPGRADES.map((upgrade) => {
-        const level = state.upgradeLevels[upgrade.id] ?? 1;
-        const current = upgrade.levels.find((item) => item.level === level) ?? upgrade.levels[0];
-        const next = upgrade.levels.find((item) => item.level === level + 1);
-        const affordable = !!next && state.cookies >= next.cost;
+        const progress = getUpgradeProgress(state, upgrade.id);
+        if (!progress) return null;
+        const { current, next, affordable } = progress;
         const handleUpgrade = () => {
           if (buyUpgrade(upgrade.id)) {
             feedback.play('upgrade'); feedback.success();
@@ -40,7 +40,7 @@ export function UpgradeScreen() {
                 <Text style={styles.upgradeName}>{upgrade.name}</Text>
                 <Text style={styles.description}>{upgrade.description}</Text>
               </View>
-              <View style={styles.levelBadge}><Text style={styles.levelText}>Lv.{level}</Text></View>
+              <View style={styles.levelBadge}><Text style={styles.levelText}>Lv.{current.level}</Text></View>
             </View>
             <View style={styles.values}>
               <View style={styles.valueBox}>

@@ -1,13 +1,132 @@
-{
-  "id": "cookieDisc",
-  "name": "쿠키 원반",
-  "purchaseCost": 180,
-  "description": "한 번 사면 전투에서 영원히 사용할 수 있어요.",
-  "levels": [
-    { "level": 1, "damage": 3, "size": 44, "speed": 280, "cooldownMs": 1000, "cost": 0 },
-    { "level": 2, "damage": 5, "size": 48, "speed": 310, "cooldownMs": 900, "cost": 220 },
-    { "level": 3, "damage": 8, "size": 52, "speed": 345, "cooldownMs": 800, "cost": 650 },
-    { "level": 4, "damage": 12, "size": 57, "speed": 385, "cooldownMs": 700, "cost": 1800 },
-    { "level": 5, "damage": 18, "size": 63, "speed": 430, "cooldownMs": 600, "cost": 4800 }
-  ]
-}
+[
+  {
+    "id": "choco-chip-disc",
+    "name": "초코칩 원반",
+    "purchaseCost": 30,
+    "description": "가볍고 다루기 쉬운 첫 번째 쿠키 원반이에요.",
+    "levels": [
+      { "level": 1, "damage": 3, "size": 42, "speed": 260, "cooldownMs": 1200, "cost": 0 },
+      { "level": 2, "damage": 5, "size": 45, "speed": 280, "cooldownMs": 1100, "cost": 25 },
+      { "level": 3, "damage": 8, "size": 48, "speed": 305, "cooldownMs": 1000, "cost": 50 },
+      { "level": 4, "damage": 12, "size": 51, "speed": 335, "cooldownMs": 900, "cost": 90 },
+      { "level": 5, "damage": 18, "size": 54, "speed": 370, "cooldownMs": 800, "cost": 150 }
+    ]
+  },
+  {
+    "id": "strawberry-disc",
+    "name": "딸기 원반",
+    "purchaseCost": 45,
+    "description": "달콤한 딸기 향으로 빠르게 날아가는 원반이에요.",
+    "levels": [
+      { "level": 1, "damage": 6, "size": 46, "speed": 280, "cooldownMs": 1100, "cost": 0 },
+      { "level": 2, "damage": 9, "size": 49, "speed": 305, "cooldownMs": 1000, "cost": 35 },
+      { "level": 3, "damage": 13, "size": 52, "speed": 335, "cooldownMs": 900, "cost": 65 },
+      { "level": 4, "damage": 19, "size": 55, "speed": 370, "cooldownMs": 800, "cost": 110 },
+      { "level": 5, "damage": 28, "size": 58, "speed": 410, "cooldownMs": 700, "cost": 180 }
+    ]
+  },
+  {
+    "id": "milk-disc",
+    "name": "우유 원반",
+    "purchaseCost": 60,
+    "description": "부드럽지만 묵직한 힘을 가진 하얀 원반이에요.",
+    "levels": [
+      { "level": 1, "damage": 10, "size": 50, "speed": 305, "cooldownMs": 1000, "cost": 0 },
+      { "level": 2, "damage": 15, "size": 53, "speed": 335, "cooldownMs": 900, "cost": 45 },
+      { "level": 3, "damage": 22, "size": 56, "speed": 370, "cooldownMs": 800, "cost": 80 },
+      { "level": 4, "damage": 32, "size": 59, "speed": 410, "cooldownMs": 700, "cost": 135 },
+      { "level": 5, "damage": 46, "size": 62, "speed": 455, "cooldownMs": 600, "cost": 215 }
+    ]
+  },
+  {
+    "id": "caramel-disc",
+    "name": "카라멜 원반",
+    "purchaseCost": 75,
+    "description": "진한 카라멜 힘을 담아 적을 세게 밀어붙여요.",
+    "levels": [
+      { "level": 1, "damage": 16, "size": 54, "speed": 335, "cooldownMs": 900, "cost": 0 },
+      { "level": 2, "damage": 24, "size": 57, "speed": 370, "cooldownMs": 800, "cost": 55 },
+      { "level": 3, "damage": 35, "size": 60, "speed": 410, "cooldownMs": 700, "cost": 95 },
+      { "level": 4, "damage": 51, "size": 63, "speed": 455, "cooldownMs": 600, "cost": 155 },
+      { "level": 5, "damage": 74, "size": 66, "speed": 505, "cooldownMs": 500, "cost": 245 }
+    ]
+  },
+  {
+    "id": "mint-disc",
+    "name": "민트 원반",
+    "purchaseCost": 90,
+    "description": "시원한 바람을 가르며 재빠르게 돌아오는 원반이에요.",
+    "levels": [
+      { "level": 1, "damage": 24, "size": 58, "speed": 370, "cooldownMs": 800, "cost": 0 },
+      { "level": 2, "damage": 36, "size": 61, "speed": 410, "cooldownMs": 700, "cost": 65 },
+      { "level": 3, "damage": 53, "size": 64, "speed": 455, "cooldownMs": 600, "cost": 110 },
+      { "level": 4, "damage": 77, "size": 67, "speed": 505, "cooldownMs": 500, "cost": 175 },
+      { "level": 5, "damage": 111, "size": 70, "speed": 560, "cooldownMs": 400, "cost": 275 }
+    ]
+  },
+  {
+    "id": "peanut-disc",
+    "name": "땅콩 원반",
+    "purchaseCost": 110,
+    "description": "고소한 땅콩처럼 단단해서 강한 피해를 줘요.",
+    "levels": [
+      { "level": 1, "damage": 35, "size": 62, "speed": 410, "cooldownMs": 700, "cost": 0 },
+      { "level": 2, "damage": 53, "size": 65, "speed": 455, "cooldownMs": 600, "cost": 75 },
+      { "level": 3, "damage": 77, "size": 68, "speed": 505, "cooldownMs": 500, "cost": 125 },
+      { "level": 4, "damage": 112, "size": 71, "speed": 560, "cooldownMs": 400, "cost": 200 },
+      { "level": 5, "damage": 161, "size": 74, "speed": 620, "cooldownMs": 320, "cost": 310 }
+    ]
+  },
+  {
+    "id": "rainbow-disc",
+    "name": "무지개 원반",
+    "purchaseCost": 135,
+    "description": "일곱 빛깔 에너지가 반짝이는 신기한 원반이에요.",
+    "levels": [
+      { "level": 1, "damage": 50, "size": 66, "speed": 455, "cooldownMs": 600, "cost": 0 },
+      { "level": 2, "damage": 75, "size": 69, "speed": 505, "cooldownMs": 500, "cost": 90 },
+      { "level": 3, "damage": 110, "size": 72, "speed": 560, "cooldownMs": 400, "cost": 145 },
+      { "level": 4, "damage": 160, "size": 75, "speed": 620, "cooldownMs": 320, "cost": 225 },
+      { "level": 5, "damage": 230, "size": 78, "speed": 685, "cooldownMs": 280, "cost": 350 }
+    ]
+  },
+  {
+    "id": "starlight-disc",
+    "name": "별빛 원반",
+    "purchaseCost": 165,
+    "description": "밤하늘 별빛처럼 빠르고 정확하게 날아가요.",
+    "levels": [
+      { "level": 1, "damage": 70, "size": 70, "speed": 505, "cooldownMs": 500, "cost": 0 },
+      { "level": 2, "damage": 105, "size": 73, "speed": 560, "cooldownMs": 420, "cost": 105 },
+      { "level": 3, "damage": 154, "size": 76, "speed": 620, "cooldownMs": 340, "cost": 165 },
+      { "level": 4, "damage": 224, "size": 79, "speed": 685, "cooldownMs": 280, "cost": 255 },
+      { "level": 5, "damage": 322, "size": 82, "speed": 755, "cooldownMs": 250, "cost": 390 }
+    ]
+  },
+  {
+    "id": "lava-disc",
+    "name": "용암 원반",
+    "purchaseCost": 200,
+    "description": "뜨거운 쿠키 용암의 힘으로 큰 피해를 줘요.",
+    "levels": [
+      { "level": 1, "damage": 95, "size": 74, "speed": 560, "cooldownMs": 400, "cost": 0 },
+      { "level": 2, "damage": 143, "size": 77, "speed": 620, "cooldownMs": 340, "cost": 125 },
+      { "level": 3, "damage": 209, "size": 80, "speed": 685, "cooldownMs": 290, "cost": 195 },
+      { "level": 4, "damage": 304, "size": 83, "speed": 755, "cooldownMs": 260, "cost": 295 },
+      { "level": 5, "damage": 437, "size": 86, "speed": 830, "cooldownMs": 250, "cost": 450 }
+    ]
+  },
+  {
+    "id": "crown-disc",
+    "name": "왕관 원반",
+    "purchaseCost": 250,
+    "description": "쿠키 왕국의 힘을 담은 가장 강력한 왕관 원반이에요.",
+    "levels": [
+      { "level": 1, "damage": 130, "size": 80, "speed": 620, "cooldownMs": 300, "cost": 0 },
+      { "level": 2, "damage": 195, "size": 83, "speed": 685, "cooldownMs": 280, "cost": 150 },
+      { "level": 3, "damage": 286, "size": 86, "speed": 755, "cooldownMs": 260, "cost": 230 },
+      { "level": 4, "damage": 416, "size": 89, "speed": 830, "cooldownMs": 250, "cost": 345 },
+      { "level": 5, "damage": 598, "size": 92, "speed": 910, "cooldownMs": 250, "cost": 520 }
+    ]
+  }
+]

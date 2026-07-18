@@ -1,0 +1,8 @@
+{
+  "damageGrowthMultiplier": 1.12,
+  "sizeIncreasePerLevel": 1,
+  "speedIncreasePerLevel": 8,
+  "cooldownReductionMsPerLevel": 10,
+  "minimumCooldownMs": 250,
+  "costGrowthMultiplier": 1.2
+}

@@ -19,6 +19,7 @@ const items: NavItem[] = [
   { id: 'monster', label: '몬스터', icon: 'ghost' },
   { id: 'difficulty', label: '난이도', icon: 'stairs-up' },
   { id: 'disc', label: '원반', icon: 'disc-player' },
+  { id: 'bot', label: '쿠키봇', icon: 'robot-happy' },
 ];
 
 interface BottomNavProps {
@@ -86,7 +87,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   activeItem: { backgroundColor: '#FFF0D6' },
-  label: { fontFamily: fonts.bold, fontSize: 9, color: colors.muted },
+  label: { fontFamily: fonts.bold, fontSize: 8, color: colors.muted },
   activeLabel: { color: colors.cookieDark },
   pressed: { opacity: 0.66 },
   newDot: {

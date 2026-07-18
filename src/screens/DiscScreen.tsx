@@ -1,8 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { DISC, PRIMARY_BOT } from '../config';
-import { BotImage } from '../components/BotImage';
+import { getDiscOffers, getDiscProgress } from '../domain/gameSelectors';
 import { DiscImage } from '../components/DiscImage';
 import { GameButton } from '../components/GameButton';
 import { Panel } from '../components/Panel';
@@ -13,12 +12,10 @@ import { fonts } from '../theme/typography';
 import { formatNumber, formatSeconds } from '../utils/format';
 
 export function DiscScreen() {
-  const { state, buyDisc, upgradeDisc, buyBot, getBotCost } = useGame();
+  const { state, buyDisc, upgradeDisc, equipDisc } = useGame();
   const feedback = useFeedback();
-  const current = DISC.levels.find((level) => level.level === state.discLevel) ?? DISC.levels[0];
-  const next = DISC.levels.find((level) => level.level === state.discLevel + 1);
-  const botCount = state.botCounts[PRIMARY_BOT.id] ?? 0;
-  const botCost = getBotCost();
+  const discOffers = getDiscOffers(state);
+  const selectedDisc = getDiscProgress(state);
 
   const resultFeedback = (success: boolean) => {
     if (success) { feedback.play('upgrade'); feedback.success(); }
@@ -29,29 +26,36 @@ export function DiscScreen() {
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <Panel style={styles.discCard}>
         <View style={styles.artWrap}>
-          <DiscImage size={112} />
+          <DiscImage size={96} />
           <View style={styles.permanentBadge}><Text style={styles.permanentText}>영구 사용</Text></View>
         </View>
         <View style={styles.info}>
-          <Text style={styles.eyebrow}>전투 전용 무기</Text>
-          <Text style={styles.title}>{DISC.name}</Text>
-          <Text style={styles.description}>{DISC.description}</Text>
-          {!state.discOwned ? (
-            <GameButton
-              title={`🍪 ${formatNumber(DISC.purchaseCost)}개로 구매`}
-              onPress={() => resultFeedback(buyDisc())}
-              disabled={state.cookies < DISC.purchaseCost}
-              compact
-            />
-          ) : <View style={styles.owned}><MaterialCommunityIcons name="check-decagram" size={20} color={colors.greenDark} /><Text style={styles.ownedText}>구매 완료</Text></View>}
+          <Text style={styles.eyebrow}>쿠키 원반 상점 · {discOffers.length}종</Text>
+          <Text style={styles.title}>장착 원반</Text>
+          <Text style={styles.selectedDiscName}>
+            {selectedDisc.owned ? `${selectedDisc.config.name} Lv.${selectedDisc.current.level}` : '아직 원반이 없어요'}
+          </Text>
+          <Text style={styles.description}>구매한 원반은 영구 보유하며, 하나를 골라 모든 쿠키봇과 쿠키 성이 사용해요.</Text>
         </View>
       </Panel>
 
-      {state.discOwned ? (
-        <Panel>
+      {discOffers.map((disc) => {
+        const { current, next } = disc;
+        return (
+        <Panel key={disc.config.id} style={[styles.offerCard, disc.selected && styles.selectedOffer]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>원반 강화</Text>
-            <View style={styles.level}><Text style={styles.levelText}>Lv.{current.level}</Text></View>
+            <View style={styles.offerTitleWrap}>
+              <DiscImage size={50} />
+              <View>
+                <Text style={styles.sectionTitle}>{disc.config.name}</Text>
+                <Text style={styles.offerDescription}>{disc.config.description}</Text>
+              </View>
+            </View>
+            <View style={[styles.level, disc.selected && styles.selectedLevel]}>
+              <Text style={[styles.levelText, disc.selected && styles.selectedLevelText]}>
+                {disc.selected ? '장착 중' : `Lv.${current.level}`}
+              </Text>
+            </View>
           </View>
           <View style={styles.statGrid}>
             <View style={styles.stat}><Text style={styles.statLabel}>공격력</Text><Text style={styles.statValue}>{current.damage}</Text></View>
@@ -59,44 +63,49 @@ export function DiscScreen() {
             <View style={styles.stat}><Text style={styles.statLabel}>속도</Text><Text style={styles.statValue}>{current.speed}</Text></View>
             <View style={styles.stat}><Text style={styles.statLabel}>쿨타임</Text><Text style={styles.statValue}>{formatSeconds(current.cooldownMs)}</Text></View>
           </View>
-          {next ? (
+          {disc.owned ? (
             <View style={styles.nextLine}>
               <Text style={styles.nextText}>다음: 공격력 {next.damage} · 쿨타임 {formatSeconds(next.cooldownMs)}</Text>
             </View>
           ) : null}
-          <GameButton
-            title={next ? `🍪 ${formatNumber(next.cost)}개로 강화` : '최고 레벨!'}
-            onPress={() => resultFeedback(upgradeDisc())}
-            disabled={!next || state.cookies < next.cost}
-            variant="purple"
-            compact
-          />
+          <View style={styles.offerButtons}>
+            {!disc.owned ? (
+              <GameButton
+                title={`🍪 ${formatNumber(disc.purchaseCost)} 구매`}
+                onPress={() => resultFeedback(buyDisc(disc.config.id))}
+                disabled={!disc.purchaseAffordable}
+                compact
+                style={styles.offerButton}
+              />
+            ) : !disc.selected ? (
+              <GameButton
+                title="이 원반 장착"
+                onPress={() => resultFeedback(equipDisc(disc.config.id))}
+                variant="blue"
+                compact
+                style={styles.offerButton}
+              />
+            ) : (
+              <View style={styles.owned}><MaterialCommunityIcons name="check-decagram" size={20} color={colors.greenDark} /><Text style={styles.ownedText}>현재 장착</Text></View>
+            )}
+            {disc.owned ? (
+              <GameButton
+                title={`🍪 ${formatNumber(next.cost)} 강화`}
+                onPress={() => resultFeedback(upgradeDisc(disc.config.id))}
+                disabled={!disc.upgradeAffordable}
+                variant="purple"
+                compact
+                style={styles.offerButton}
+              />
+            ) : null}
+          </View>
         </Panel>
-      ) : null}
-
-      <Panel style={styles.botCard}>
-        <View style={styles.botArt}>
-          <Text style={styles.teamName}>아군</Text>
-          <BotImage size={93} />
-        </View>
-        <View style={styles.info}>
-          <Text style={styles.eyebrow}>자동 공격 아군</Text>
-          <Text style={styles.title}>{PRIMARY_BOT.name} × {botCount}</Text>
-          <Text style={styles.description}>{PRIMARY_BOT.description}</Text>
-          <Text style={styles.botDamage}>한 번에 {PRIMARY_BOT.damage} 피해 · {PRIMARY_BOT.attackIntervalMs / 1000}초마다</Text>
-          <GameButton
-            title={`🍪 ${formatNumber(botCost)}개로 1대 구매`}
-            onPress={() => resultFeedback(buyBot())}
-            disabled={state.cookies < botCost}
-            variant="blue"
-            compact
-          />
-        </View>
-      </Panel>
+        );
+      })}
 
       <View style={styles.rules}>
         <MaterialCommunityIcons name="information" size={23} color={colors.blue} />
-        <Text style={styles.rulesText}>원반과 쿠키봇은 전투 화면에서만 사용할 수 있어요. 원반은 화면에 하나만 존재하며, 사라지고 쿨타임이 끝나야 다시 던질 수 있어요.</Text>
+        <Text style={styles.rulesText}>원반은 전투 화면에서만 사용해요. 이전 원반이 날아가는 중이어도 쿨타임이 끝나면 다음 원반을 던질 수 있어요.</Text>
       </View>
     </ScrollView>
   );
@@ -111,23 +120,28 @@ const styles = StyleSheet.create({
   info: { flex: 1, marginLeft: 13, gap: 3 },
   eyebrow: { fontFamily: fonts.extraBold, fontSize: 10, color: colors.orange },
   title: { fontFamily: fonts.display, fontSize: 22, color: colors.ink },
+  selectedDiscName: { fontFamily: fonts.extraBold, fontSize: 14, color: colors.purple },
   description: { fontFamily: fonts.regular, fontSize: 10, lineHeight: 15, color: colors.muted, marginBottom: 5 },
   owned: { flexDirection: 'row', gap: 5, alignItems: 'center', backgroundColor: '#E4F9EC', borderRadius: 12, alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 6 },
   ownedText: { fontFamily: fonts.extraBold, fontSize: 11, color: colors.greenDark },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
-  sectionTitle: { fontFamily: fonts.display, fontSize: 22, color: colors.ink },
+  offerCard: { backgroundColor: colors.white },
+  selectedOffer: { borderColor: colors.blue, backgroundColor: '#F1F8FF' },
+  offerTitleWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sectionTitle: { fontFamily: fonts.display, fontSize: 18, color: colors.ink },
+  offerDescription: { maxWidth: 220, fontFamily: fonts.regular, fontSize: 9, color: colors.muted },
   level: { backgroundColor: '#EEE5FF', borderRadius: 13, paddingHorizontal: 11, paddingVertical: 6 },
   levelText: { fontFamily: fonts.extraBold, fontSize: 12, color: colors.purple },
+  selectedLevel: { backgroundColor: colors.blue },
+  selectedLevelText: { color: colors.white },
   statGrid: { flexDirection: 'row', gap: 5 },
   stat: { flex: 1, backgroundColor: colors.cream, borderRadius: 12, paddingVertical: 8, alignItems: 'center' },
   statLabel: { fontFamily: fonts.medium, fontSize: 8, color: colors.muted },
   statValue: { fontFamily: fonts.extraBold, fontSize: 13, color: colors.ink },
   nextLine: { marginVertical: 9, backgroundColor: '#F1EAFE', borderRadius: 11, padding: 7 },
   nextText: { fontFamily: fonts.bold, fontSize: 10, color: colors.purple, textAlign: 'center' },
-  botCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.blueSoft },
-  botArt: { width: 116, height: 126, borderRadius: 28, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
-  teamName: { fontFamily: fonts.extraBold, fontSize: 12, color: colors.blue, marginBottom: -4 },
-  botDamage: { fontFamily: fonts.bold, fontSize: 9, color: colors.blueDark, marginBottom: 4 },
+  offerButtons: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  offerButton: { flex: 1 },
   rules: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', paddingHorizontal: 8 },
   rulesText: { flex: 1, fontFamily: fonts.medium, fontSize: 10, lineHeight: 16, color: colors.muted },
 });

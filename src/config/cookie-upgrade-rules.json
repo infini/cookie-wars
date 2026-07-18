@@ -1,0 +1,14 @@
+{
+  "clickPower": {
+    "valueIncreasePerLevel": 25,
+    "costGrowthMultiplier": 1.25
+  },
+  "autoProduction": {
+    "valueIncreasePerLevel": 25,
+    "costGrowthMultiplier": 1.25
+  },
+  "cookieHealth": {
+    "valueIncreasePerLevel": 120,
+    "costGrowthMultiplier": 1.25
+  }
+}

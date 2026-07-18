@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { DIFFICULTIES } from '../config';
+import { DIFFICULTIES, PROGRESSION } from '../config';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 
@@ -43,7 +43,9 @@ export function DifficultyDropdown({
             <View style={styles.listHeader}>
               <View>
                 <Text style={styles.listTitle}>난이도 선택</Text>
-                <Text style={styles.listSubtitle}>클리어하면 다음 단계가 열려요</Text>
+                <Text style={styles.listSubtitle}>
+                  각 난이도 {PROGRESSION.winsToUnlockNextDifficulty}승으로 다음 단계 해금
+                </Text>
               </View>
               <Pressable accessibilityLabel="난이도 목록 닫기" onPress={() => setOpen(false)}>
                 <MaterialCommunityIcons name="close-circle" size={34} color={colors.muted} />

@@ -1,0 +1,5 @@
+{
+  "winsToUnlockNextDifficulty": 20,
+  "saveDebounceMs": 250,
+  "autoProductionIntervalMs": 1000
+}

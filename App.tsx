@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ScreenLayout } from './src/components/ScreenLayout';
 import { SettingsModal } from './src/components/SettingsModal';
 import { BattleScreen } from './src/screens/BattleScreen';
+import { BotScreen } from './src/screens/BotScreen';
 import { CookieScreen } from './src/screens/CookieScreen';
 import { DifficultyScreen } from './src/screens/DifficultyScreen';
 import { DiscScreen } from './src/screens/DiscScreen';
@@ -27,7 +28,8 @@ const titles: Record<TabId, string> = {
   upgrade: '쿠키 업그레이드',
   monster: '몬스터 도감',
   difficulty: '난이도 선택',
-  disc: '원반과 쿠키봇',
+  disc: '쿠키 원반',
+  bot: '쿠키봇',
 };
 
 function LoadingScreen() {
@@ -62,6 +64,7 @@ function GameShell() {
       case 'monster': return <MonsterScreen />;
       case 'difficulty': return <DifficultyScreen />;
       case 'disc': return <DiscScreen />;
+      case 'bot': return <BotScreen />;
     }
   };
 

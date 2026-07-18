@@ -1,11 +1,102 @@
 [
   {
-    "id": "cookie-bot",
-    "name": "쿠키봇",
-    "description": "전투에서 가장 가까운 적을 자동으로 공격해요.",
-    "baseCost": 140,
-    "costMultiplier": 1.65,
-    "damage": 2,
-    "attackIntervalMs": 900
+    "id": "choco-bot",
+    "name": "초코 쿠키봇",
+    "description": "천천히 정확하게 공격하는 기본 쿠키봇이에요.",
+    "accentColor": "#8D5A3B",
+    "baseCost": 35,
+    "costMultiplier": 1.15,
+    "discDamageMultiplier": 1,
+    "attackIntervalMs": 1800
+  },
+  {
+    "id": "berry-bot",
+    "name": "베리 쿠키봇",
+    "description": "딸기 에너지로 더 강하고 빠르게 던져요.",
+    "accentColor": "#F05F7A",
+    "baseCost": 45,
+    "costMultiplier": 1.15,
+    "discDamageMultiplier": 1.5,
+    "attackIntervalMs": 1600
+  },
+  {
+    "id": "milk-bot",
+    "name": "밀크 쿠키봇",
+    "description": "묵직한 우유 파워를 원반에 실어 보내요.",
+    "accentColor": "#6F9FD8",
+    "baseCost": 60,
+    "costMultiplier": 1.15,
+    "discDamageMultiplier": 2.2,
+    "attackIntervalMs": 1400
+  },
+  {
+    "id": "caramel-bot",
+    "name": "카라멜 쿠키봇",
+    "description": "진한 카라멜 힘으로 강력한 연속 공격을 해요.",
+    "accentColor": "#D88935",
+    "baseCost": 75,
+    "costMultiplier": 1.15,
+    "discDamageMultiplier": 3.2,
+    "attackIntervalMs": 1200
+  },
+  {
+    "id": "mint-bot",
+    "name": "민트 쿠키봇",
+    "description": "차가운 바람처럼 빠른 원반을 날려요.",
+    "accentColor": "#38BFA8",
+    "baseCost": 90,
+    "costMultiplier": 1.15,
+    "discDamageMultiplier": 4.6,
+    "attackIntervalMs": 1000
+  },
+  {
+    "id": "peanut-bot",
+    "name": "땅콩 쿠키봇",
+    "description": "단단한 팔로 거대한 충격을 자주 만들어요.",
+    "accentColor": "#B87934",
+    "baseCost": 110,
+    "costMultiplier": 1.15,
+    "discDamageMultiplier": 6.5,
+    "attackIntervalMs": 850
+  },
+  {
+    "id": "rainbow-bot",
+    "name": "무지개 쿠키봇",
+    "description": "무지개 에너지를 모아 폭발적인 공격을 해요.",
+    "accentColor": "#8D64D8",
+    "baseCost": 135,
+    "costMultiplier": 1.15,
+    "discDamageMultiplier": 9,
+    "attackIntervalMs": 700
+  },
+  {
+    "id": "star-bot",
+    "name": "별빛 쿠키봇",
+    "description": "별빛 속도로 표적을 향해 강한 원반을 쏴요.",
+    "accentColor": "#4C77D9",
+    "baseCost": 165,
+    "costMultiplier": 1.15,
+    "discDamageMultiplier": 12.5,
+    "attackIntervalMs": 575
+  },
+  {
+    "id": "lava-bot",
+    "name": "용암 쿠키봇",
+    "description": "뜨거운 용암 동력으로 쉬지 않고 공격해요.",
+    "accentColor": "#ED573E",
+    "baseCost": 205,
+    "costMultiplier": 1.15,
+    "discDamageMultiplier": 17.5,
+    "attackIntervalMs": 450
+  },
+  {
+    "id": "royal-bot",
+    "name": "로열 쿠키봇",
+    "description": "쿠키 왕국 최고의 힘과 속도를 가진 쿠키봇이에요.",
+    "accentColor": "#D6A51F",
+    "baseCost": 250,
+    "costMultiplier": 1.15,
+    "discDamageMultiplier": 25,
+    "attackIntervalMs": 350
   }
 ]

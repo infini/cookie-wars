@@ -1,6 +1,14 @@
 import * as Haptics from 'expo-haptics';
 import { useAudioPlayer } from 'expo-audio';
-import React, { createContext, PropsWithChildren, useCallback, useContext, useMemo } from 'react';
+import React, {
+  createContext,
+  PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+} from 'react';
+import { AUDIO_SETTINGS } from '../config';
 import { useGame } from '../state/GameContext';
 
 export type SoundName =
@@ -9,11 +17,8 @@ export type SoundName =
   | 'upgrade'
   | 'blocked'
   | 'hit'
-  | 'laser'
   | 'disc'
-  | 'enemyDefeated'
-  | 'victory'
-  | 'defeat';
+  | 'enemyDefeated';
 
 interface FeedbackContextValue {
   play: (name: SoundName) => void;
@@ -31,16 +36,22 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
   const upgrade = useAudioPlayer(require('../../assets/audio/upgrade.ogg'));
   const blocked = useAudioPlayer(require('../../assets/audio/blocked.ogg'));
   const hit = useAudioPlayer(require('../../assets/audio/hit.ogg'));
-  const laser = useAudioPlayer(require('../../assets/audio/bot-laser.ogg'));
   const disc = useAudioPlayer(require('../../assets/audio/disc-throw.ogg'));
   const enemyDefeated = useAudioPlayer(require('../../assets/audio/enemy-defeated.ogg'));
-  const victory = useAudioPlayer(require('../../assets/audio/victory.ogg'));
-  const defeat = useAudioPlayer(require('../../assets/audio/defeat.ogg'));
 
   const players = useMemo(
-    () => ({ cookie, menu, upgrade, blocked, hit, laser, disc, enemyDefeated, victory, defeat }),
-    [cookie, menu, upgrade, blocked, hit, laser, disc, enemyDefeated, victory, defeat],
+    () => ({ cookie, menu, upgrade, blocked, hit, disc, enemyDefeated }),
+    [cookie, menu, upgrade, blocked, hit, disc, enemyDefeated],
   );
+
+  useEffect(() => {
+    const volume = AUDIO_SETTINGS.levels.find(
+      (item) => item.level === state.soundVolumeLevel,
+    )?.volume ?? AUDIO_SETTINGS.levels[0].volume;
+    Object.values(players).forEach((player) => {
+      player.volume = volume;
+    });
+  }, [players, state.soundVolumeLevel]);
 
   const play = useCallback(
     (name: SoundName) => {

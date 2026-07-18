@@ -7,16 +7,18 @@
 | 파일 | 원본 | 라이선스 |
 |---|---|---|
 | `cookie.png`, `flying-disc.png`, 앱 아이콘·스플래시 | Google Noto Emoji | Apache License 2.0 |
+| `assets/images/cookies/*.png` 10종 진화 이미지 | Google Noto Emoji | Apache License 2.0 |
 | `cookie-bot.png` | Kenney Robot Pack | CC0 1.0 |
 | `monster-body.png`, `monster-eye.png`, `monster-mouth.png` | Kenney Monster Builder Pack | CC0 1.0 |
+| `cookie-castle.png` | Kenney Medieval RTS Pack | CC0 1.0 |
 
 ## 효과음
 
 | 사용처 | 원본 팩 | 라이선스 |
 |---|---|---|
-| 쿠키 클릭, 메뉴, 강화, 사용 불가 | Kenney Interface Sounds | CC0 1.0 |
+| 쿠키 클릭 | Kenney UI Audio | CC0 1.0 |
+| 메뉴, 강화, 사용 불가 | Kenney Interface Sounds | CC0 1.0 |
 | 피격, 원반, 적 처치 | Kenney Impact Sounds / Sci-Fi Sounds | CC0 1.0 |
-| 쿠키봇 레이저 | Kenney Sci-Fi Sounds | CC0 1.0 |
 | 승리, 패배 | Kenney Music Jingles | CC0 1.0 |
 
 ## 글꼴과 아이콘
@@ -32,7 +34,9 @@
 - [Google Noto Emoji](https://github.com/googlefonts/noto-emoji)
 - [Kenney Monster Builder Pack](https://kenney.nl/assets/monster-builder-pack)
 - [Kenney Robot Pack](https://kenney.nl/assets/robot-pack)
+- [Kenney Medieval RTS Pack](https://kenney.nl/assets/medieval-rts)
 - [Kenney Interface Sounds](https://kenney.nl/assets/interface-sounds)
+- [Kenney UI Audio](https://kenney.nl/assets/ui-audio)
 - [Kenney Impact Sounds](https://kenney.nl/assets/impact-sounds)
 - [Kenney Sci-Fi Sounds](https://kenney.nl/assets/sci-fi-sounds)
 - [Kenney Music Jingles](https://kenney.nl/assets/music-jingles)

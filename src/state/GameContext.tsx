@@ -9,15 +9,21 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { DIFFICULTIES, PROGRESSION, getDifficulty } from '../config';
 import {
-  COOKIE_UPGRADES,
-  DIFFICULTIES,
-  DISC,
-  getDifficulty,
-  PRIMARY_BOT,
-} from '../config';
+  calculateCookieStats,
+  getBotOffer,
+  getDifficultyProgress,
+  getDiscProgress,
+  getUpgradeProgress,
+} from '../domain/gameSelectors';
 import { loadGame, saveGame } from '../services/storage';
-import { BattleRewardResult, CookieStats, GameState } from '../types/game';
+import {
+  BattleRewardResult,
+  CookieStats,
+  GameState,
+  SoundVolumeLevel,
+} from '../types/game';
 import { gameReducer, initialGameState } from './gameReducer';
 
 interface GameContextValue {
@@ -26,36 +32,20 @@ interface GameContextValue {
   stats: CookieStats;
   clickCookie: () => number;
   buyUpgrade: (upgradeId: string) => boolean;
-  buyDisc: () => boolean;
-  upgradeDisc: () => boolean;
-  buyBot: () => boolean;
-  getBotCost: () => number;
+  buyDisc: (discId: string) => boolean;
+  upgradeDisc: (discId: string) => boolean;
+  equipDisc: (discId: string) => boolean;
+  buyBot: (botId: string) => boolean;
   setDifficulty: (difficultyId: string) => boolean;
   discoverMonster: (monsterId: string) => void;
   acknowledgeMonsters: () => void;
   completeBattle: (difficultyId: string) => BattleRewardResult;
   toggleSound: () => void;
+  setSoundVolume: (level: SoundVolumeLevel) => void;
   toggleVibration: () => void;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
-
-function getUpgradeValue(state: GameState, id: string): number {
-  const upgrade = COOKIE_UPGRADES.find((item) => item.id === id);
-  if (!upgrade) return 0;
-  const level = state.upgradeLevels[id] ?? upgrade.levels[0].level;
-  return upgrade.levels.find((item) => item.level === level)?.value ?? upgrade.levels[0].value;
-}
-
-export function calculateCookieStats(state: GameState): CookieStats {
-  return {
-    clickPower: getUpgradeValue(state, 'clickPower'),
-    sizePercent: getUpgradeValue(state, 'cookieSize'),
-    autoProduction: getUpgradeValue(state, 'autoProduction'),
-    maxHealth: getUpgradeValue(state, 'cookieHealth'),
-    cookieLevel: state.upgradeLevels.clickPower ?? 1,
-  };
-}
 
 export function GameProvider({ children }: PropsWithChildren) {
   const [state, dispatch] = useReducer(gameReducer, initialGameState);
@@ -77,7 +67,7 @@ export function GameProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!hydrated) return;
-    const timer = setTimeout(() => saveGame(state), 250);
+    const timer = setTimeout(() => saveGame(state), PROGRESSION.saveDebounceMs);
     return () => clearTimeout(timer);
   }, [hydrated, state]);
 
@@ -87,7 +77,7 @@ export function GameProvider({ children }: PropsWithChildren) {
     if (!hydrated || stats.autoProduction <= 0) return;
     const timer = setInterval(() => {
       dispatch({ type: 'GAIN_COOKIES', amount: stats.autoProduction });
-    }, 1000);
+    }, PROGRESSION.autoProductionIntervalMs);
     return () => clearInterval(timer);
   }, [hydrated, stats.autoProduction]);
 
@@ -98,42 +88,35 @@ export function GameProvider({ children }: PropsWithChildren) {
   }, []);
 
   const buyUpgrade = useCallback((upgradeId: string) => {
-    const current = stateRef.current;
-    const upgrade = COOKIE_UPGRADES.find((item) => item.id === upgradeId);
-    if (!upgrade) return false;
-    const level = current.upgradeLevels[upgradeId] ?? upgrade.levels[0].level;
-    const next = upgrade.levels.find((item) => item.level === level + 1);
-    if (!next || current.cookies < next.cost) return false;
-    dispatch({ type: 'BUY_UPGRADE', upgradeId, cost: next.cost, nextLevel: next.level });
+    const progress = getUpgradeProgress(stateRef.current, upgradeId);
+    if (!progress?.affordable) return false;
+    dispatch({ type: 'BUY_UPGRADE', upgradeId });
     return true;
   }, []);
 
-  const buyDisc = useCallback(() => {
-    const current = stateRef.current;
-    if (current.discOwned || current.cookies < DISC.purchaseCost) return false;
-    dispatch({ type: 'BUY_DISC' });
+  const buyDisc = useCallback((discId: string) => {
+    if (!getDiscProgress(stateRef.current, discId).purchaseAffordable) return false;
+    dispatch({ type: 'BUY_DISC', discId });
     return true;
   }, []);
 
-  const upgradeDisc = useCallback(() => {
-    const current = stateRef.current;
-    const next = DISC.levels.find((level) => level.level === current.discLevel + 1);
-    if (!current.discOwned || !next || current.cookies < next.cost) return false;
-    dispatch({ type: 'UPGRADE_DISC', cost: next.cost, nextLevel: next.level });
+  const upgradeDisc = useCallback((discId: string) => {
+    if (!getDiscProgress(stateRef.current, discId).upgradeAffordable) return false;
+    dispatch({ type: 'UPGRADE_DISC', discId });
     return true;
   }, []);
 
-  const getBotCost = useCallback(() => {
-    const count = stateRef.current.botCounts[PRIMARY_BOT.id] ?? 0;
-    return Math.floor(PRIMARY_BOT.baseCost * PRIMARY_BOT.costMultiplier ** count);
+  const equipDisc = useCallback((discId: string) => {
+    if (!stateRef.current.ownedDiscIds.includes(discId)) return false;
+    dispatch({ type: 'EQUIP_DISC', discId });
+    return true;
   }, []);
 
-  const buyBot = useCallback(() => {
-    const cost = getBotCost();
-    if (stateRef.current.cookies < cost) return false;
-    dispatch({ type: 'BUY_BOT', botId: PRIMARY_BOT.id, cost });
+  const buyBot = useCallback((botId: string) => {
+    if (!getBotOffer(stateRef.current, botId)?.affordable) return false;
+    dispatch({ type: 'BUY_BOT', botId });
     return true;
-  }, [getBotCost]);
+  }, []);
 
   const setDifficulty = useCallback((difficultyId: string) => {
     const index = DIFFICULTIES.findIndex((difficulty) => difficulty.id === difficultyId);
@@ -152,14 +135,22 @@ export function GameProvider({ children }: PropsWithChildren) {
 
   const completeBattle = useCallback((difficultyId: string): BattleRewardResult => {
     const current = stateRef.current;
+    const difficulty = getDifficulty(difficultyId);
+    const difficultyIndex = DIFFICULTIES.findIndex((item) => item.id === difficultyId);
+    const progress = getDifficultyProgress(current, difficultyId);
     const firstClear = !current.rewardClaimedDifficultyIds.includes(difficultyId);
-    const reward = firstClear ? getDifficulty(difficultyId).reward : 0;
-    dispatch({
-      type: 'COMPLETE_BATTLE',
-      difficultyId,
-      reward: getDifficulty(difficultyId).reward,
-    });
-    return { firstClear, reward };
+    const difficultyWins = progress.wins + 1;
+    const unlockedNextDifficulty = difficultyIndex < DIFFICULTIES.length - 1
+      && progress.wins < progress.requiredWins
+      && difficultyWins >= progress.requiredWins;
+    dispatch({ type: 'COMPLETE_BATTLE', difficultyId });
+    return {
+      firstClear,
+      reward: firstClear ? difficulty.reward : 0,
+      difficultyWins,
+      winsRequired: progress.requiredWins,
+      unlockedNextDifficulty,
+    };
   }, []);
 
   const value = useMemo<GameContextValue>(
@@ -171,13 +162,14 @@ export function GameProvider({ children }: PropsWithChildren) {
       buyUpgrade,
       buyDisc,
       upgradeDisc,
+      equipDisc,
       buyBot,
-      getBotCost,
       setDifficulty,
       discoverMonster,
       acknowledgeMonsters,
       completeBattle,
       toggleSound: () => dispatch({ type: 'TOGGLE_SOUND' }),
+      setSoundVolume: (level) => dispatch({ type: 'SET_SOUND_VOLUME', level }),
       toggleVibration: () => dispatch({ type: 'TOGGLE_VIBRATION' }),
     }),
     [
@@ -188,8 +180,8 @@ export function GameProvider({ children }: PropsWithChildren) {
       buyUpgrade,
       buyDisc,
       upgradeDisc,
+      equipDisc,
       buyBot,
-      getBotCost,
       setDifficulty,
       discoverMonster,
       acknowledgeMonsters,

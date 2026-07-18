@@ -9,6 +9,7 @@ import { formatNumber } from '../utils/format';
 import { CookieImage } from '../components/CookieImage';
 import { GameButton } from '../components/GameButton';
 import { StatChip } from '../components/StatChip';
+import { getCookie } from '../config';
 
 interface FloatingGainProps {
   id: number;
@@ -45,6 +46,7 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
   const scale = useRef(new Animated.Value(1)).current;
   const nextGainId = useRef(0);
   const [gains, setGains] = useState<{ id: number; amount: number }[]>([]);
+  const activeCookie = getCookie(stats.activeCookieId);
 
   const handleCookiePress = () => {
     const amount = clickCookie();
@@ -68,7 +70,7 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
       </View>
 
       <View style={styles.hero}>
-        <Text style={styles.guide}>쿠키를 눌러 보세요!</Text>
+        <Text style={styles.guide}>{activeCookie.name}를 눌러요!</Text>
         <View style={styles.cookieStage}>
           <View style={styles.ringOuter} />
           <View style={styles.ringInner} />
@@ -86,7 +88,10 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
           >
             <Animated.View style={{ transform: [{ scale }] }}>
               <LinearGradient colors={gradients.cookieButton} style={styles.cookieButton}>
-                <CookieImage size={Math.min(224, 190 * (stats.sizePercent / 100))} />
+                <CookieImage
+                  imageKey={activeCookie.imageKey}
+                  size={Math.min(224, 190 * (stats.sizePercent / 100))}
+                />
               </LinearGradient>
             </Animated.View>
           </Pressable>
