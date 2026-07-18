@@ -3,7 +3,7 @@ import { Image, StyleSheet, View } from 'react-native';
 import { CookieImage } from './CookieImage';
 import { BATTLE_UI } from '../config';
 
-export function CookieCastle({
+export const CookieCastle = React.memo(function CookieCastle({
   size = 104,
   cookieImageKey = 'classic',
   grounded = false,
@@ -35,7 +35,7 @@ export function CookieCastle({
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   emblem: {

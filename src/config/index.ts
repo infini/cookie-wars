@@ -1,9 +1,14 @@
 import botData from './bots.json';
 import audioSettingData from './audio-settings.json';
 import battleAudioData from './battle-audio.json';
+import battleFeedbackData from './battle-feedback.json';
+import battleMapData from './battle-maps.json';
+import battleMapRuleData from './battle-map-rules.json';
 import battleRuleData from './battle-rules.json';
 import battleStageRuleData from './battle-stage-rules.json';
 import battleUiData from './battle-ui.json';
+import bossBalanceData from './boss-balance.json';
+import bossBehaviorData from './boss-behavior.json';
 import cookieUpgradeData from './cookie-upgrades.json';
 import cookieUpgradeRuleData from './cookie-upgrade-rules.json';
 import cookieData from './cookies.json';
@@ -20,9 +25,14 @@ import {
   BotConfig,
   AudioSettingsConfig,
   BattleAudioConfig,
+  BattleFeedbackConfig,
+  BattleMapConfig,
+  BattleMapRulesConfig,
   BattleRulesConfig,
   BattleStageRulesConfig,
   BattleUiConfig,
+  BossBalanceConfig,
+  BossBehaviorConfig,
   CookieConfig,
   CookieUpgradeRulesConfig,
   DifficultyConfig,
@@ -41,9 +51,14 @@ export const COOKIE_UPGRADES = cookieUpgradeData as UpgradeConfig[];
 export const COOKIE_UPGRADE_RULES = cookieUpgradeRuleData as CookieUpgradeRulesConfig;
 export const AUDIO_SETTINGS = audioSettingData as AudioSettingsConfig;
 export const BATTLE_AUDIO = battleAudioData as BattleAudioConfig;
+export const BATTLE_FEEDBACK = battleFeedbackData as BattleFeedbackConfig;
+export const BATTLE_MAPS = battleMapData as BattleMapConfig[];
+export const BATTLE_MAP_RULES = battleMapRuleData as BattleMapRulesConfig;
 export const BATTLE_RULES = battleRuleData as BattleRulesConfig;
 export const BATTLE_STAGE_RULES = battleStageRuleData as BattleStageRulesConfig;
 export const BATTLE_UI = battleUiData as BattleUiConfig;
+export const BOSS_BALANCE = bossBalanceData as BossBalanceConfig;
+export const BOSS_BEHAVIOR = bossBehaviorData as BossBehaviorConfig;
 export const DISCS = discData as DiscConfig[];
 export const DISC_UPGRADE_RULES = discUpgradeRuleData as DiscUpgradeRulesConfig;
 export const ENEMY_DISCS = enemyDiscData as EnemyDiscConfig[];
@@ -66,6 +81,23 @@ const cookieById = new Map(COOKIES.map((item) => [item.id, item]));
 
 export function getDifficulty(id: string): DifficultyConfig {
   return difficultyById.get(id) ?? DIFFICULTIES[0];
+}
+
+export function getBattleMapForBattle(
+  difficultyId: string,
+  battleNumber: number,
+): BattleMapConfig {
+  const difficultyIndex = Math.max(
+    0,
+    DIFFICULTIES.findIndex((difficulty) => difficulty.id === difficultyId),
+  );
+  const stageThemeIndex = Math.floor(
+    (Math.max(1, battleNumber) - 1) / BATTLE_MAP_RULES.stagesPerTheme,
+  );
+  const themeIndex = (
+    stageThemeIndex + difficultyIndex * BATTLE_MAP_RULES.difficultyThemeOffset
+  ) % BATTLE_MAPS.length;
+  return BATTLE_MAPS[themeIndex];
 }
 
 export function getEnemyDisc(level: number): EnemyDiscConfig {

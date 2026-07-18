@@ -2,7 +2,7 @@ import React from 'react';
 import { Image, View } from 'react-native';
 import { BATTLE_UI } from '../config';
 
-export function BotImage({
+export const BotImage = React.memo(function BotImage({
   size = 64,
   grounded = false,
 }: {
@@ -30,4 +30,4 @@ export function BotImage({
       />
     </View>
   );
-}
+});

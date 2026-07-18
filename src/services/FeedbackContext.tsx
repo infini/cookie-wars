@@ -9,12 +9,14 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-import { AUDIO_SETTINGS } from '../config';
+import { AUDIO_SETTINGS, BATTLE_AUDIO } from '../config';
 import { useGame } from '../state/GameContext';
 import {
   BATTLE_ACTION_SOUND_NAMES,
   BattleActionSoundName,
+  BattleSoundGroup,
   canPlayBattleActionSound,
+  getBattleSoundGroup,
   isBattleActionSound,
 } from './battleAudio';
 
@@ -23,12 +25,11 @@ export type SoundName =
   | 'menu'
   | 'upgrade'
   | 'blocked'
-  | 'hit'
-  | 'disc'
-  | 'enemyDefeated';
+  | BattleActionSoundName;
 
 interface FeedbackContextValue {
   play: (name: SoundName) => void;
+  startBattleMusic: () => void;
   stopBattleSounds: () => void;
   tap: () => void;
   success: () => void;
@@ -43,16 +44,53 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
   const menu = useAudioPlayer(require('../../assets/audio/menu-select.ogg'));
   const upgrade = useAudioPlayer(require('../../assets/audio/upgrade.ogg'));
   const blocked = useAudioPlayer(require('../../assets/audio/blocked.ogg'));
-  const hit = useAudioPlayer(require('../../assets/audio/hit.ogg'));
-  const disc = useAudioPlayer(require('../../assets/audio/disc-throw.ogg'));
-  const enemyDefeated = useAudioPlayer(require('../../assets/audio/enemy-defeated.ogg'));
+  const friendlyDisc = useAudioPlayer(require('../../assets/audio/disc-friendly.ogg'));
+  const enemyDisc = useAudioPlayer(require('../../assets/audio/disc-enemy.ogg'));
+  const giantDisc = useAudioPlayer(require('../../assets/audio/disc-giant.ogg'));
+  const hitLight1 = useAudioPlayer(require('../../assets/audio/hit-light-1.ogg'));
+  const hitLight2 = useAudioPlayer(require('../../assets/audio/hit-light-2.ogg'));
+  const hitLight3 = useAudioPlayer(require('../../assets/audio/hit-light-3.ogg'));
+  const hitHeavy = useAudioPlayer(require('../../assets/audio/hit-heavy.ogg'));
+  const bossMelee = useAudioPlayer(require('../../assets/audio/boss-melee.ogg'));
+  const bossEnrage = useAudioPlayer(require('../../assets/audio/boss-enrage.ogg'));
+  const battleMusic = useAudioPlayer(require('../../assets/audio/battle-loop.ogg'));
 
   const players = useMemo(
-    () => ({ cookie, menu, upgrade, blocked, hit, disc, enemyDefeated }),
-    [cookie, menu, upgrade, blocked, hit, disc, enemyDefeated],
+    () => ({
+      cookie,
+      menu,
+      upgrade,
+      blocked,
+      friendlyDisc,
+      enemyDisc,
+      giantDisc,
+      hitLight1,
+      hitLight2,
+      hitLight3,
+      hitHeavy,
+      bossMelee,
+      bossEnrage,
+      battleMusic,
+    }),
+    [
+      cookie,
+      menu,
+      upgrade,
+      blocked,
+      friendlyDisc,
+      enemyDisc,
+      giantDisc,
+      hitLight1,
+      hitLight2,
+      hitLight3,
+      hitHeavy,
+      bossMelee,
+      bossEnrage,
+      battleMusic,
+    ],
   );
   const playbackEpoch = useRef(0);
-  const lastBattleSoundAt = useRef<Partial<Record<BattleActionSoundName, number>>>({});
+  const lastBattleSoundAt = useRef<Partial<Record<BattleSoundGroup, number>>>({});
 
   const stopBattleSounds = useCallback(() => {
     playbackEpoch.current += 1;
@@ -62,15 +100,23 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
       player.pause();
       void player.seekTo(0).catch(() => undefined);
     });
-  }, [players]);
+    battleMusic.pause();
+    void battleMusic.seekTo(0).catch(() => undefined);
+  }, [battleMusic, players]);
 
   useEffect(() => {
     const volume = AUDIO_SETTINGS.levels.find(
       (item) => item.level === state.soundVolumeLevel,
     )?.volume ?? AUDIO_SETTINGS.levels[0].volume;
-    Object.values(players).forEach((player) => {
-      player.volume = volume;
+    Object.entries(players).forEach(([name, player]) => {
+      const battleMultiplier = name in BATTLE_AUDIO.volumeMultipliers
+        ? BATTLE_AUDIO.volumeMultipliers[
+          name as keyof typeof BATTLE_AUDIO.volumeMultipliers
+        ]
+        : 1;
+      player.volume = volume * battleMultiplier;
     });
+    battleMusic.loop = true;
   }, [players, state.soundVolumeLevel]);
 
   useEffect(() => {
@@ -88,7 +134,7 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
       const now = Date.now();
       if (isBattleActionSound(name)) {
         if (!canPlayBattleActionSound(name, lastBattleSoundAt.current, now)) return;
-        lastBattleSoundAt.current[name] = now;
+        lastBattleSoundAt.current[getBattleSoundGroup(name)] = now;
       }
       const requestedEpoch = playbackEpoch.current;
       const player = players[name];
@@ -98,6 +144,16 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     },
     [players, state.soundEnabled],
   );
+
+  const startBattleMusic = useCallback(() => {
+    if (!state.soundEnabled) return;
+    const requestedEpoch = playbackEpoch.current;
+    void battleMusic.seekTo(0).then(() => {
+      if (requestedEpoch === playbackEpoch.current && state.soundEnabled) {
+        battleMusic.play();
+      }
+    }).catch(() => undefined);
+  }, [battleMusic, state.soundEnabled]);
 
   const tap = useCallback(() => {
     if (!state.vibrationEnabled) return;
@@ -115,8 +171,8 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
   }, [state.vibrationEnabled]);
 
   const value = useMemo(
-    () => ({ play, stopBattleSounds, tap, success, error }),
-    [play, stopBattleSounds, tap, success, error],
+    () => ({ play, startBattleMusic, stopBattleSounds, tap, success, error }),
+    [play, startBattleMusic, stopBattleSounds, tap, success, error],
   );
   return <FeedbackContext.Provider value={value}>{children}</FeedbackContext.Provider>;
 }

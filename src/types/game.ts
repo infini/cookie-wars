@@ -76,6 +76,37 @@ export interface DifficultyConfig {
   enemyDiscLevel: number;
 }
 
+export interface BossBalanceConfig {
+  playerPowerBaseSurvivalSeconds: number;
+  hpMultiplierReference: number;
+  hpScalingExponent: number;
+  maximumPowerScaledSurvivalSeconds: number;
+  minimumAutomaticHitsToDefeat: number;
+}
+
+export interface BossBehaviorConfig {
+  globalAttackDamageMultiplier: number;
+  globalAttackCooldownMultiplier: number;
+  globalMoveSpeedMultiplier: number;
+  globalDifficultyMultiplier: number;
+  enrageHealthRatio: number;
+  enrageAttackCooldownMultiplier: number;
+  enrageProjectileDamageMultiplier: number;
+  enrageMeleeDamageMultiplier: number;
+  enrageAnnouncementMs: number;
+}
+
+export interface BattleMapConfig {
+  id: string;
+  name: string;
+  imageKey: string;
+}
+
+export interface BattleMapRulesConfig {
+  stagesPerTheme: number;
+  difficultyThemeOffset: number;
+}
+
 export interface GiantDiscConfig {
   damageMultiplier: number;
   speedMultiplier: number;
@@ -160,10 +191,94 @@ export interface AudioSettingsConfig {
 
 export interface BattleAudioConfig {
   minimumIntervalMs: {
-    disc: number;
-    hit: number;
-    enemyDefeated: number;
+    friendlyDisc: number;
+    enemyDisc: number;
+    giantDisc: number;
+    hitLight: number;
+    hitHeavy: number;
+    bossMelee: number;
+    bossEnrage: number;
   };
+  volumeMultipliers: {
+    friendlyDisc: number;
+    enemyDisc: number;
+    giantDisc: number;
+    hitLight1: number;
+    hitLight2: number;
+    hitLight3: number;
+    hitHeavy: number;
+    bossMelee: number;
+    bossEnrage: number;
+    battleMusic: number;
+  };
+}
+
+export interface BattleFeedbackConfig {
+  enemyAttackDurationMs: number;
+  enemyAttackWindupMs: number;
+  enemyAttackLungePixels: number;
+  enemyAttackScale: number;
+  enemyAttackWindupScale: number;
+  enemyAttackShakeCycles: number;
+  enemyHitDurationMs: number;
+  enemyHitShakePixels: number;
+  enemyHitScale: number;
+  enemyHitShakeCycles: number;
+  auraSizeMultiplier: number;
+  enragePulseScale: number;
+  castleHitDurationMs: number;
+  castleHitShakePixels: number;
+  castleHitScale: number;
+  impactEffectDurationMs: number;
+  impactBurstDurationMs: number;
+  impactEffectSize: number;
+  impactRingBorderWidth: number;
+  impactStartScale: number;
+  impactEndScale: number;
+  impactInnerScale: number;
+  impactSparkCount: number;
+  impactSparkLength: number;
+  impactSparkWidth: number;
+  impactSparkTravelPixels: number;
+  impactSparkEndScale: number;
+  impactBursts: Array<{
+    xRatio: number;
+    yRatio: number;
+    delayMs: number;
+    scale: number;
+    rotationDeg: number;
+  }>;
+  fieldShockwaveDurationMs: number;
+  fieldShockwaveSize: number;
+  fieldShockwaveHeightRatio: number;
+  fieldShockwaveStartScale: number;
+  fieldShockwaveEndScale: number;
+  fieldShockwaveMaximumOpacity: number;
+  fieldShockwaveBorderWidth: number;
+  damageTextRisePixels: number;
+  enemyProjectileTrailLengthMultiplier: number;
+  enemyProjectileTrailWidthMultiplier: number;
+  enemyProjectileTrailOpacity: number;
+  enemyProjectileGlowRadius: number;
+  attackAuraColor: string;
+  attackAuraBorderColor: string;
+  attackAuraBorderWidth: number;
+  enrageAuraColor: string;
+  enrageAuraBorderColor: string;
+  impactOuterColor: string;
+  impactInnerColor: string;
+  impactSparkColor: string;
+  impactSecondaryColor: string;
+  castleImpactOuterColor: string;
+  castleImpactInnerColor: string;
+  castleImpactSparkColor: string;
+  castleImpactSecondaryColor: string;
+  screenFlashColor: string;
+  screenFlashMaximumOpacity: number;
+  damageTextColor: string;
+  damageTextOutlineColor: string;
+  damageTextFontSize: number;
+  damageTextWidth: number;
 }
 
 export interface SaveMigrationsConfig {
@@ -215,7 +330,6 @@ export interface BattleStageRulesConfig {
 }
 
 export interface BattleUiConfig {
-  battleMapImageKey: string;
   castleRenderSize: number;
   castleTouchWidth: number;
   botRenderSize: number;
@@ -226,6 +340,10 @@ export interface BattleUiConfig {
   enemyLabelWidth: number;
   enemyHealthWidth: number;
   castleHealthWidth: number;
+  bossHealthHudTop: number;
+  bossHealthWidthRatio: number;
+  bossHealthBarHeight: number;
+  giantDiscButtonTop: number;
   unitPerspectiveFarY: number;
   unitPerspectiveNearY: number;
   unitPerspectiveFarScale: number;

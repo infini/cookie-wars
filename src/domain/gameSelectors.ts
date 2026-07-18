@@ -242,15 +242,20 @@ export function getBattleDifficulty(
   const enemyDiscBonus = Math.floor(
     stageWins / BATTLE_STAGE_RULES.enemyDiscLevelEveryWins,
   );
+  const baselineDifficulty = DIFFICULTIES[0];
   return {
     ...difficulty,
     enemyCount: difficulty.enemyCount + extraEnemies,
     hpMultiplier: difficulty.hpMultiplier
-      * (1 + stageWins * BATTLE_STAGE_RULES.hpMultiplierPerWin),
+      + baselineDifficulty.hpMultiplier * stageWins * BATTLE_STAGE_RULES.hpMultiplierPerWin,
     attackMultiplier: difficulty.attackMultiplier
-      * (1 + stageWins * BATTLE_STAGE_RULES.attackMultiplierPerWin),
+      + baselineDifficulty.attackMultiplier
+        * stageWins
+        * BATTLE_STAGE_RULES.attackMultiplierPerWin,
     moveSpeed: difficulty.moveSpeed
-      * (1 + stageWins * BATTLE_STAGE_RULES.moveSpeedMultiplierPerWin),
+      + baselineDifficulty.moveSpeed
+        * stageWins
+        * BATTLE_STAGE_RULES.moveSpeedMultiplierPerWin,
     enemyDiscLevel: Math.min(
       ENEMY_DISCS.length,
       difficulty.enemyDiscLevel + enemyDiscBonus,

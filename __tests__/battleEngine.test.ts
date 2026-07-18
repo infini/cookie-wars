@@ -1,15 +1,21 @@
 import {
   BATTLE_RULES,
+  BOSS_BALANCE,
+  BOSS_BEHAVIOR,
   BOTS,
   DIFFICULTIES,
   DISCS,
+  MONSTERS,
   getEnemyDisc,
   getEnemyWave,
 } from '../src/config';
+import { getBattleDifficulty } from '../src/domain/gameSelectors';
 import {
   BattleState,
   advanceBattle,
   calculateBotDiscSize,
+  calculateBotArmyDps,
+  calculateBossHealth,
   calculateCastleDiscDamage,
   calculateGiantDiscDamage,
   canThrowCastleDisc,
@@ -37,6 +43,7 @@ function activeBattle(): BattleState {
       spawnAt: 0,
       lastShotAt: 1000,
       lastMeleeAt: 1000,
+      enraged: false,
     }],
     enemyProjectiles: [],
     playerProjectiles: [{
@@ -167,6 +174,36 @@ describe('전투 엔진', () => {
     expect(calculateGiantDiscDamage(disc)).toBe(disc.damage * 30);
   });
 
+  test('거대 원반은 현재 최강 쿠키봇 일반 원반의 정확히 30배 피해다', () => {
+    const disc = DISCS[0].levels[0];
+    const strongestBot = BOTS[BOTS.length - 1];
+    const bots = [{ config: strongestBot, count: 3 }];
+    expect(calculateGiantDiscDamage(disc, bots)).toBe(
+      disc.damage * strongestBot.discDamageMultiplier * 3 * 30,
+    );
+  });
+
+  test('성장한 쿠키봇 군단도 단일 보스를 한 발에 처치하지 못한다', () => {
+    const playerDisc = DISCS[0].levels[0];
+    const bots = BOTS.map((config, index) => ({
+      config,
+      count: [65, 49, 44, 60, 65][index],
+    }));
+    const difficulty = getBattleDifficulty(DIFFICULTIES[4], 17);
+    const boss = MONSTERS.find((monster) => monster.id === 'cookie-tyrant')!;
+    const health = calculateBossHealth(boss.baseHp, difficulty, playerDisc, bots);
+    const strongestHit = Math.max(...bots.map((activeBot) => (
+      playerDisc.damage * activeBot.config.discDamageMultiplier * activeBot.count
+    )));
+
+    expect(calculateBotArmyDps(playerDisc, bots)).toBeGreaterThan(0);
+    expect(health).toBeGreaterThanOrEqual(
+      strongestHit * BOSS_BALANCE.minimumAutomaticHitsToDefeat,
+    );
+    expect(health).toBeGreaterThan(Math.round(boss.baseHp * difficulty.hpMultiplier));
+    expect(createBattleEnemies(difficulty, 1000, playerDisc, bots)[0].maxHp).toBe(health);
+  });
+
   test('쿠키봇은 공격 간격이 지나면 장착 원반을 자동 발사한다', () => {
     const difficulty = DIFFICULTIES[0];
     const bot = BOTS[0];
@@ -190,6 +227,120 @@ describe('전투 엔진', () => {
     expect(next.playerProjectiles[0].y).not.toBe(BATTLE_RULES.playerStartY);
     expect(next.playerProjectiles[0].size).toBe(calculateBotDiscSize(DISCS[0].levels[0]));
     expect(next.playerProjectiles[0].size).toBeLessThan(DISCS[0].levels[0].size);
+  });
+
+  test('보스는 근접 범위에 닿기 전에 원반 테이블 기준 2배 속도로 원거리 공격한다', () => {
+    const difficulty = DIFFICULTIES[0];
+    const enemyDisc = getEnemyDisc(difficulty.enemyDiscLevel);
+    const attackIntervalMs = enemyDisc.cooldownMs
+      * BOSS_BEHAVIOR.globalAttackCooldownMultiplier;
+    const beforeCooldown = activeBattle();
+    beforeCooldown.playerProjectiles = [];
+    const before = advanceBattle(beforeCooldown, {
+      difficulty,
+      enemyDisc,
+      playerDisc: DISCS[0].levels[0],
+      bots: [],
+      now: beforeCooldown.enemies[0].lastShotAt + attackIntervalMs - 1,
+      deltaMs: 0,
+    });
+    expect(before.enemyProjectiles).toHaveLength(0);
+
+    const atCooldown = activeBattle();
+    atCooldown.playerProjectiles = [];
+    atCooldown.enemies[0].y = BATTLE_RULES.enemyMeleeTriggerY - 0.1;
+    expect(atCooldown.enemies[0].y).toBeLessThan(BATTLE_RULES.enemyMeleeTriggerY);
+    expect(Math.hypot(
+      atCooldown.enemies[0].x - BATTLE_RULES.playerStartX,
+      atCooldown.enemies[0].y - BATTLE_RULES.playerStartY,
+    )).toBeLessThanOrEqual(BATTLE_RULES.enemyAttackRadius);
+    const fired = advanceBattle(atCooldown, {
+      difficulty,
+      enemyDisc,
+      playerDisc: DISCS[0].levels[0],
+      bots: [],
+      now: atCooldown.enemies[0].lastShotAt + attackIntervalMs,
+      deltaMs: 0,
+    });
+    expect(fired.enemyProjectiles).toHaveLength(1);
+    expect(fired.lastEvent?.kind).toBe('enemyDisc');
+  });
+
+  test('보스는 성 앞에 도착하면 2배 속도로 근접 공격한다', () => {
+    const difficulty = DIFFICULTIES[0];
+    const battle = activeBattle();
+    battle.playerProjectiles = [];
+    battle.enemies[0].y = BATTLE_RULES.enemyMeleeTriggerY;
+    const meleeIntervalMs = BATTLE_RULES.enemyMeleeIntervalMs
+      * BOSS_BEHAVIOR.globalAttackCooldownMultiplier;
+    const next = advanceBattle(battle, {
+      difficulty,
+      enemyDisc: getEnemyDisc(difficulty.enemyDiscLevel),
+      playerDisc: DISCS[0].levels[0],
+      bots: [],
+      now: battle.enemies[0].lastMeleeAt + meleeIntervalMs,
+      deltaMs: 0,
+    });
+    expect(next.baseHealth).toBeLessThan(battle.baseHealth);
+    expect(next.lastEvent?.kind).toBe('castleHit');
+    expect(next.lastEvent?.attackKind).toBe('melee');
+    expect(next.lastEvent?.sourceEnemyId).toBe(battle.enemies[0].id);
+  });
+
+  test('보스 이동 속도는 난이도 결과의 80%로 적용된다', () => {
+    const difficulty = DIFFICULTIES[0];
+    const battle = activeBattle();
+    battle.playerProjectiles = [];
+    const deltaMs = 100;
+    const next = advanceBattle(battle, {
+      difficulty,
+      enemyDisc: getEnemyDisc(difficulty.enemyDiscLevel),
+      playerDisc: DISCS[0].levels[0],
+      bots: [],
+      now: battle.now + deltaMs,
+      deltaMs,
+    });
+    const expectedMovement = difficulty.moveSpeed
+      * BOSS_BEHAVIOR.globalMoveSpeedMultiplier
+      * battle.enemies[0].moveSpeedMultiplier
+      * deltaMs
+      / BATTLE_RULES.enemyMoveDivisor;
+    expect(next.enemies[0].y).toBeCloseTo(battle.enemies[0].y + expectedMovement);
+  });
+
+  test('보스 원반은 기본 2배와 전체 난이도 1.2배 피해를 성에 입힌다', () => {
+    const difficulty = DIFFICULTIES[0];
+    const battle = activeBattle();
+    battle.playerProjectiles = [];
+    battle.enemyProjectiles = [{
+      id: 'enemy-disc-test',
+      owner: 'enemy',
+      sourceEnemyId: battle.enemies[0].id,
+      x: BATTLE_RULES.playerStartX,
+      y: BATTLE_RULES.coreProjectileHitY,
+      level: 1,
+      damage: 20,
+      size: 20,
+      speed: 90,
+      createdAt: 0,
+    }];
+    const next = advanceBattle(battle, {
+      difficulty,
+      enemyDisc: getEnemyDisc(difficulty.enemyDiscLevel),
+      playerDisc: DISCS[0].levels[0],
+      bots: [],
+      now: 1050,
+      deltaMs: 0,
+    });
+    const expectedDamage = Math.round(
+      20
+        * difficulty.attackMultiplier
+        * BOSS_BEHAVIOR.globalAttackDamageMultiplier
+        * BOSS_BEHAVIOR.globalDifficultyMultiplier,
+    );
+    expect(next.baseHealth).toBe(battle.baseHealth - expectedDamage);
+    expect(next.lastEvent?.kind).toBe('castleHit');
+    expect(next.lastEvent?.amount).toBe(expectedDamage);
   });
 
   test('공격 반경 밖의 먼 적에게는 성과 쿠키봇 모두 원반을 던지지 않는다', () => {

@@ -6,7 +6,7 @@ const discImages = {
   enemy: require('../../assets/images/enemy-disc.png'),
 };
 
-export function DiscImage({
+export const DiscImage = React.memo(function DiscImage({
   size = 60,
   style,
   team = 'friendly',
@@ -22,4 +22,4 @@ export function DiscImage({
       style={[{ width: size, height: size }, style]}
     />
   );
-}
+});

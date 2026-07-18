@@ -1,0 +1,11 @@
+{
+  "globalAttackDamageMultiplier": 2,
+  "globalAttackCooldownMultiplier": 0.5,
+  "globalMoveSpeedMultiplier": 0.8,
+  "globalDifficultyMultiplier": 1.2,
+  "enrageHealthRatio": 0.5,
+  "enrageAttackCooldownMultiplier": 0.72,
+  "enrageProjectileDamageMultiplier": 1.35,
+  "enrageMeleeDamageMultiplier": 1.35,
+  "enrageAnnouncementMs": 1000
+}

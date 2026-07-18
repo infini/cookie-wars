@@ -12,9 +12,19 @@ const cookieImages: Record<string, ImageSourcePropType> = {
   'party-cake': require('../../assets/images/cookies/party-cake.png'),
   'rice-cracker': require('../../assets/images/cookies/rice-cracker.png'),
   chocolate: require('../../assets/images/cookies/chocolate.png'),
+  candy: require('../../assets/images/cookies/candy.png'),
+  lollipop: require('../../assets/images/cookies/lollipop.png'),
+  custard: require('../../assets/images/cookies/custard.png'),
+  shortcake: require('../../assets/images/cookies/shortcake.png'),
+  dango: require('../../assets/images/cookies/dango.png'),
+  'shaved-ice': require('../../assets/images/cookies/shaved-ice.png'),
+  honey: require('../../assets/images/cookies/honey.png'),
+  pie: require('../../assets/images/cookies/pie.png'),
+  gem: require('../../assets/images/cookies/gem.png'),
+  crown: require('../../assets/images/cookies/crown.png'),
 };
 
-export function CookieImage({
+export const CookieImage = React.memo(function CookieImage({
   size,
   imageKey = 'classic',
   style,
@@ -30,4 +40,4 @@ export function CookieImage({
       style={[{ width: size, height: size }, style]}
     />
   );
-}
+});

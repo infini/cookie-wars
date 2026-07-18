@@ -2,6 +2,11 @@ import {
   AUDIO_SETTINGS,
   BATTLE_STAGE_RULES,
   BATTLE_RULES,
+  BATTLE_FEEDBACK,
+  BATTLE_MAPS,
+  BATTLE_MAP_RULES,
+  BOSS_BALANCE,
+  BOSS_BEHAVIOR,
   BOTS,
   COOKIE_UPGRADE_RULES,
   COOKIES,
@@ -13,6 +18,7 @@ import {
   GIANT_DISC,
   MONSTERS,
   PROGRESSION,
+  getBattleMapForBattle,
 } from '../src/config';
 import { getBattleDifficulty } from '../src/domain/gameSelectors';
 
@@ -98,13 +104,41 @@ describe('데이터 테이블', () => {
       'clickPower',
       'cookieHealth',
     ]);
-    expect(COOKIES).toHaveLength(10);
+    expect(COOKIES).toHaveLength(20);
     COOKIES.slice(1).forEach((cookie, index) => {
       expect(cookie.requiredTotalUpgradeLevels).toBeGreaterThan(
         COOKIES[index].requiredTotalUpgradeLevels,
       );
       expect(cookie.clickMultiplier).toBeGreaterThan(COOKIES[index].clickMultiplier);
     });
+    expect(COOKIES[10].name).toBe('별사탕 쿠키');
+    expect(COOKIES[COOKIES.length - 1].name).toBe('천상 왕관 쿠키');
+    expect(BOSS_BALANCE.playerPowerBaseSurvivalSeconds).toBeGreaterThan(0);
+    expect(BOSS_BALANCE.hpMultiplierReference).toBeGreaterThan(0);
+    expect(BOSS_BALANCE.maximumPowerScaledSurvivalSeconds)
+      .toBeGreaterThan(BOSS_BALANCE.playerPowerBaseSurvivalSeconds);
+    expect(BOSS_BALANCE.minimumAutomaticHitsToDefeat).toBeGreaterThan(1);
+    expect(BOSS_BEHAVIOR.globalAttackDamageMultiplier).toBe(2);
+    expect(BOSS_BEHAVIOR.globalAttackCooldownMultiplier).toBe(0.5);
+    expect(BOSS_BEHAVIOR.globalMoveSpeedMultiplier).toBe(0.8);
+    expect(BOSS_BEHAVIOR.globalDifficultyMultiplier).toBe(1.2);
+    expect(BOSS_BEHAVIOR.enrageHealthRatio).toBe(0.5);
+    expect(BATTLE_FEEDBACK.enemyAttackWindupMs).toBeGreaterThan(0);
+    expect(BATTLE_FEEDBACK.impactEffectDurationMs).toBeGreaterThan(0);
+    expect(BATTLE_FEEDBACK.impactBursts.length).toBeGreaterThanOrEqual(4);
+  });
+
+  test('전투 배경은 색상 변경이 아닌 서로 다른 네 개의 테마로 순환한다', () => {
+    expect(BATTLE_MAPS).toHaveLength(4);
+    expect(new Set(BATTLE_MAPS.map((map) => map.imageKey)).size).toBe(BATTLE_MAPS.length);
+    expect(new Set(BATTLE_MAPS.map((map) => map.name)).size).toBe(BATTLE_MAPS.length);
+    const themeIds = [1, 6, 11, 16].map((battleNumber) => (
+      getBattleMapForBattle('easy', battleNumber).id
+    ));
+    expect(new Set(themeIds).size).toBe(4);
+    expect(BATTLE_MAP_RULES.stagesPerTheme).toBe(5);
+    expect(getBattleMapForBattle('normal', 1).id)
+      .not.toBe(getBattleMapForBattle('easy', 1).id);
   });
 
   test('길 없는 보스 전장의 위치와 공격 반경은 데이터 테이블에서 제공한다', () => {
@@ -124,14 +158,28 @@ describe('데이터 테이블', () => {
     const second = getBattleDifficulty(DIFFICULTIES[0], 1);
     const final = getBattleDifficulty(DIFFICULTIES[0], PROGRESSION.winsToUnlockNextDifficulty - 1);
     expect(BATTLE_STAGE_RULES.hpMultiplierPerWin).toBeGreaterThan(0);
-    expect(BATTLE_STAGE_RULES.hpMultiplierPerWin).toBeCloseTo(0.05);
-    expect(BATTLE_STAGE_RULES.attackMultiplierPerWin).toBeCloseTo(0.03);
-    expect(BATTLE_STAGE_RULES.moveSpeedMultiplierPerWin).toBeCloseTo(0.015);
+    expect(BATTLE_STAGE_RULES.hpMultiplierPerWin).toBeCloseTo(0.08);
+    expect(BATTLE_STAGE_RULES.attackMultiplierPerWin).toBeCloseTo(0.05);
+    expect(BATTLE_STAGE_RULES.moveSpeedMultiplierPerWin).toBeCloseTo(0.001);
     expect(BATTLE_STAGE_RULES.extraEnemiesPerStep).toBe(0);
     expect(second.hpMultiplier).toBeGreaterThan(first.hpMultiplier);
     expect(second.attackMultiplier).toBeGreaterThan(first.attackMultiplier);
     expect(second.moveSpeed).toBeGreaterThan(first.moveSpeed);
     expect(final.enemyCount).toBe(1);
-    expect(final.enemyDiscLevel).toBeGreaterThan(first.enemyDiscLevel);
+    expect(final.enemyDiscLevel).toBe(first.enemyDiscLevel);
+  });
+
+  test('다음 난이도의 첫 전투는 이전 난이도의 20번째 전투보다 항상 강하다', () => {
+    DIFFICULTIES.slice(1).forEach((nextBase, index) => {
+      const previousFinal = getBattleDifficulty(
+        DIFFICULTIES[index],
+        PROGRESSION.winsToUnlockNextDifficulty - 1,
+      );
+      const nextFirst = getBattleDifficulty(nextBase, 0);
+      expect(nextFirst.hpMultiplier).toBeGreaterThan(previousFinal.hpMultiplier);
+      expect(nextFirst.attackMultiplier).toBeGreaterThan(previousFinal.attackMultiplier);
+      expect(nextFirst.moveSpeed).toBeGreaterThan(previousFinal.moveSpeed);
+      expect(nextFirst.enemyDiscLevel).toBeGreaterThan(previousFinal.enemyDiscLevel);
+    });
   });
 });

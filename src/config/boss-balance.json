@@ -1,0 +1,7 @@
+{
+  "playerPowerBaseSurvivalSeconds": 8,
+  "hpMultiplierReference": 0.1,
+  "hpScalingExponent": 0.5,
+  "maximumPowerScaledSurvivalSeconds": 30,
+  "minimumAutomaticHitsToDefeat": 6
+}

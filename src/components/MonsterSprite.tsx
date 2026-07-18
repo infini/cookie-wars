@@ -16,7 +16,11 @@ interface MonsterSpriteProps {
   grounded?: boolean;
 }
 
-export function MonsterSprite({ imageKey, size = 84, grounded = false }: MonsterSpriteProps) {
+export const MonsterSprite = React.memo(function MonsterSprite({
+  imageKey,
+  size = 84,
+  grounded = false,
+}: MonsterSpriteProps) {
   return (
     <View style={{ width: size, height: size }}>
       {grounded ? (
@@ -37,4 +41,4 @@ export function MonsterSprite({ imageKey, size = 84, grounded = false }: Monster
       />
     </View>
   );
-}
+});

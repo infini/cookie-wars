@@ -1,7 +1,23 @@
 {
   "minimumIntervalMs": {
-    "disc": 100,
-    "hit": 120,
-    "enemyDefeated": 160
+    "friendlyDisc": 100,
+    "enemyDisc": 180,
+    "giantDisc": 400,
+    "hitLight": 110,
+    "hitHeavy": 180,
+    "bossMelee": 250,
+    "bossEnrage": 500
+  },
+  "volumeMultipliers": {
+    "friendlyDisc": 0.82,
+    "enemyDisc": 0.88,
+    "giantDisc": 1,
+    "hitLight1": 0.82,
+    "hitLight2": 0.82,
+    "hitLight3": 0.82,
+    "hitHeavy": 1,
+    "bossMelee": 1,
+    "bossEnrage": 0.9,
+    "battleMusic": 0.28
   }
 }

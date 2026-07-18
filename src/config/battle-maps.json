@@ -1,0 +1,6 @@
+[
+  { "id": "medieval-meadow", "name": "초원 왕국", "imageKey": "medieval-meadow" },
+  { "id": "arctic-glacier", "name": "빙하 협곡", "imageKey": "arctic-glacier" },
+  { "id": "desert-temple", "name": "태양 신전", "imageKey": "desert-temple" },
+  { "id": "volcanic-rift", "name": "흑요석 균열", "imageKey": "volcanic-rift" }
+]

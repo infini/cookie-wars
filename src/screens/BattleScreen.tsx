@@ -11,30 +11,37 @@ import {
 } from 'react-native';
 import {
   BATTLE_RULES,
+  BATTLE_FEEDBACK,
   BATTLE_UI,
+  BOSS_BEHAVIOR,
   DIFFICULTIES,
   GIANT_DISC,
+  getBattleMapForBattle,
   getCookie,
   getDifficulty,
   getEnemyWaveMonsterIds,
 } from '../config';
 import {
+  ActiveBot,
   getActiveBots,
   getBattleDifficulty,
   getDifficultyProgress,
   getDiscProgress,
 } from '../domain/gameSelectors';
-import { BattleEventKind, useBattleEngine } from '../engine/useBattleEngine';
+import { BattleEvent, useBattleEngine } from '../engine/useBattleEngine';
 import { BotImage } from '../components/BotImage';
+import { getBattleMapImageSource } from '../components/BattleMapImage';
 import { CookieCastle } from '../components/CookieCastle';
 import { DiscImage } from '../components/DiscImage';
 import { GameButton } from '../components/GameButton';
 import { MonsterSprite } from '../components/MonsterSprite';
 import { useFeedback } from '../services/FeedbackContext';
+import { getLightHitSoundName } from '../services/battleAudio';
 import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import { BattleRewardResult } from '../types/game';
+import { formatNumber } from '../utils/format';
 
 export function getHealthColor(value: number, max: number): string {
   const ratio = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
@@ -53,7 +60,17 @@ function getPerspectiveScale(y: number): number {
     + (BATTLE_UI.unitPerspectiveNearScale - BATTLE_UI.unitPerspectiveFarScale) * progress;
 }
 
-function HealthBar({ value, max, width }: { value: number; max: number; width: number }) {
+function HealthBar({
+  value,
+  max,
+  width,
+  height = BATTLE_UI.healthBarHeight,
+}: {
+  value: number;
+  max: number;
+  width: number;
+  height?: number;
+}) {
   const ratio = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
   return (
     <View
@@ -61,7 +78,7 @@ function HealthBar({ value, max, width }: { value: number; max: number; width: n
         styles.healthTrack,
         {
           width,
-          height: BATTLE_UI.healthBarHeight,
+          height,
           borderWidth: BATTLE_UI.healthBarOutlineWidth,
           borderColor: BATTLE_UI.healthBarOutlineColor,
           backgroundColor: BATTLE_UI.healthBarTrackColor,
@@ -78,6 +95,229 @@ function HealthBar({ value, max, width }: { value: number; max: number; width: n
   );
 }
 
+function BattleImpactEffect({ event, now }: { event: BattleEvent | null; now: number }) {
+  if (
+    !event
+    || event.x === undefined
+    || event.y === undefined
+    || !['enemyHit', 'castleHit', 'bossEnraged', 'enemyDefeated'].includes(event.kind)
+  ) return null;
+  const ageMs = Math.max(0, now - event.at);
+  if (ageMs > BATTLE_FEEDBACK.impactEffectDurationMs) return null;
+
+  const isCastleImpact = event.kind === 'castleHit';
+  const overallProgress = Math.min(
+    1,
+    ageMs / BATTLE_FEEDBACK.impactEffectDurationMs,
+  );
+  const fieldProgress = Math.min(
+    1,
+    ageMs / BATTLE_FEEDBACK.fieldShockwaveDurationMs,
+  );
+  const fieldScale = BATTLE_FEEDBACK.fieldShockwaveStartScale + (
+    BATTLE_FEEDBACK.fieldShockwaveEndScale
+    - BATTLE_FEEDBACK.fieldShockwaveStartScale
+  ) * fieldProgress;
+  const showFieldShockwave = !isCastleImpact
+    && (event.attackSource === 'castle' || event.attackSource === 'giant');
+
+  return (
+    <View
+      pointerEvents="none"
+      style={[
+        styles.impactEffect,
+        {
+          left: `${event.x * 100}%`,
+          top: `${event.y * 100}%`,
+          width: BATTLE_FEEDBACK.impactEffectSize,
+          height: BATTLE_FEEDBACK.impactEffectSize,
+          marginLeft: -BATTLE_FEEDBACK.impactEffectSize / 2,
+          marginTop: -BATTLE_FEEDBACK.impactEffectSize / 2,
+        },
+      ]}
+    >
+      {showFieldShockwave ? (
+        <View style={[
+          styles.fieldShockwave,
+          {
+            width: BATTLE_FEEDBACK.fieldShockwaveSize,
+            height: BATTLE_FEEDBACK.fieldShockwaveSize
+              * BATTLE_FEEDBACK.fieldShockwaveHeightRatio,
+            left: (
+              BATTLE_FEEDBACK.impactEffectSize - BATTLE_FEEDBACK.fieldShockwaveSize
+            ) / 2,
+            top: (
+              BATTLE_FEEDBACK.impactEffectSize
+              - BATTLE_FEEDBACK.fieldShockwaveSize
+                * BATTLE_FEEDBACK.fieldShockwaveHeightRatio
+            ) / 2,
+            borderColor: BATTLE_FEEDBACK.impactOuterColor,
+            borderWidth: BATTLE_FEEDBACK.fieldShockwaveBorderWidth,
+            opacity: BATTLE_FEEDBACK.fieldShockwaveMaximumOpacity * (1 - fieldProgress),
+            transform: [{ scale: fieldScale }],
+          },
+        ]} />
+      ) : null}
+
+      {BATTLE_FEEDBACK.impactBursts.map((burst, burstIndex) => {
+        const burstAgeMs = ageMs - burst.delayMs;
+        if (burstAgeMs < 0 || burstAgeMs > BATTLE_FEEDBACK.impactBurstDurationMs) {
+          return null;
+        }
+        const progress = Math.min(
+          1,
+          burstAgeMs / BATTLE_FEEDBACK.impactBurstDurationMs,
+        );
+        const scale = (
+          BATTLE_FEEDBACK.impactStartScale + (
+            BATTLE_FEEDBACK.impactEndScale - BATTLE_FEEDBACK.impactStartScale
+          ) * progress
+        ) * burst.scale;
+        const primaryColor = isCastleImpact
+          ? BATTLE_FEEDBACK.castleImpactSparkColor
+          : BATTLE_FEEDBACK.impactSparkColor;
+        const secondaryColor = isCastleImpact
+          ? BATTLE_FEEDBACK.castleImpactSecondaryColor
+          : BATTLE_FEEDBACK.impactSecondaryColor;
+        return (
+          <View
+            key={`impact-burst-${burstIndex}`}
+            style={[
+              styles.impactBurst,
+              {
+                opacity: 1 - progress,
+                transform: [
+                  { translateX: burst.xRatio * BATTLE_FEEDBACK.impactEffectSize },
+                  { translateY: burst.yRatio * BATTLE_FEEDBACK.impactEffectSize },
+                  { rotate: `${burst.rotationDeg}deg` },
+                  { scale },
+                ],
+              },
+            ]}
+          >
+            <View style={[
+              styles.impactOuter,
+              {
+                borderColor: isCastleImpact
+                  ? BATTLE_FEEDBACK.castleImpactOuterColor
+                  : BATTLE_FEEDBACK.impactOuterColor,
+                borderWidth: BATTLE_FEEDBACK.impactRingBorderWidth,
+              },
+            ]} />
+            {Array.from({ length: BATTLE_FEEDBACK.impactSparkCount }, (_, index) => {
+              const angle = index * 360 / BATTLE_FEEDBACK.impactSparkCount;
+              return (
+                <View
+                  key={`impact-spark-${index}`}
+                  style={[
+                    styles.impactSpark,
+                    {
+                      width: BATTLE_FEEDBACK.impactSparkWidth,
+                      height: BATTLE_FEEDBACK.impactSparkLength,
+                      left: (
+                        BATTLE_FEEDBACK.impactEffectSize
+                        - BATTLE_FEEDBACK.impactSparkWidth
+                      ) / 2,
+                      top: (
+                        BATTLE_FEEDBACK.impactEffectSize
+                        - BATTLE_FEEDBACK.impactSparkLength
+                      ) / 2,
+                      backgroundColor: index % 2 === 0 ? primaryColor : secondaryColor,
+                      transform: [
+                        { rotate: `${angle}deg` },
+                        {
+                          translateY: -(
+                            BATTLE_FEEDBACK.impactSparkTravelPixels * progress
+                          ),
+                        },
+                        {
+                          scaleY: 1 - (
+                            1 - BATTLE_FEEDBACK.impactSparkEndScale
+                          ) * progress,
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              );
+            })}
+            <View style={[
+              styles.impactInner,
+              {
+                width: `${BATTLE_FEEDBACK.impactInnerScale * 100}%`,
+                height: `${BATTLE_FEEDBACK.impactInnerScale * 100}%`,
+                backgroundColor: isCastleImpact
+                  ? BATTLE_FEEDBACK.castleImpactInnerColor
+                  : BATTLE_FEEDBACK.impactInnerColor,
+              },
+            ]} />
+          </View>
+        );
+      })}
+
+      {event.amount ? (
+        <Text numberOfLines={1} style={[
+          styles.damageText,
+          {
+            color: BATTLE_FEEDBACK.damageTextColor,
+            fontSize: BATTLE_FEEDBACK.damageTextFontSize,
+            width: BATTLE_FEEDBACK.damageTextWidth,
+            left: (
+              BATTLE_FEEDBACK.impactEffectSize - BATTLE_FEEDBACK.damageTextWidth
+            ) / 2,
+            opacity: 1 - overallProgress,
+            textShadowColor: BATTLE_FEEDBACK.damageTextOutlineColor,
+            textShadowRadius: BATTLE_FEEDBACK.impactRingBorderWidth,
+            transform: [{
+              translateY: -BATTLE_FEEDBACK.damageTextRisePixels * overallProgress,
+            }],
+          },
+        ]}>-{formatNumber(event.amount)}</Text>
+      ) : null}
+    </View>
+  );
+}
+
+const BattleBotFormation = React.memo(function BattleBotFormation({
+  bots,
+}: {
+  bots: ActiveBot[];
+}) {
+  return (
+    <>
+      {bots.map((bot, index) => {
+        const slot = BATTLE_RULES.botFormationSlots[
+          index % BATTLE_RULES.botFormationSlots.length
+        ];
+        return (
+          <View
+            key={bot.config.id}
+            style={[
+              styles.bot,
+              {
+                left: `${slot.x * 100}%`,
+                top: `${slot.y * 100}%`,
+                width: BATTLE_UI.botLabelWidth,
+                marginLeft: -BATTLE_UI.botLabelWidth / 2,
+                marginTop: -(
+                  BATTLE_UI.botRenderSize * getPerspectiveScale(slot.y)
+                  + BATTLE_UI.enemyAnchorLabelOffset
+                ),
+                zIndex: Math.round(slot.y * 1000),
+              },
+            ]}
+          >
+            <Text style={[styles.allyName, styles.botName]} numberOfLines={1}>
+              {bot.config.name}{bot.count > 1 ? ` ×${bot.count}` : ''}
+            </Text>
+            <BotImage size={BATTLE_UI.botRenderSize * getPerspectiveScale(slot.y)} grounded />
+          </View>
+        );
+      })}
+    </>
+  );
+});
+
 interface BattleScreenProps {
   onReturnToGame: () => void;
 }
@@ -92,18 +332,39 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
     () => getBattleDifficulty(baseDifficulty, difficultyProgress.wins),
     [baseDifficulty, difficultyProgress.wins],
   );
+  const battleMap = useMemo(
+    () => getBattleMapForBattle(baseDifficulty.id, difficultyProgress.currentBattleNumber),
+    [baseDifficulty.id, difficultyProgress.currentBattleNumber],
+  );
   const activeCookie = getCookie(stats.activeCookieId);
-  const discProgress = getDiscProgress(game);
-  const playerDisc = discProgress.current;
+  const playerDisc = useMemo(
+    () => getDiscProgress(game).current,
+    [game.selectedDiscId, game.discLevels],
+  );
+  const discAvailable = game.ownedDiscIds.includes(game.selectedDiscId);
   const activeBots = useMemo(() => getActiveBots(game), [game.botCounts]);
   const [rewardResult, setRewardResult] = useState<BattleRewardResult | null>(null);
   const handledResult = useRef(false);
   const giantDiscRenderSize = Math.round(screenWidth * GIANT_DISC.renderWidthRatio);
 
-  const onEvent = useCallback((kind: BattleEventKind) => {
-    if (kind === 'disc') feedback.play('disc');
-    if (kind === 'hit') feedback.play('hit');
-    if (kind === 'enemyDefeated') feedback.play('enemyDefeated');
+  const onEvent = useCallback((event: BattleEvent) => {
+    const { kind } = event;
+    if (kind === 'disc') {
+      feedback.play(event.attackSource === 'giant' ? 'giantDisc' : 'friendlyDisc');
+    }
+    if (kind === 'enemyDisc') feedback.play('enemyDisc');
+    if (kind === 'enemyHit') {
+      if (event.attackSource === 'giant' || event.attackSource === 'castle') {
+        feedback.play('hitHeavy');
+      } else {
+        feedback.play(getLightHitSoundName(event.id));
+      }
+    }
+    if (kind === 'castleHit') {
+      feedback.play(event.attackKind === 'melee' ? 'bossMelee' : 'hitHeavy');
+    }
+    if (kind === 'bossEnraged') feedback.play('bossEnrage');
+    if (kind === 'enemyDefeated') feedback.play('hitHeavy');
     if (kind === 'victory') {
       feedback.stopBattleSounds();
       feedback.success();
@@ -117,11 +378,28 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
   const engine = useBattleEngine({
     difficulty,
     playerDisc,
-    discAvailable: discProgress.owned,
+    discAvailable,
     bots: activeBots,
     maxHealth: stats.maxHealth,
     onEvent,
   });
+  const lastEvent = engine.state.lastEvent;
+  const lastEventAgeMs = lastEvent
+    ? Math.max(0, engine.state.now - lastEvent.at)
+    : Number.POSITIVE_INFINITY;
+  const castleHitVisible = Boolean(
+    lastEvent?.kind === 'castleHit'
+    && lastEventAgeMs <= BATTLE_FEEDBACK.castleHitDurationMs,
+  );
+  const castleHitProgress = castleHitVisible
+    ? Math.min(1, lastEventAgeMs / BATTLE_FEEDBACK.castleHitDurationMs)
+    : 1;
+  const castleHitWave = castleHitVisible ? Math.sin(castleHitProgress * Math.PI) : 0;
+  const castleHitShake = castleHitVisible
+    ? Math.sin(
+      castleHitProgress * Math.PI * BATTLE_FEEDBACK.enemyHitShakeCycles,
+    ) * BATTLE_FEEDBACK.castleHitShakePixels * (1 - castleHitProgress)
+    : 0;
 
   useEffect(() => {
     if (engine.state.status === 'victory' && !handledResult.current) {
@@ -145,6 +423,7 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
     getEnemyWaveMonsterIds(difficulty.enemyWaveId).forEach(discoverMonster);
     engine.start();
     feedback.play('menu');
+    feedback.startBattleMusic();
     feedback.tap();
   };
 
@@ -158,12 +437,14 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
   const remainingEnemyCount = useMemo(() => engine.state.enemies.filter(
     (enemy) => enemy.hp > 0,
   ).length, [engine.state.enemies]);
-  const hasWeapon = discProgress.owned && activeBots.length > 0;
+  const displayedBoss = engine.state.enemies.find((enemy) => enemy.hp > 0)
+    ?? engine.state.enemies[0];
+  const hasWeapon = discAvailable && activeBots.length > 0;
 
   return (
     <View style={styles.root}>
       <ImageBackground
-        source={require('../../assets/images/maps/battle-map-medieval.png')}
+        source={getBattleMapImageSource(battleMap.imageKey)}
         resizeMode="cover"
         style={styles.field}
         imageStyle={styles.mapImage}
@@ -172,6 +453,32 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
           <Text style={styles.stageHud}>{difficulty.name} · 전투 {difficultyProgress.currentBattleNumber}/{difficultyProgress.requiredWins}</Text>
           <Text style={styles.enemyHud}>남은 보스 {remainingEnemyCount}</Text>
         </View>
+
+        {displayedBoss && engine.state.status === 'active' ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.bossHealthHud,
+              {
+                top: BATTLE_UI.bossHealthHudTop,
+                width: screenWidth * BATTLE_UI.bossHealthWidthRatio,
+              },
+            ]}
+          >
+            <View style={styles.bossHealthLabelRow}>
+              <Text style={styles.bossHealthName}>{displayedBoss.name}</Text>
+              <Text style={styles.bossHealthValue}>
+                {formatNumber(displayedBoss.hp)} / {formatNumber(displayedBoss.maxHp)}
+              </Text>
+            </View>
+            <HealthBar
+              value={displayedBoss.hp}
+              max={displayedBoss.maxHp}
+              width={screenWidth * BATTLE_UI.bossHealthWidthRatio}
+              height={BATTLE_UI.bossHealthBarHeight}
+            />
+          </View>
+        ) : null}
 
         {engine.state.enemies.map((enemy) => {
           if (enemy.hp <= 0 || enemy.spawnAt > engine.state.now) return null;
@@ -184,6 +491,89 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
                 * getPerspectiveScale(enemy.y),
             ),
           );
+          const distanceToCastle = Math.hypot(
+            enemy.x - BATTLE_RULES.playerStartX,
+            enemy.y - BATTLE_RULES.playerStartY,
+          );
+          const alreadyFlying = engine.state.enemyProjectiles.some(
+            (projectile) => projectile.sourceEnemyId === enemy.id,
+          );
+          const effectiveAttackCooldownMs = engine.enemyDisc.cooldownMs
+            * BOSS_BEHAVIOR.globalAttackCooldownMultiplier
+            * (enemy.enraged ? BOSS_BEHAVIOR.enrageAttackCooldownMultiplier : 1);
+          const timeUntilAttackMs = effectiveAttackCooldownMs
+            - (engine.state.now - enemy.lastShotAt);
+          const effectiveMeleeCooldownMs = BATTLE_RULES.enemyMeleeIntervalMs
+            * BOSS_BEHAVIOR.globalAttackCooldownMultiplier
+            * (enemy.enraged ? BOSS_BEHAVIOR.enrageAttackCooldownMultiplier : 1);
+          const timeUntilMeleeMs = effectiveMeleeCooldownMs
+            - (engine.state.now - enemy.lastMeleeAt);
+          const projectileWindupVisible = engine.state.status === 'active'
+            && distanceToCastle <= BATTLE_RULES.enemyAttackRadius
+            && !alreadyFlying
+            && timeUntilAttackMs > 0
+            && timeUntilAttackMs <= BATTLE_FEEDBACK.enemyAttackWindupMs;
+          const meleeWindupVisible = engine.state.status === 'active'
+            && enemy.y >= BATTLE_RULES.enemyMeleeTriggerY
+            && timeUntilMeleeMs > 0
+            && timeUntilMeleeMs <= BATTLE_FEEDBACK.enemyAttackWindupMs;
+          const windupVisible = projectileWindupVisible || meleeWindupVisible;
+          const windupProgress = Math.max(
+            projectileWindupVisible
+              ? 1 - timeUntilAttackMs / BATTLE_FEEDBACK.enemyAttackWindupMs
+              : 0,
+            meleeWindupVisible
+              ? 1 - timeUntilMeleeMs / BATTLE_FEEDBACK.enemyAttackWindupMs
+              : 0,
+          );
+          const targetsThisEnemy = lastEvent?.sourceEnemyId === enemy.id || (
+            lastEvent?.x !== undefined
+            && lastEvent.y !== undefined
+            && Math.abs(lastEvent.x - enemy.x) <= BATTLE_RULES.playerHitToleranceX
+            && Math.abs(lastEvent.y - enemy.y) <= BATTLE_RULES.playerHitToleranceY
+          );
+          const attackVisible = Boolean(
+            targetsThisEnemy
+            && (
+              lastEvent?.kind === 'enemyDisc'
+              || (lastEvent?.kind === 'castleHit' && lastEvent.attackKind === 'melee')
+            )
+            && lastEventAgeMs <= BATTLE_FEEDBACK.enemyAttackDurationMs,
+          );
+          const attackProgress = attackVisible
+            ? Math.min(1, lastEventAgeMs / BATTLE_FEEDBACK.enemyAttackDurationMs)
+            : 1;
+          const attackWave = attackVisible ? Math.sin(attackProgress * Math.PI) : 0;
+          const hitVisible = Boolean(
+            targetsThisEnemy
+            && ['enemyHit', 'bossEnraged', 'enemyDefeated'].includes(lastEvent?.kind ?? '')
+            && lastEventAgeMs <= BATTLE_FEEDBACK.enemyHitDurationMs,
+          );
+          const hitProgress = hitVisible
+            ? Math.min(1, lastEventAgeMs / BATTLE_FEEDBACK.enemyHitDurationMs)
+            : 1;
+          const hitWave = hitVisible ? Math.sin(hitProgress * Math.PI) : 0;
+          const translateX = hitVisible
+            ? Math.sin(
+              hitProgress * Math.PI * BATTLE_FEEDBACK.enemyHitShakeCycles,
+            ) * BATTLE_FEEDBACK.enemyHitShakePixels * (1 - hitProgress)
+            : attackVisible
+              ? Math.sin(
+                attackProgress * Math.PI * BATTLE_FEEDBACK.enemyAttackShakeCycles,
+              ) * BATTLE_FEEDBACK.enemyAttackLungePixels * (1 - attackProgress)
+              : 0;
+          const translateY = attackWave * BATTLE_FEEDBACK.enemyAttackLungePixels;
+          const scale = hitVisible
+            ? 1 - (1 - BATTLE_FEEDBACK.enemyHitScale) * hitWave
+            : attackVisible
+              ? 1 + (BATTLE_FEEDBACK.enemyAttackScale - 1) * attackWave
+              : 1 + (BATTLE_FEEDBACK.enemyAttackWindupScale - 1) * windupProgress;
+          const enragePulse = enemy.enraged
+            ? 1 + Math.sin(
+              engine.state.now / BATTLE_FEEDBACK.enemyAttackDurationMs * Math.PI * 2,
+            ) * BATTLE_FEEDBACK.enragePulseScale
+            : 1;
+          const auraSize = renderSize * BATTLE_FEEDBACK.auraSizeMultiplier;
           return (
             <View
               key={enemy.id}
@@ -196,12 +586,36 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
                   marginLeft: -BATTLE_UI.enemyLabelWidth / 2,
                   marginTop: -(renderSize + BATTLE_UI.enemyAnchorLabelOffset),
                   zIndex: Math.round(enemy.y * 1000),
+                  transform: [{ translateX }, { translateY }, { scale }],
                 },
               ]}
             >
               <Text style={styles.enemyName} numberOfLines={1}>{enemy.name}</Text>
               <HealthBar value={enemy.hp} max={enemy.maxHp} width={BATTLE_UI.enemyHealthWidth} />
-              <MonsterSprite imageKey={enemy.imageKey} size={renderSize} grounded />
+              <View style={[styles.enemySpriteFrame, { width: renderSize, height: renderSize }]}>
+                {enemy.enraged || windupVisible || attackVisible ? (
+                  <View
+                    style={[
+                      styles.enemyAttackAura,
+                      {
+                        width: auraSize,
+                        height: auraSize,
+                        left: (renderSize - auraSize) / 2,
+                        top: (renderSize - auraSize) / 2,
+                        borderWidth: BATTLE_FEEDBACK.attackAuraBorderWidth,
+                        borderColor: enemy.enraged
+                          ? BATTLE_FEEDBACK.enrageAuraBorderColor
+                          : BATTLE_FEEDBACK.attackAuraBorderColor,
+                        backgroundColor: enemy.enraged
+                          ? BATTLE_FEEDBACK.enrageAuraColor
+                          : BATTLE_FEEDBACK.attackAuraColor,
+                        transform: [{ scale: enragePulse }],
+                      },
+                    ]}
+                  />
+                ) : null}
+                <MonsterSprite imageKey={enemy.imageKey} size={renderSize} grounded />
+              </View>
             </View>
           );
         })}
@@ -219,13 +633,45 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
                 height: projectile.size,
                 marginLeft: -projectile.size / 2,
                 marginTop: -projectile.size / 2,
-                transform: [{ rotate: `${((engine.state.now - projectile.createdAt) / BATTLE_UI.projectileSpinDurationMs) * 360}deg` }],
               },
             ]}
           >
-            <DiscImage size={projectile.size - 4} team="enemy" />
+            <View
+              style={[
+                styles.enemyProjectileTrail,
+                {
+                  width: projectile.size * BATTLE_FEEDBACK.enemyProjectileTrailWidthMultiplier,
+                  height: projectile.size * BATTLE_FEEDBACK.enemyProjectileTrailLengthMultiplier,
+                  top: -projectile.size * BATTLE_FEEDBACK.enemyProjectileTrailLengthMultiplier,
+                  opacity: BATTLE_FEEDBACK.enemyProjectileTrailOpacity,
+                  backgroundColor: BATTLE_FEEDBACK.attackAuraBorderColor,
+                  shadowColor: BATTLE_FEEDBACK.screenFlashColor,
+                  shadowRadius: BATTLE_FEEDBACK.enemyProjectileGlowRadius,
+                },
+              ]}
+            />
+            <View style={{
+              transform: [{ rotate: `${((engine.state.now - projectile.createdAt) / BATTLE_UI.projectileSpinDurationMs) * 360}deg` }],
+            }}>
+              <DiscImage size={projectile.size - BATTLE_FEEDBACK.impactRingBorderWidth} team="enemy" />
+            </View>
           </View>
         ))}
+
+        <BattleImpactEffect event={lastEvent} now={engine.state.now} />
+
+        {castleHitVisible ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.castleHitFlash,
+              {
+                backgroundColor: BATTLE_FEEDBACK.screenFlashColor,
+                opacity: BATTLE_FEEDBACK.screenFlashMaximumOpacity * castleHitWave,
+              },
+            ]}
+          />
+        ) : null}
 
         {engine.state.playerProjectiles.map((projectile) => {
           const isGiant = projectile.source === 'giant';
@@ -297,7 +743,8 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
               if (useGiantDisc() && engine.throwGiantDisc()) feedback.tap();
             }}
             style={({ pressed }) => [
-              styles.giantDiscButton,
+            styles.giantDiscButton,
+            { top: BATTLE_UI.giantDiscButtonTop },
               {
                 backgroundColor: game.giantDiscCount <= 0 || !engine.canGiantThrow
                   ? GIANT_DISC.buttonDisabledColor
@@ -319,33 +766,7 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
 
         {engine.state.notice ? <Text style={styles.notice}>{engine.state.notice}</Text> : null}
 
-        {activeBots.map((bot, index) => {
-          const slot = BATTLE_RULES.botFormationSlots[index % BATTLE_RULES.botFormationSlots.length];
-          return (
-            <View
-              key={bot.config.id}
-              style={[
-                styles.bot,
-                {
-                  left: `${slot.x * 100}%`,
-                  top: `${slot.y * 100}%`,
-                  width: BATTLE_UI.botLabelWidth,
-                  marginLeft: -BATTLE_UI.botLabelWidth / 2,
-                  marginTop: -(
-                    BATTLE_UI.botRenderSize * getPerspectiveScale(slot.y)
-                    + BATTLE_UI.enemyAnchorLabelOffset
-                  ),
-                  zIndex: Math.round(slot.y * 1000),
-                },
-              ]}
-            >
-              <Text style={[styles.allyName, styles.botName]} numberOfLines={1}>
-                {bot.config.name}{bot.count > 1 ? ` ×${bot.count}` : ''}
-              </Text>
-              <BotImage size={BATTLE_UI.botRenderSize * getPerspectiveScale(slot.y)} grounded />
-            </View>
-          );
-        })}
+        <BattleBotFormation bots={activeBots} />
 
         <Pressable
           accessibilityRole="button"
@@ -357,7 +778,16 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
           }}
           style={({ pressed }) => [
             styles.core,
-            { width: BATTLE_UI.castleTouchWidth, marginLeft: -BATTLE_UI.castleTouchWidth / 2 },
+            {
+              width: BATTLE_UI.castleTouchWidth,
+              marginLeft: -BATTLE_UI.castleTouchWidth / 2,
+              transform: [
+                { translateX: castleHitShake },
+                { scale: castleHitVisible
+                  ? 1 - (1 - BATTLE_FEEDBACK.castleHitScale) * castleHitWave
+                  : 1 },
+              ],
+            },
             engine.state.status === 'active' && engine.canCastleThrow && styles.coreReady,
             pressed && engine.canCastleThrow && styles.corePressed,
           ]}
@@ -422,7 +852,7 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
                 style={styles.resultButton}
               />
               <GameButton
-                title="다음 전투"
+                title={engine.state.status === 'victory' ? '다음 전투' : '다시 전투'}
                 onPress={startBattle}
                 variant="green"
                 style={styles.resultButton}
@@ -443,6 +873,8 @@ const styles = StyleSheet.create({
   stageHud: { fontFamily: fonts.extraBold, fontSize: 9, color: colors.white, backgroundColor: 'rgba(42,83,153,0.82)', borderRadius: 9, paddingHorizontal: 7, paddingVertical: 4 },
   enemyHud: { fontFamily: fonts.extraBold, fontSize: 9, color: colors.white, backgroundColor: 'rgba(167,37,48,0.84)', borderRadius: 9, paddingHorizontal: 7, paddingVertical: 4 },
   enemy: { position: 'absolute', alignItems: 'center' },
+  enemySpriteFrame: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
+  enemyAttackAura: { position: 'absolute', borderRadius: 999, borderStyle: 'dashed', elevation: 5 },
   enemyName: { fontFamily: fonts.extraBold, fontSize: 7, color: colors.red, maxWidth: '100%', backgroundColor: 'rgba(255,255,255,0.9)', paddingHorizontal: 3, borderRadius: 4 },
   healthTrack: { borderRadius: 4, overflow: 'hidden', marginVertical: 1 },
   healthFill: { height: '100%' },
@@ -460,7 +892,20 @@ const styles = StyleSheet.create({
   giantDamage: { position: 'absolute', top: -18, fontFamily: fonts.display, fontSize: 18, textShadowRadius: 8, zIndex: 3 },
   doubleDamage: { position: 'absolute', top: -9, alignSelf: 'center', zIndex: 2, fontFamily: fonts.extraBold, fontSize: 8, color: colors.blueDark, backgroundColor: colors.white, borderRadius: 5, paddingHorizontal: 3 },
   enemyProjectile: { borderWidth: 2, borderColor: colors.red, borderRadius: 30, backgroundColor: 'rgba(255,224,227,0.62)', alignItems: 'center', justifyContent: 'center' },
-  giantDiscButton: { position: 'absolute', top: 38, right: 8, zIndex: 2200, minWidth: 128, flexDirection: 'row', alignItems: 'center', gap: 7, borderWidth: 2, borderRadius: 17, paddingHorizontal: 10, paddingVertical: 7, shadowOpacity: 0.8, shadowRadius: 8, elevation: 9 },
+  enemyProjectileTrail: { position: 'absolute', alignSelf: 'center', borderRadius: 999, shadowOpacity: 1, elevation: 8 },
+  impactEffect: { position: 'absolute', alignItems: 'center', justifyContent: 'center', zIndex: 2450 },
+  impactBurst: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
+  fieldShockwave: { position: 'absolute', borderRadius: 999 },
+  impactOuter: { ...StyleSheet.absoluteFill, borderRadius: 999 },
+  impactSpark: { position: 'absolute', borderRadius: 999 },
+  impactInner: { borderRadius: 999 },
+  damageText: { position: 'absolute', top: 0, fontFamily: fonts.display, textAlign: 'center', zIndex: 3 },
+  castleHitFlash: { ...StyleSheet.absoluteFill, zIndex: 900 },
+  bossHealthHud: { position: 'absolute', alignSelf: 'center', zIndex: 2300 },
+  bossHealthLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 3 },
+  bossHealthName: { fontFamily: fonts.extraBold, fontSize: 10, color: colors.red, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 5, paddingHorizontal: 5 },
+  bossHealthValue: { fontFamily: fonts.extraBold, fontSize: 9, color: colors.white, textShadowColor: colors.ink, textShadowRadius: 3 },
+  giantDiscButton: { position: 'absolute', right: 8, zIndex: 2200, minWidth: 128, flexDirection: 'row', alignItems: 'center', gap: 7, borderWidth: 2, borderRadius: 17, paddingHorizontal: 10, paddingVertical: 7, shadowOpacity: 0.8, shadowRadius: 8, elevation: 9 },
   giantDiscButtonDisabled: { opacity: 0.42 },
   giantDiscButtonPressed: { transform: [{ scale: 0.94 }] },
   giantDiscButtonTitle: { fontFamily: fonts.extraBold, fontSize: 12, color: colors.white },

@@ -1,5 +1,4 @@
 {
-  "battleMapImageKey": "medieval-cookie-courtyard",
   "castleRenderSize": 72,
   "castleTouchWidth": 92,
   "botRenderSize": 30,
@@ -10,6 +9,10 @@
   "enemyLabelWidth": 108,
   "enemyHealthWidth": 94,
   "castleHealthWidth": 78,
+  "bossHealthHudTop": 34,
+  "bossHealthWidthRatio": 0.88,
+  "bossHealthBarHeight": 11,
+  "giantDiscButtonTop": 78,
   "unitPerspectiveFarY": 0.19,
   "unitPerspectiveNearY": 0.75,
   "unitPerspectiveFarScale": 0.76,

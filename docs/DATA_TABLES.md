@@ -14,14 +14,20 @@
 | `monsters.json` | 적 이미지·등급, 기본 HP·공격, 속도·원반·크기 배율 |
 | `enemy-waves.json` | 거대 보스 한 종류의 전투 구성 |
 | `difficulties.json` | 난이도 순서, 보스 HP·공격 배율·이동 속도 |
+| `boss-balance.json` | 성장한 쿠키봇 군단에 대한 보스 최소 생존 시간·즉사 방지 |
+| `boss-behavior.json` | 보스 전역 공격력·공격 간격·이동 배율과 HP 분노 페이즈 |
 | `battle-stage-rules.json` | 같은 난이도의 승리별 보스 HP·공격·속도·원반 증가식 |
+| `battle-maps.json` | 전투 배경 테마 ID·이름·정적 이미지 키 |
+| `battle-map-rules.json` | 배경 교체 전투 간격과 난이도별 시작 테마 오프셋 |
 | `enemy-discs.json` | 적 원반 레벨별 피해·크기·속도·쿨타임 |
 | `giant-disc.json` | 거대 원반 피해·비행·크기·연출·버튼 표시 |
 | `progression.json` | 다음 난이도 해금 승수, 최초 클리어 거대 원반 수, 저장·생산 주기 |
 | `battle-rules.json` | 전투 좌표, 이동·충돌·공격 시간 |
-| `battle-ui.json` | 전투 맵, 성·봇·적 표시 크기, 체력 게이지 스타일 |
+| `battle-ui.json` | 성·봇·적 표시 크기, 상단 보스 HP, 체력 게이지 스타일 |
+| `battle-feedback.json` | 보스 공격 예고·돌진, 다중 피격 폭발·전장 충격파·피해 숫자 연출 |
+| `battle-audio.json` | 전투 효과음 그룹별 최소 간격과 음악·효과음 상대 음량 |
 | `audio-settings.json` | 효과음 5단계별 실제 볼륨과 기본 단계 |
-| `cookies.json` | 10종 쿠키의 자동 진화 조건, 이미지, 최종 능력 배율 |
+| `cookies.json` | 20종 쿠키의 자동 진화 조건, 이미지, 최종 능력 배율 |
 | `save-migrations.json` | 이전 버전 데이터 ID를 현재 ID로 옮기는 호환 규칙 |
 
 ## 상점과 성장
@@ -97,6 +103,18 @@
 
 현재 모든 난이도의 `enemyCount`는 1입니다. 스테이지 성장 테이블도 적 추가량을 0으로 유지하므로 1~20번째 전투 모두 보스 한 마리만 등장합니다.
 
+### 단일 보스 자동 밸런스
+
+`boss-balance.json`은 다수 적 전투 시절부터 성장한 쿠키봇 저장 데이터가 단일 보스를 한 발에 쓰러뜨리지 않도록 최소 HP만 보정합니다.
+
+- `playerPowerBaseSurvivalSeconds`: 자동 공격 DPS 기준 easy 초반의 최소 목표 생존 시간
+- `hpMultiplierReference`: 난이도 HP 배율을 생존 시간으로 환산하는 기준점
+- `hpScalingExponent`: 난이도·스테이지 HP 배율이 목표 생존 시간에 반영되는 곡선
+- `maximumPowerScaledSurvivalSeconds`: 매우 높은 난이도에서도 자동 보정이 넘지 않는 시간 상한
+- `minimumAutomaticHitsToDefeat`: 가장 강한 쿠키봇 자동 원반을 최소 몇 번 맞아야 하는지 정하는 즉사 방지 하한
+
+엔진은 먼저 `몬스터 기본 HP × 실효 난이도 HP 배율`을 계산합니다. 그다음 현재 장착 원반과 종류별 쿠키봇 수·피해 배율·발사 간격으로 자동 공격 DPS를 계산합니다. 테이블 기본 HP, `자동 DPS × 목표 생존 시간`, `가장 강한 자동 한 발 × 최소 명중 수` 가운데 가장 큰 값이 최종 보스 HP입니다. 초반처럼 전력이 낮으면 기존 HP가 우선되고, 과도하게 성장해 한 발 처치가 가능한 저장에서만 자동 하한이 크게 작동합니다. 쿠키 성 수동 공격과 소모품 거대 원반은 이 자동 DPS 보정에 포함하지 않습니다.
+
 `enemy-waves.json`에는 `giant-boss-duel` 한 행만 있고 일반 패턴과 보스 ID가 모두 `cookie-tyrant`를 가리킵니다. `bossEveryEnemies`도 1이므로 다른 적이 생성될 수 없습니다. `monsters.json`의 추가 필드는 다음과 같습니다.
 
 - `imageKey`, `rank`: 전투·도감의 이미지와 한국어 등급
@@ -116,11 +134,17 @@
 - `maximumExtraEnemies`: 한 난이도에서 추가할 수 있는 최대 적 수
 - `enemyDiscLevelEveryWins`: 적 원반 레벨을 하나 올리는 승리 간격
 
-현재 값은 승리 1회마다 보스 HP 5%, 공격 3%, 이동 속도 1.5%를 기본 난이도 값에 추가합니다. 적 원반 레벨은 2승마다 1씩 오릅니다. `extraEnemiesPerStep`과 `maximumExtraEnemies`는 모두 0이므로 보스 수는 늘지 않습니다. 승리할 때만 다음 단계로 올라가고 패배는 진행도를 바꾸지 않습니다.
+현재 `hpMultiplierPerWin=0.08`, `attackMultiplierPerWin=0.05`, `moveSpeedMultiplierPerWin=0.001`입니다. 이 값은 현재 난이도 자체가 아니라 easy 기준값에 곱한 뒤 각 난이도 기준값에 더하므로, 한 승리마다 실효 HP 배율 0.008, 공격 배율 0.005, 이동 속도 0.012가 일정하게 증가합니다. `enemyDiscLevelEveryWins=20`이라 같은 등급 1~20전투에서는 적 원반 레벨이 유지되고 다음 난이도에서 1레벨 오릅니다. `difficulties.json`의 각 다음 등급 첫 기준값은 이전 등급 20번째보다 위의 한 증가분만큼 높아 등급 경계가 항상 단조 증가합니다. `extraEnemiesPerStep`과 `maximumExtraEnemies`는 모두 0이므로 보스 수는 늘지 않습니다. 승리할 때만 다음 단계로 올라가고 패배는 진행도를 바꾸지 않습니다.
+
+## 전투 배경 테마
+
+`battle-maps.json`은 초원 왕국, 빙하 협곡, 태양 신전, 흑요석 균열의 네 행을 정의합니다. `imageKey`는 React Native 정적 번들 요구사항 때문에 `BattleMapImage.ts`의 `require` 매핑과 함께 추가해야 합니다. 각 이미지는 단순 색상 변형이 아니라 지형·건축·성 실루엣이 다른 독립 원본입니다.
+
+`battle-map-rules.json`의 `stagesPerTheme`은 같은 배경을 유지할 전투 수이며 현재 5입니다. `difficultyThemeOffset`은 다음 난이도의 첫 전투가 이전 난이도와 다른 테마에서 시작하도록 난이도 인덱스에 곱하는 값입니다.
 
 ## 쿠키 진화
 
-`cookies.json` 배열 순서가 진화 순서입니다. 현재 10종은 클래식 초코칩 → 행운 → 도넛 → 와플 → 컵케이크 → 딸기 케이크 → 달빛 → 파티 → 별빛 쌀쿠키 → 로열 초콜릿입니다.
+`cookies.json` 배열 순서가 진화 순서입니다. 현재 20종은 클래식 초코칩 → 행운 → 도넛 → 와플 → 컵케이크 → 딸기 케이크 → 달빛 → 파티 → 별빛 쌀쿠키 → 로열 초콜릿 → 별사탕 → 무지개 롤리팝 → 황금 푸딩 → 별빛 쇼트케이크 → 삼색 경단 → 은하수 빙수 → 황금 꿀단지 → 마법 파이 → 다이아몬드 → 천상 왕관입니다.
 
 - `imageKey`: `CookieImage`가 정적으로 포함한 Noto 이미지 키
 - `requiredTotalUpgradeLevels`: 네 가지 쿠키 업그레이드 현재 레벨 합계의 진화 조건
@@ -148,9 +172,32 @@
 
 이 파일의 값은 전투 엔진만 해석합니다. 화면 컴포넌트에 같은 전투 수치를 다시 쓰지 않습니다.
 
+### `boss-behavior.json`
+
+- `globalAttackDamageMultiplier`: 난이도·스테이지 공격 결과에 곱하는 보스 기본 피해 배율. 현재 2이며 아래 전체 난이도 배율이 한 번 더 적용됨
+- `globalAttackCooldownMultiplier`: 적 원반·근접 공격 간격 배율. 현재 0.5이므로 공격 속도가 정확히 2배
+- `globalMoveSpeedMultiplier`: 난이도·스테이지 이동 속도에 마지막으로 곱하는 배율. 현재 0.8이므로 보스가 20% 느림
+- `globalDifficultyMultiplier`: 최종 보스 HP와 원거리·근접 피해에 곱하는 전체 난이도 배율. 현재 1.2
+- `enrageHealthRatio`: 분노 페이즈가 시작되는 남은 HP 비율. 현재 0.5
+- `enrageAttackCooldownMultiplier`: 분노 후 공격 간격에 추가로 곱하는 배율
+- `enrageProjectileDamageMultiplier`, `enrageMeleeDamageMultiplier`: 분노 후 원거리·근접 피해 배율
+- `enrageAnnouncementMs`: `보스 분노!` 안내 유지 시간
+
+### `battle-feedback.json`
+
+- `enemyAttackWindupMs`, `enemyAttackDurationMs`: 공격 예고와 돌진 지속 시간
+- `enemyAttack*`, `enemyHit*`, `castleHit*`: 공격·피격 크기, 이동, 흔들림, 지속 시간
+- `aura*`, `enrage*`: 발사 예고와 분노 오라 크기·색·맥동
+- `impact*`, `damageText*`: 명중 지점 충격 링·방사형 파편·피해 숫자 크기·표시 폭·색·시간
+- `impactBursts[]`: 한 번의 명중에서 시간차로 터지는 효과의 상대 좌표·지연·크기·회전. 현재 다섯 위치
+- `fieldShockwave*`: 성 수동 원반·거대 원반 강타 때 전장에 퍼지는 얇은 충격파
+- `enemyProjectileTrail*`: 적 원반의 빨간 궤적과 발광
+
+전투 엔진은 공격 종류·명중 위치·피해량을 이벤트로 보내고, 화면은 이 테이블을 이용해 동일 좌표에 연출을 그립니다. 원거리와 근접 공격은 같은 피해 경로를 사용하지만 공격 종류 이벤트로 동작을 구분합니다.
+
 ### `giant-disc.json`
 
-- `damageMultiplier`: 장착 일반 원반 기본 피해에 곱하는 값. 현재 정확히 30배
+- `damageMultiplier`: 현재 최강 쿠키봇이 날리는 일반 원반 피해에 곱하는 값. 현재 정확히 30배. 봇이 없으면 장착 원반 기본 피해가 기준
 - `speedMultiplier`: 일반 원반 속도에 곱하는 거대 원반 비행 속도 배율
 - `attackRadius`: 거대 원반을 사용할 수 있는 보스 탐색 반경
 - `renderWidthRatio`: 휴대폰 화면 너비 대비 표시 크기. 현재 0.34로 화면 약 1/3
@@ -159,15 +206,16 @@
 - `launchNoticeMs`: `거대 원반!` 전투 안내 표시 시간
 - `button*Color`: 보유량·30배 수치를 표시하는 전투 버튼 색상
 
-거대 원반은 전투에서만 사용할 수 있는 소모형 무기입니다. 버튼을 눌러 실제 발사에 성공하면 저장 상태의 `giantDiscCount`가 1 감소합니다. 보유량이 없거나 살아 있는 보스가 없으면 발사와 소모가 모두 일어나지 않습니다. 일반 원반 강화 레벨이 오르면 기준 피해도 함께 오르지만 30배 배율은 이 테이블에서 유지됩니다.
+거대 원반은 전투에서만 사용할 수 있는 소모형 무기입니다. 버튼을 눌러 실제 발사에 성공하면 저장 상태의 `giantDiscCount`가 1 감소합니다. 보유량이 없거나 살아 있는 보스가 없으면 발사와 소모가 모두 일어나지 않습니다. 장착 원반·봇 종류·보유 수량이 성장하면 현재 최강 쿠키봇의 일반 한 발과 거대 원반이 함께 성장합니다. 최종 피해가 실제 발사체에 저장되어 충돌 시 보스 HP에서 차감됩니다.
 
 ### `battle-ui.json`
 
-- `battleMapImageKey`: 전투 맵 이미지 키
 - `castleRenderSize`, `castleTouchWidth`: 성 그림과 터치 영역
 - `botRenderSize`, `botLabelWidth`: 봇 그림과 이름 영역
 - `enemyBaseRenderSize`, `enemyMinimumRenderSize`, `enemyMaximumRenderSize`: 등급별 배율 적용 전후 적 크기
 - `enemyLabelWidth`, `enemyHealthWidth`, `castleHealthWidth`: 이름과 체력 게이지 폭
+- `bossHealthHudTop`, `bossHealthWidthRatio`, `bossHealthBarHeight`: 화면 상단의 긴 보스 HP 표시 위치·폭·높이
+- `giantDiscButtonTop`: 상단 보스 HP와 겹치지 않는 거대 원반 버튼 위치
 - `unitPerspective*`: 맵의 위·아래 위치에 따른 유닛 원근 크기
 - `groundShadow*`: 유닛 발밑 접촉 그림자 크기·위치·색상
 - `projectileSpinDurationMs`: 원반 한 바퀴 회전 시간
@@ -191,7 +239,8 @@
 
 `battle-audio.json`:
 
-- `minimumIntervalMs.disc/hit/enemyDefeated`: 같은 전투 액션음의 최소 재생 간격
+- `minimumIntervalMs`: 아군·적·거대 원반, 약·강 피격, 보스 근접·분노 그룹별 최소 재생 간격
+- `volumeMultipliers`: 5단계 전역 음량에 곱하는 액션별 상대 음량. 오케스트라 배경 음악은 효과음을 가리지 않도록 현재 0.28
 
 ## 안전하게 테이블을 변경하는 절차
 
