@@ -1,18 +1,152 @@
 [
   {
-    "id": "medieval-cookie-invasion",
-    "name": "중세 쿠키 침공군",
+    "id": "easy-scout-line",
+    "name": "초급 정찰대",
     "monsterPatternIds": [
-      "crumb-minion",
-      "crumb-minion",
-      "sugar-guard",
-      "crumb-minion",
-      "wafer-sorcerer",
-      "crumb-minion",
-      "sugar-guard",
-      "chocolate-brute"
+      "crumb-minion", "crumb-minion", "sugar-guard", "crumb-minion", "wafer-sorcerer",
+      "crumb-minion", "sugar-guard", "crumb-minion", "wafer-sorcerer", "crumb-minion"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 18
+  },
+  {
+    "id": "normal-scout-line",
+    "name": "정찰 골렘대",
+    "monsterPatternIds": [
+      "crumb-minion", "crumb-minion", "sugar-guard", "crumb-minion", "wafer-sorcerer",
+      "crumb-minion", "sugar-guard", "crumb-minion", "wafer-sorcerer", "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 18
+  },
+  {
+    "id": "hard-armored-line",
+    "name": "초급 중장갑대",
+    "monsterPatternIds": [
+      "crumb-minion", "crumb-minion", "sugar-guard", "crumb-minion", "wafer-sorcerer",
+      "crumb-minion", "sugar-guard", "chocolate-brute", "wafer-sorcerer", "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 17
+  },
+  {
+    "id": "harder-armored-line",
+    "name": "중급 중장갑대",
+    "monsterPatternIds": [
+      "crumb-minion", "crumb-minion", "sugar-guard", "crumb-minion", "wafer-sorcerer",
+      "crumb-minion", "chocolate-brute", "chocolate-brute", "wafer-sorcerer", "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 16
+  },
+  {
+    "id": "insane-armored-line",
+    "name": "상급 중장갑대",
+    "monsterPatternIds": [
+      "crumb-minion", "crumb-minion", "sugar-guard", "crumb-minion", "wafer-sorcerer",
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "wafer-sorcerer", "chocolate-brute"
     ],
     "bossMonsterId": "cookie-tyrant",
     "bossEveryEnemies": 15
+  },
+  {
+    "id": "easy-demon-brute-line",
+    "name": "초급 악마 골렘대",
+    "monsterPatternIds": [
+      "crumb-minion", "crumb-minion", "sugar-guard", "crumb-minion", "chocolate-brute",
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "wafer-sorcerer", "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 14
+  },
+  {
+    "id": "medium-demon-brute-line",
+    "name": "중급 악마 골렘대",
+    "monsterPatternIds": [
+      "crumb-minion", "crumb-minion", "sugar-guard", "chocolate-brute", "chocolate-brute",
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "wafer-sorcerer", "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 13
+  },
+  {
+    "id": "hard-demon-brute-line",
+    "name": "상급 악마 골렘대",
+    "monsterPatternIds": [
+      "crumb-minion", "crumb-minion", "chocolate-brute", "chocolate-brute", "chocolate-brute",
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "wafer-sorcerer", "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 12
+  },
+  {
+    "id": "insane-demon-brute-line",
+    "name": "극한 악마 골렘대",
+    "monsterPatternIds": [
+      "crumb-minion", "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute",
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "wafer-sorcerer", "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 11
+  },
+  {
+    "id": "extreme-demon-brute-line",
+    "name": "최상급 악마 골렘대",
+    "monsterPatternIds": [
+      "wafer-sorcerer", "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute",
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 10
+  },
+  {
+    "id": "easy-god-siege-line",
+    "name": "초급 신의 공성대",
+    "monsterPatternIds": [
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute",
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 9
+  },
+  {
+    "id": "medium-god-siege-line",
+    "name": "중급 신의 공성대",
+    "monsterPatternIds": [
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute",
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 7
+  },
+  {
+    "id": "hard-god-siege-line",
+    "name": "상급 신의 공성대",
+    "monsterPatternIds": [
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute",
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 5
+  },
+  {
+    "id": "insane-god-siege-line",
+    "name": "극한 신의 공성대",
+    "monsterPatternIds": [
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute",
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 4
+  },
+  {
+    "id": "extreme-god-siege-line",
+    "name": "최종 신의 공성대",
+    "monsterPatternIds": [
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute",
+      "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute", "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 3
   }
 ]

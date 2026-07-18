@@ -36,7 +36,7 @@ describe('데이터 테이블', () => {
     ]);
   });
 
-  test('난이도가 오르면 적 수와 원반 레벨이 감소하지 않는다', () => {
+  test('난이도가 오르면 적 수는 소폭만 늘고 원반 레벨은 감소하지 않는다', () => {
     DIFFICULTIES.slice(1).forEach((difficulty, index) => {
       expect(difficulty.enemyCount).toBeGreaterThanOrEqual(DIFFICULTIES[index].enemyCount);
       expect(difficulty.enemyDiscLevel).toBeGreaterThan(DIFFICULTIES[index].enemyDiscLevel);
@@ -44,7 +44,27 @@ describe('데이터 테이블', () => {
       expect(difficulty.hpMultiplier).toBeGreaterThan(DIFFICULTIES[index].hpMultiplier);
       expect(difficulty.attackMultiplier).toBeGreaterThan(DIFFICULTIES[index].attackMultiplier);
     });
+    expect(DIFFICULTIES[DIFFICULTIES.length - 1].enemyCount - DIFFICULTIES[0].enemyCount)
+      .toBeLessThanOrEqual(6);
     expect(ENEMY_DISCS).toHaveLength(15);
+  });
+
+  test('난이도는 단순 물량 대신 느리고 강한 적의 편성 비율로 상승한다', () => {
+    const slowStrongIds = new Set(MONSTERS
+      .filter((monster) => monster.moveSpeedMultiplier <= 0.62)
+      .map((monster) => monster.id));
+    const compositionScores = DIFFICULTIES.map((difficulty) => {
+      const wave = ENEMY_WAVES.find((item) => item.id === difficulty.enemyWaveId)!;
+      const strongPatternCount = wave.monsterPatternIds.filter(
+        (monsterId) => slowStrongIds.has(monsterId),
+      ).length;
+      return strongPatternCount / wave.monsterPatternIds.length
+        + 1 / wave.bossEveryEnemies;
+    });
+
+    compositionScores.slice(1).forEach((score, index) => {
+      expect(score).toBeGreaterThan(compositionScores[index]);
+    });
   });
 
   test('모든 난이도는 실제 웨이브와 몬스터 테이블을 참조한다', () => {

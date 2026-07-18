@@ -1,4 +1,11 @@
-import { BATTLE_RULES, BOTS, DIFFICULTIES, DISCS, getEnemyDisc } from '../src/config';
+import {
+  BATTLE_RULES,
+  BOTS,
+  DIFFICULTIES,
+  DISCS,
+  getEnemyDisc,
+  getEnemyWave,
+} from '../src/config';
 import {
   BattleState,
   advanceBattle,
@@ -104,9 +111,50 @@ describe('전투 엔진', () => {
 
   test('일반 적 사이에 서로 다른 등급과 보스가 테이블 순서대로 등장한다', () => {
     const enemies = createBattleEnemies(DIFFICULTIES[0], 1000);
+    const wave = getEnemyWave(DIFFICULTIES[0].enemyWaveId);
     expect(new Set(enemies.map((enemy) => enemy.monsterId)).size).toBeGreaterThanOrEqual(4);
-    expect(enemies[14].rank).toBe('보스');
-    expect(enemies[14].sizeMultiplier).toBeGreaterThan(1);
+    expect(enemies[wave.bossEveryEnemies - 1].rank).toBe('보스');
+    expect(enemies[wave.bossEveryEnemies - 1].sizeMultiplier).toBeGreaterThan(1);
+  });
+
+  test('성 앞에서 멈춘 적도 빠른 상위 원반에 정상적으로 피해를 받는다', () => {
+    const difficulty = DIFFICULTIES[0];
+    const disc = DISCS[DISCS.length - 1].levels[4];
+    let battle = activeBattle();
+    battle.now = 1000;
+    battle.enemies[0] = {
+      ...battle.enemies[0],
+      hp: disc.damage * 2,
+      maxHp: disc.damage * 2,
+      x: BATTLE_RULES.playerStartX,
+      y: BATTLE_RULES.enemyStopY,
+    };
+    battle.playerProjectiles[0] = {
+      ...battle.playerProjectiles[0],
+      x: BATTLE_RULES.playerStartX,
+      y: BATTLE_RULES.playerStartY,
+      targetId: battle.enemies[0].id,
+      damage: disc.damage,
+      speed: disc.speed,
+      createdAt: battle.now,
+    };
+
+    const frameCount = Math.ceil(
+      BATTLE_RULES.playerProjectileMinimumFlightMs / BATTLE_RULES.tickMs,
+    );
+    for (let frame = 1; frame <= frameCount; frame += 1) {
+      battle = advanceBattle(battle, {
+        difficulty,
+        enemyDisc: getEnemyDisc(difficulty.enemyDiscLevel),
+        playerDisc: disc,
+        bots: [],
+        now: 1000 + frame * BATTLE_RULES.tickMs,
+        deltaMs: BATTLE_RULES.tickMs,
+      });
+    }
+
+    expect(battle.enemies[0].hp).toBe(disc.damage);
+    expect(battle.playerProjectiles).toHaveLength(0);
   });
 
   test('easy 적은 원반을 피하지 못하고 피해를 받는다', () => {

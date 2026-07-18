@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { DIFFICULTIES, getDifficulty } from '../config';
+import { DIFFICULTIES, getDifficulty, getEnemyWave } from '../config';
 import { DifficultyDropdown } from '../components/DifficultyDropdown';
 import { getBattleDifficulty, getBattleStageId, getDifficultyProgress } from '../domain/gameSelectors';
 import { Panel } from '../components/Panel';
@@ -31,6 +31,7 @@ export function DifficultyScreen() {
   const isLastDifficulty = selectedIndex === DIFFICULTIES.length - 1;
   const progress = getDifficultyProgress(state, selected.id);
   const battleDifficulty = getBattleDifficulty(selected, progress.wins);
+  const enemyWave = getEnemyWave(selected.enemyWaveId);
   const rewardReceived = state.rewardClaimedStageIds.includes(
     getBattleStageId(selected.id, progress.currentBattleNumber),
   );
@@ -58,6 +59,7 @@ export function DifficultyScreen() {
         </View>
         <View style={styles.details}>
           <Detail icon="account-group" label="현재 적 수" value={`${battleDifficulty.enemyCount}마리`} tint={colors.red} />
+          <Detail icon="shield-sword" label="현재 적 편성" value={enemyWave.name} tint={colors.orange} />
           <Detail icon="disc" label="현재 적 원반" value={`Lv.${battleDifficulty.enemyDiscLevel}`} tint={colors.purple} />
           <Detail icon="run-fast" label="현재 이동 속도" value={battleDifficulty.moveSpeed.toFixed(1)} tint={colors.blue} />
           <Detail icon="heart-pulse" label="현재 적 체력" value={`× ${battleDifficulty.hpMultiplier.toFixed(2)}`} tint={colors.orange} />
@@ -104,7 +106,7 @@ export function DifficultyScreen() {
       </Panel>
       <View style={styles.tip}>
         <MaterialCommunityIcons name="lightbulb-on" size={24} color={colors.yellowDark} />
-        <Text style={styles.tipText}>같은 난이도도 승리할 때마다 다음 전투의 적이 강해져요. 일정 승수마다 적 수와 적 원반 레벨도 올라갑니다.</Text>
+        <Text style={styles.tipText}>높은 난이도일수록 느리지만 강한 골렘과 보스가 더 많이 편성돼요. 같은 난이도 안에서도 전투를 이길수록 적이 강해져요.</Text>
       </View>
     </ScrollView>
   );

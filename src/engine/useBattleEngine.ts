@@ -281,6 +281,20 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
         enemy.id === originalProjectile.targetId && enemy.hp > 0 && enemy.spawnAt <= now
       ))
       : closestEnemy(enemies, now);
+    const targetDistanceY = target ? target.y - originalProjectile.y : 0;
+    const physicalTravelY = originalProjectile.speed
+      * deltaMs
+      / rules.playerProjectileMoveDivisor;
+    const ageAtFrameStart = Math.max(0, now - deltaMs - originalProjectile.createdAt);
+    const minimumFlightRemainingAtFrameStart = Math.max(
+      deltaMs,
+      rules.playerProjectileMinimumFlightMs - ageAtFrameStart,
+    );
+    const timedTravelY = Math.abs(targetDistanceY)
+      * Math.min(1, deltaMs / minimumFlightRemainingAtFrameStart);
+    const travelY = ageAtFrameStart < rules.playerProjectileMinimumFlightMs
+      ? Math.min(physicalTravelY, timedTravelY)
+      : physicalTravelY;
     const projectile = {
       ...originalProjectile,
       targetId: target?.id,
@@ -288,8 +302,12 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
         ? originalProjectile.x
           + (target.x - originalProjectile.x) * Math.min(1, deltaMs / rules.playerHomingMs)
         : originalProjectile.x,
-      y: originalProjectile.y
-        - originalProjectile.speed * deltaMs / rules.playerProjectileMoveDivisor,
+      y: target
+        ? originalProjectile.y + Math.sign(targetDistanceY) * Math.min(
+          Math.abs(targetDistanceY),
+          travelY,
+        )
+        : originalProjectile.y - physicalTravelY,
     };
     const hitTarget = target
       && now - projectile.createdAt >= rules.playerProjectileMinimumFlightMs
