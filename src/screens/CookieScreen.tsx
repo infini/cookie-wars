@@ -1,8 +1,11 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { COOKIES } from '../config';
-import { getCookieEvolutionProgress } from '../domain/gameSelectors';
+import { BATTLE_REWARDS, COOKIES } from '../config';
+import {
+  getBattleMedalBonuses,
+  getCookieEvolutionProgress,
+} from '../domain/gameSelectors';
 import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
@@ -23,6 +26,7 @@ function InfoRow({ icon, label, value }: { icon: React.ComponentProps<typeof Mat
 export function CookieScreen() {
   const { state, stats } = useGame();
   const evolution = getCookieEvolutionProgress(state);
+  const medalBonuses = getBattleMedalBonuses(state);
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <Panel style={styles.heroCard}>
@@ -40,6 +44,18 @@ export function CookieScreen() {
         <InfoRow icon="clock-fast" label="자동 획득" value={`${formatNumber(stats.autoProduction)}개/초`} />
         <InfoRow icon="star-circle" label="진화 레벨" value={`Lv.${stats.totalUpgradeLevels}`} />
         <InfoRow icon="creation" label="현재 쿠키 보너스" value={`×${evolution.active.clickMultiplier.toFixed(2)}`} />
+      </Panel>
+      <Panel style={styles.medalPanel}>
+        <View style={styles.medalHeader}>
+          <MaterialCommunityIcons name="medal" size={31} color={colors.purple} />
+          <View style={styles.medalTextGroup}>
+            <Text style={styles.medalTitle}>전투 훈장 {formatNumber(medalBonuses.battleMedals)}개</Text>
+            <Text style={styles.medalDescription}>각 스테이지를 처음 이기면 훈장 {BATTLE_REWARDS.battleMedalsPerStageClear}개를 얻어요.</Text>
+          </View>
+        </View>
+        <Text style={styles.medalBonus}>
+          클릭 +{formatNumber(medalBonuses.clickPowerBonusPercent)}% · 자동 생산 +{formatNumber(medalBonuses.autoProductionBonusPercent)}% · 성 체력 +{formatNumber(medalBonuses.castleHealthBonusPercent)}%
+        </Text>
       </Panel>
       <Panel style={styles.evolutionPanel}>
         <View style={styles.evolutionHeader}>
@@ -99,6 +115,12 @@ const styles = StyleSheet.create({
   infoLabel: { flex: 1, fontFamily: fonts.bold, fontSize: 13, color: colors.muted },
   infoValue: { fontFamily: fonts.extraBold, fontSize: 14, color: colors.ink },
   evolutionPanel: { backgroundColor: '#F3ECFF' },
+  medalPanel: { backgroundColor: '#FFF3C9' },
+  medalHeader: { flexDirection: 'row', alignItems: 'center' },
+  medalTextGroup: { flex: 1, marginLeft: 12 },
+  medalTitle: { fontFamily: fonts.display, fontSize: 19, color: colors.purple },
+  medalDescription: { fontFamily: fonts.medium, fontSize: 11, lineHeight: 16, color: colors.muted, marginTop: 2 },
+  medalBonus: { fontFamily: fonts.extraBold, fontSize: 12, lineHeight: 18, color: colors.cookieDark, marginTop: 10, textAlign: 'center' },
   evolutionHeader: { flexDirection: 'row', alignItems: 'center' },
   futureText: { flex: 1, marginLeft: 13 },
   futureTitle: { fontFamily: fonts.display, fontSize: 19, color: colors.purple },

@@ -13,6 +13,7 @@ import {
   calculateUpgradeLevel,
   getActiveBots,
   getBattleDifficulty,
+  getBattleMedalBonuses,
   getBotOffer,
   getCookieEvolutionProgress,
   getDiscProgress,
@@ -52,6 +53,7 @@ function expectSafeStoredIntegers(state: typeof initialGameState): void {
     state.legacyCookieEvolutionBonusLevels,
     state.highestUnlockedDifficultyIndex,
     state.giantDiscCount,
+    state.battleMedals,
     state.soundVolumeLevel,
     state.lastSavedAt,
     ...Object.values(state.upgradeLevels),
@@ -202,12 +204,14 @@ describe('게임 숫자 안전 경계', () => {
     const maximumInventory = {
       ...initialGameState,
       giantDiscCount: MAX_GAME_INTEGER,
+      battleMedals: MAX_GAME_INTEGER,
     };
     const completed = gameReducer(maximumInventory, {
       type: 'COMPLETE_BATTLE',
       difficultyId: DIFFICULTIES[0].id,
     });
     expect(completed.giantDiscCount).toBe(MAX_GAME_INTEGER);
+    expect(completed.battleMedals).toBe(MAX_GAME_INTEGER);
     expectSafeInteger(completed.difficultyWinCounts[DIFFICULTIES[0].id]);
 
     const consumed = gameReducer(completed, { type: 'USE_GIANT_DISC' });
@@ -236,6 +240,7 @@ describe('게임 숫자 안전 경계', () => {
         DIFFICULTIES.map((difficulty) => [difficulty.id, Number.MAX_VALUE]),
       ),
       giantDiscCount: Number.MAX_VALUE,
+      battleMedals: Number.MAX_VALUE,
       lastSavedAt: Number.MAX_VALUE,
     });
     let state = gameReducer(initialGameState, {
@@ -285,6 +290,7 @@ describe('게임 숫자 안전 경계', () => {
       botCounts: Object.fromEntries(
         BOTS.map((bot) => [bot.id, Number.MAX_VALUE]),
       ),
+      battleMedals: Number.MAX_VALUE,
     });
 
     for (const upgrade of COOKIE_UPGRADES) {
@@ -317,6 +323,7 @@ describe('게임 숫자 안전 경계', () => {
 
     const evolution = getCookieEvolutionProgress(extremeState);
     const stats = calculateCookieStats(extremeState);
+    const medalBonuses = getBattleMedalBonuses(extremeState);
     expect(evolution.totalUpgradeLevels).toBe(MAX_GAME_INTEGER);
     expect(Number.isFinite(evolution.progressRatio)).toBe(true);
     for (const value of [
@@ -325,6 +332,10 @@ describe('게임 숫자 안전 경계', () => {
       stats.maxHealth,
       stats.cookieLevel,
       stats.totalUpgradeLevels,
+      medalBonuses.battleMedals,
+      medalBonuses.clickPowerBonusPercent,
+      medalBonuses.autoProductionBonusPercent,
+      medalBonuses.castleHealthBonusPercent,
       getTotalBotCount(extremeState),
       ...getActiveBots(extremeState).map((bot) => bot.count),
     ]) expectSafeInteger(value);

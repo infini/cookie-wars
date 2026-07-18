@@ -4,6 +4,7 @@ import battleAudioData from './battle-audio.json';
 import battleFeedbackData from './battle-feedback.json';
 import battleMapData from './battle-maps.json';
 import battleRuleData from './battle-rules.json';
+import battleRewardData from './battle-rewards.json';
 import battleStageRuleData from './battle-stage-rules.json';
 import battleUiData from './battle-ui.json';
 import bossBalanceData from './boss-balance.json';
@@ -42,6 +43,7 @@ export const CONFIG_TABLES = validateGameConfig({
   BATTLE_FEEDBACK: battleFeedbackData,
   BATTLE_MAPS: battleMapData,
   BATTLE_RULES: battleRuleData,
+  BATTLE_REWARDS: battleRewardData,
   BATTLE_STAGE_RULES: battleStageRuleData,
   BATTLE_UI: battleUiData,
   BOSS_BALANCE: bossBalanceData,
@@ -68,6 +70,7 @@ export const {
   BATTLE_FEEDBACK,
   BATTLE_MAPS,
   BATTLE_RULES,
+  BATTLE_REWARDS,
   BATTLE_STAGE_RULES,
   BATTLE_UI,
   BOSS_BALANCE,

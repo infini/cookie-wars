@@ -4,6 +4,7 @@ import {
   BattleFeedbackConfig,
   BattleMapConfig,
   BattleRulesConfig,
+  BattleRewardsConfig,
   BattleStageRulesConfig,
   BattleUiConfig,
   BossBalanceConfig,
@@ -30,6 +31,7 @@ export interface GameConfigInput {
   BATTLE_FEEDBACK: unknown;
   BATTLE_MAPS: unknown;
   BATTLE_RULES: unknown;
+  BATTLE_REWARDS: unknown;
   BATTLE_STAGE_RULES: unknown;
   BATTLE_UI: unknown;
   BOSS_BALANCE: unknown;
@@ -56,6 +58,7 @@ export interface ValidatedGameConfig {
   BATTLE_FEEDBACK: BattleFeedbackConfig;
   BATTLE_MAPS: BattleMapConfig[];
   BATTLE_RULES: BattleRulesConfig;
+  BATTLE_REWARDS: BattleRewardsConfig;
   BATTLE_STAGE_RULES: BattleStageRulesConfig;
   BATTLE_UI: BattleUiConfig;
   BOSS_BALANCE: BossBalanceConfig;

@@ -18,6 +18,15 @@ export function validateSaveMigrations(value: unknown): UnknownRecord {
     min: 1,
     max: currentSaveVersion,
   });
+  numberField(config, 'battleMedalMigrationVersion', path, {
+    integer: true,
+    min: 1,
+    max: currentSaveVersion,
+  });
+  numberField(config, 'battleMedalsPerLegacyWin', path, {
+    integer: true,
+    min: 1,
+  });
 
   const legacyUpgradePath = `${path}.cookieEvolutionLegacyUpgrade`;
   const legacyUpgrade = record(config.cookieEvolutionLegacyUpgrade, legacyUpgradePath);

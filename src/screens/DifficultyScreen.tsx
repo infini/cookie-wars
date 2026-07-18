@@ -3,6 +3,8 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   DIFFICULTIES,
+  BATTLE_REWARDS,
+  PROGRESSION,
   getBattleMapForDifficulty,
   getDifficulty,
   getEnemyWave,
@@ -40,7 +42,7 @@ export function DifficultyScreen() {
   const enemyWave = getEnemyWave(selected.enemyWaveId);
   const boss = getMonster(enemyWave.bossMonsterId);
   const battleMap = getBattleMapForDifficulty(selected.id);
-  const rewardReceived = state.rewardClaimedStageIds.includes(
+  const rewardReceived = progress.completed || state.rewardClaimedStageIds.includes(
     getBattleStageId(selected.id, progress.currentBattleNumber),
   );
 
@@ -118,7 +120,9 @@ export function DifficultyScreen() {
         <View style={styles.rewardText}>
           <Text style={styles.rewardTitle}>{rewardReceived ? `전투 ${progress.currentBattleNumber} 보상 받음` : `전투 ${progress.currentBattleNumber} 최초 보상`}</Text>
           <Text style={styles.rewardDescription}>
-            {rewardReceived ? '이 전투를 다시 이겨도 거대 원반은 추가되지 않아요.' : '처음 클리어하면 거대 원반 1개를 받아요!'}
+            {rewardReceived
+              ? '이 전투를 다시 이겨도 거대 원반과 전투 훈장은 추가되지 않아요.'
+              : `처음 클리어하면 거대 원반 ${PROGRESSION.giantDiscRewardPerFirstClear}개와 전투 훈장 ${BATTLE_REWARDS.battleMedalsPerStageClear}개를 받아요!`}
           </Text>
         </View>
       </Panel>

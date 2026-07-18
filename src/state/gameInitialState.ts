@@ -26,6 +26,7 @@ export const initialGameState: GameState = {
   clearedDifficultyIds: [],
   rewardClaimedStageIds: [],
   giantDiscCount: 0,
+  battleMedals: 0,
   discoveredMonsterIds: [],
   newMonsterIds: [],
   soundEnabled: true,

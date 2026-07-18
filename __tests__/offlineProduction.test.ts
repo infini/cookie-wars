@@ -1,4 +1,8 @@
-import { PROGRESSION } from '../src/config';
+import {
+  DIFFICULTIES,
+  PROGRESSION,
+  SAVE_MIGRATIONS,
+} from '../src/config';
 import {
   calculateOfflineProduction,
   calculateProductionForElapsedTime,
@@ -50,6 +54,31 @@ describe('오프라인 자동 생산', () => {
     });
     expect(restoredAgain.cookies).toBe(restored.cookies);
     expect(restoredAgain.lifetimeCookies).toBe(restored.lifetimeCookies);
+  });
+
+  test('기존 승리의 소급 전투 훈장 보너스도 오프라인 자동 생산에 반영한다', () => {
+    const completedStages = PROGRESSION.winsToUnlockNextDifficulty;
+    const now = savedAt + PROGRESSION.autoProductionIntervalMs * 5;
+    const restored = gameReducer(initialGameState, {
+      type: 'HYDRATE',
+      payload: {
+        ...autoProductionState,
+        saveVersion: SAVE_MIGRATIONS.battleMedalMigrationVersion - 1,
+        upgradeLevels: {
+          ...autoProductionState.upgradeLevels,
+          autoProduction: 6,
+        },
+        difficultyWinCounts: {
+          ...initialGameState.difficultyWinCounts,
+          [DIFFICULTIES[0].id]: completedStages,
+        },
+      },
+      now,
+    });
+
+    expect(restored.battleMedals).toBe(completedStages);
+    expect(restored.cookies).toBe(autoProductionState.cookies + 180);
+    expect(restored.lifetimeCookies).toBe(autoProductionState.lifetimeCookies + 180);
   });
 
   test('기존 저장처럼 시각이 없거나 기기 시계가 뒤로 간 경우 보상을 만들지 않는다', () => {

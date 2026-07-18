@@ -16,6 +16,7 @@ export interface GameState {
   clearedDifficultyIds: string[];
   rewardClaimedStageIds: string[];
   giantDiscCount: number;
+  battleMedals: number;
   discoveredMonsterIds: string[];
   newMonsterIds: string[];
   soundEnabled: boolean;
@@ -37,6 +38,8 @@ export interface CookieStats {
 export interface BattleRewardResult {
   firstClear: boolean;
   giantDiscReward: number;
+  battleMedalReward: number;
+  totalBattleMedals: number;
   stageNumber: number;
   difficultyWins: number;
   winsRequired: number;

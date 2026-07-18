@@ -1,7 +1,7 @@
-import { DIFFICULTIES, PROGRESSION } from '../config';
+import { BATTLE_REWARDS, DIFFICULTIES, PROGRESSION } from '../config';
 import { BattleRewardResult, GameState } from '../types/game';
 import { getBattleStageId, getDifficultyProgress } from './gameSelectors';
-import { saturatingAdd } from './safeNumbers';
+import { clampSafeInteger, saturatingAdd } from './safeNumbers';
 
 export interface BattleCompletionTransition {
   state: GameState;
@@ -22,6 +22,8 @@ function unchangedBattleResult(
     result: {
       firstClear: false,
       giantDiscReward: 0,
+      battleMedalReward: 0,
+      totalBattleMedals: clampSafeInteger(state.battleMedals),
       stageNumber: progress.currentBattleNumber,
       difficultyWins: progress.wins,
       winsRequired: progress.requiredWins,
@@ -51,12 +53,14 @@ export function completeBattleTransition(
   const progress = getDifficultyProgress(state, difficulty.id);
   const stageNumber = progress.currentBattleNumber;
   const stageId = getBattleStageId(difficulty.id, stageNumber);
-  const firstClear = !state.rewardClaimedStageIds.includes(stageId);
   const difficultyWins = saturatingAdd(
     progress.wins,
     1,
     progress.requiredWins,
   );
+  const advancedStage = difficultyWins > progress.wins;
+  const firstClear = advancedStage
+    && !state.rewardClaimedStageIds.includes(stageId);
   const reachedUnlockRequirement = difficultyWins >= progress.requiredWins;
   const unlockedNextDifficulty = difficultyIndex < DIFFICULTIES.length - 1
     && progress.wins < progress.requiredWins
@@ -64,11 +68,19 @@ export function completeBattleTransition(
   const giantDiscReward = firstClear
     ? PROGRESSION.giantDiscRewardPerFirstClear
     : 0;
+  const battleMedalReward = advancedStage
+    ? BATTLE_REWARDS.battleMedalsPerStageClear
+    : 0;
+  const totalBattleMedals = saturatingAdd(
+    state.battleMedals,
+    battleMedalReward,
+  );
 
   return {
     state: {
       ...state,
       giantDiscCount: saturatingAdd(state.giantDiscCount, giantDiscReward),
+      battleMedals: totalBattleMedals,
       difficultyWinCounts: {
         ...state.difficultyWinCounts,
         [difficulty.id]: difficultyWins,
@@ -85,6 +97,8 @@ export function completeBattleTransition(
     result: {
       firstClear,
       giantDiscReward,
+      battleMedalReward,
+      totalBattleMedals,
       stageNumber,
       difficultyWins,
       winsRequired: progress.requiredWins,

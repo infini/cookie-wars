@@ -21,6 +21,7 @@
 | `battle-maps.json` | 난이도 ID별 고유 전투 배경 테마·정적 이미지 키 |
 | `enemy-discs.json` | 적 원반 레벨별 피해·크기·속도·쿨타임 |
 | `giant-disc.json` | 거대 원반 피해·비행·크기·연출·버튼 표시 |
+| `battle-rewards.json` | 스테이지 진행 승리당 전투 훈장 수와 훈장당 영구 쿠키 능력 보너스 |
 | `progression.json` | 다음 난이도 해금 승수, 최초 클리어 거대 원반 수, 저장·생산 주기 |
 | `battle-rules.json` | 전투 좌표, 이동·충돌·공격 시간 |
 | `battle-ui.json` | 성·봇·적 표시 크기, 상단 보스 HP, 체력 게이지 스타일 |
@@ -106,7 +107,7 @@
 - `moveSpeed`: 중앙 쿠키 성으로 접근하는 속도
 - `enemyDiscLevel`: `enemy-discs.json`의 단계
 
-`progression.json`의 `winsToUnlockNextDifficulty`가 다음 단계 해금에 필요한 승리 수입니다. 현재 값은 20입니다. 1~20번 전투는 각각 처음 클리어할 때마다 `giantDiscRewardPerFirstClear` 수량만큼 거대 원반을 지급하며 현재 값은 1개입니다. 전투 승리로 쿠키는 지급하지 않습니다. 완료한 전투를 재도전할 때는 `rewardClaimedStageIds`에 같은 `난이도ID:전투번호` 키가 있으므로 거대 원반도 다시 지급하지 않습니다. 20승 뒤 재도전은 20번 전투로 처리됩니다.
+`progression.json`의 `winsToUnlockNextDifficulty`가 다음 단계 해금에 필요한 승리 수입니다. 현재 값은 20입니다. 1~20번 전투는 각각 처음 클리어할 때마다 `giantDiscRewardPerFirstClear` 수량만큼 거대 원반을 지급하며 현재 값은 1개입니다. 같은 승리에서 `battle-rewards.json`의 전투 훈장도 지급합니다. 전투 승리로 쿠키를 직접 지급하지 않습니다. 완료한 전투를 재도전할 때는 난이도 진행 단계가 더 오르지 않으므로 거대 원반과 전투 훈장을 모두 다시 지급하지 않습니다. 이 진행도 검사를 먼저 하므로 `rewardClaimedStageIds`의 키가 손상되어 누락된 완료 저장도 재승리 보상을 만들지 않습니다. 20승 뒤 재도전은 20번 전투로 처리됩니다.
 
 현재 모든 난이도의 `enemyCount`는 1입니다. 스테이지 성장 테이블도 적 추가량을 0으로 유지하므로 1~20번째 전투 모두 보스 한 마리만 등장합니다.
 
@@ -243,6 +244,15 @@
 
 ## 진행·사운드
 
+`battle-rewards.json`:
+
+- `battleMedalsPerStageClear`: 아직 완료하지 않은 다음 스테이지를 이겼을 때 지급할 전투 훈장 개수. 현재 1개
+- `clickPowerBonusPercentPerMedal`: 훈장 1개당 클릭 힘 증가율. 현재 1%
+- `autoProductionBonusPercentPerMedal`: 훈장 1개당 자동 생산 증가율. 현재 1%
+- `castleHealthBonusPercentPerMedal`: 훈장 1개당 쿠키 성 최대 체력 증가율. 현재 1%
+
+훈장 보너스는 `1 + (보유 훈장 × 능력별 퍼센트) / 100` 배율입니다. 강화 능력과 현재 쿠키 진화 배율을 먼저 계산한 최종 값에 적용하며, 훈장 자체는 진화 레벨에 포함하지 않습니다. 자동 생산에도 같은 최종 배율이 적용되므로 실행 중 생산과 재실행 시 오프라인 정산이 동일한 훈장 효과를 사용합니다. 모든 값은 앱 시작 시 1 이상의 안전 정수인지 검증합니다.
+
 `progression.json`:
 
 - `winsToUnlockNextDifficulty`: 다음 난이도 해금 승수
@@ -279,10 +289,14 @@
 
 - `currentSaveVersion`: 새 저장에 기록하고 이전 저장을 정규화할 현재 스키마 버전
 - `cookieEvolutionBonusMigrationVersion`: 이전 쿠키 크기 진행도를 영구 진화 보너스로 한 번 옮기는 스키마 경계
+- `battleMedalMigrationVersion`: 이전 난이도 진행도를 전투 훈장으로 한 번 소급하는 스키마 경계
+- `battleMedalsPerLegacyWin`: 이전 저장의 정규화된 승리 1회당 소급 지급할 전투 훈장 수
 - `cookieEvolutionLegacyUpgrade.id`, `baseLevel`, `maximumLevel`: v7 저장에서 읽을 고정 레거시 강화 ID와 유효 레벨 범위
 - `botIdAliases`, `discIdAliases`, `monsterIdAliases`: 제거·변경된 ID를 현재 테이블 ID로 옮기는 대응표
 
-현재 `currentSaveVersion`은 8입니다. v7 이하 저장은 고정 레거시 ID `cookieSize`의 정규화된 현재 레벨에서 기본 레벨 1을 뺀 값을 `legacyCookieEvolutionBonusLevels`에 한 번 기록합니다. 1~6 범위의 소수 레벨은 기존 저장 정책대로 내림하고, 범위 밖이거나 유한하지 않은 값은 기본 레벨로 복구해 보너스를 만들지 않습니다. 이 규칙은 현재 강화 테이블과 분리되어 향후 숨김 행을 제거하거나 다른 강화의 진화 기여도를 바꿔도 v7 직행 업데이트 결과가 변하지 않습니다. 새 저장과 해당 필드가 없던 v8 이상 저장은 0을 사용하고, v8 이상에서는 쿠키 크기를 다시 읽어 보너스를 만들지 않습니다.
+현재 `currentSaveVersion`은 9입니다. v7 이하 저장은 고정 레거시 ID `cookieSize`의 정규화된 현재 레벨에서 기본 레벨 1을 뺀 값을 `legacyCookieEvolutionBonusLevels`에 한 번 기록합니다. 1~6 범위의 소수 레벨은 기존 저장 정책대로 내림하고, 범위 밖이거나 유한하지 않은 값은 기본 레벨로 복구해 보너스를 만들지 않습니다. 이 규칙은 현재 강화 테이블과 분리되어 향후 숨김 행을 제거하거나 다른 강화의 진화 기여도를 바꿔도 v7 직행 업데이트 결과가 변하지 않습니다. 새 저장과 해당 필드가 없던 v8 이상 저장은 0을 사용하고, v8 이상에서는 쿠키 크기를 다시 읽어 보너스를 만들지 않습니다.
+
+v8 이하 저장은 각 난이도의 `difficultyWinCounts`를 먼저 `0..winsToUnlockNextDifficulty`로 정규화한 뒤 합산하고 `battleMedalsPerLegacyWin`을 곱해 `battleMedals`를 만듭니다. 현재 값은 완료 승리 1회당 훈장 1개이므로 과거에 보상 없이 진행한 모든 완료 스테이지가 정확히 소급됩니다. v9 이상 저장은 저장된 `battleMedals`를 정규화해 사용하고 승리 수에서 다시 계산하지 않으므로 재실행해도 중복 지급되지 않습니다. 새 게임은 0개에서 시작합니다.
 
 `currentSaveVersion`은 양의 정수여야 하며 별칭 대상은 실제 현재 데이터에 존재해야 합니다.
 

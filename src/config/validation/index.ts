@@ -20,6 +20,7 @@ import {
 } from './economy';
 import { ConfigValidationError } from './primitives';
 import { validateReferences } from './references';
+import { validateBattleRewards } from './rewards';
 import { validateSaveMigrations } from './saveMigrations';
 import {
   validateAudioSettings,
@@ -40,6 +41,7 @@ export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig 
   validateBattleFeedback(input.BATTLE_FEEDBACK);
   const maps = validateBattleMaps(input.BATTLE_MAPS);
   validateBattleRules(input.BATTLE_RULES);
+  validateBattleRewards(input.BATTLE_REWARDS);
   validateBattleStageRules(input.BATTLE_STAGE_RULES);
   validateBattleUi(input.BATTLE_UI);
   validateBossBalance(input.BOSS_BALANCE);

@@ -1,5 +1,6 @@
 import {
   AUDIO_SETTINGS,
+  BATTLE_REWARDS,
   BOTS,
   COOKIE_UPGRADES,
   DIFFICULTIES,
@@ -14,6 +15,7 @@ import {
   calculateBotPrice,
   calculateCookieStats,
   getBotOffer,
+  getBattleMedalBonuses,
   getCookieEvolutionProgress,
   getBattleStageId,
   getDiscProgress,
@@ -54,6 +56,8 @@ describe('게임 저장 상태', () => {
     expect(transition.result).toEqual({
       firstClear: true,
       giantDiscReward: PROGRESSION.giantDiscRewardPerFirstClear,
+      battleMedalReward: BATTLE_REWARDS.battleMedalsPerStageClear,
+      totalBattleMedals: BATTLE_REWARDS.battleMedalsPerStageClear,
       stageNumber: 1,
       difficultyWins: 1,
       winsRequired: PROGRESSION.winsToUnlockNextDifficulty,
@@ -64,6 +68,9 @@ describe('게임 저장 상태', () => {
     expect(transition.state.lifetimeCookies).toBe(funded.lifetimeCookies);
     expect(transition.state.giantDiscCount).toBe(
       funded.giantDiscCount + PROGRESSION.giantDiscRewardPerFirstClear,
+    );
+    expect(transition.state.battleMedals).toBe(
+      BATTLE_REWARDS.battleMedalsPerStageClear,
     );
     expect(transition.state.rewardClaimedStageIds).toEqual([
       getBattleStageId(DIFFICULTIES[0].id, 1),
@@ -86,6 +93,9 @@ describe('게임 저장 상태', () => {
     expect(results.map((result) => result.difficultyWins)).toEqual([1, 2]);
     expect(stateRef.current.giantDiscCount).toBe(
       PROGRESSION.giantDiscRewardPerFirstClear * 2,
+    );
+    expect(stateRef.current.battleMedals).toBe(
+      BATTLE_REWARDS.battleMedalsPerStageClear * 2,
     );
     expect(actions).toEqual([
       { type: 'COMPLETE_BATTLE', difficultyId: DIFFICULTIES[0].id },
@@ -171,6 +181,7 @@ describe('게임 저장 상태', () => {
     const beforeLastStage = {
       ...initialGameState,
       giantDiscCount: previousWins,
+      battleMedals: previousWins * BATTLE_REWARDS.battleMedalsPerStageClear,
       difficultyWinCounts: {
         ...initialGameState.difficultyWinCounts,
         [difficulty.id]: previousWins,
@@ -188,6 +199,9 @@ describe('게임 저장 상태', () => {
     expect(completed.result).toEqual({
       firstClear: true,
       giantDiscReward: PROGRESSION.giantDiscRewardPerFirstClear,
+      battleMedalReward: BATTLE_REWARDS.battleMedalsPerStageClear,
+      totalBattleMedals: PROGRESSION.winsToUnlockNextDifficulty
+        * BATTLE_REWARDS.battleMedalsPerStageClear,
       stageNumber: PROGRESSION.winsToUnlockNextDifficulty,
       difficultyWins: PROGRESSION.winsToUnlockNextDifficulty,
       winsRequired: PROGRESSION.winsToUnlockNextDifficulty,
@@ -201,12 +215,35 @@ describe('게임 저장 상태', () => {
       ...completed.result,
       firstClear: false,
       giantDiscReward: 0,
+      battleMedalReward: 0,
       unlockedNextDifficulty: false,
     });
     expect(replayed.state.giantDiscCount).toBe(completed.state.giantDiscCount);
+    expect(replayed.state.battleMedals).toBe(completed.state.battleMedals);
     expect(replayed.state.rewardClaimedStageIds).toEqual(
       completed.state.rewardClaimedStageIds,
     );
+  });
+
+  test('완료 진행의 보상 키가 빠져 있어도 마지막 스테이지 재승리에 훈장을 중복 지급하지 않는다', () => {
+    const difficulty = DIFFICULTIES[0];
+    const completedProgress = {
+      ...initialGameState,
+      battleMedals: PROGRESSION.winsToUnlockNextDifficulty,
+      difficultyWinCounts: {
+        ...initialGameState.difficultyWinCounts,
+        [difficulty.id]: PROGRESSION.winsToUnlockNextDifficulty,
+      },
+      rewardClaimedStageIds: [],
+      highestUnlockedDifficultyIndex: 1,
+    };
+    const replayed = completeBattleTransition(completedProgress, difficulty.id);
+
+    expect(replayed.result.firstClear).toBe(false);
+    expect(replayed.result.giantDiscReward).toBe(0);
+    expect(replayed.result.battleMedalReward).toBe(0);
+    expect(replayed.result.totalBattleMedals).toBe(completedProgress.battleMedals);
+    expect(replayed.state.battleMedals).toBe(completedProgress.battleMedals);
   });
 
   test('잠긴 난이도와 알 수 없는 난이도의 완료 요청은 상태와 보상을 바꾸지 않는다', () => {
@@ -221,9 +258,88 @@ describe('게임 저장 상태', () => {
       expect(reduced).toBe(initialGameState);
       expect(transition.result.firstClear).toBe(false);
       expect(transition.result.giantDiscReward).toBe(0);
+      expect(transition.result.battleMedalReward).toBe(0);
+      expect(transition.result.totalBattleMedals).toBe(initialGameState.battleMedals);
       expect(transition.result.difficultyWins).toBe(0);
       expect(transition.result.unlockedNextDifficulty).toBe(false);
     }
+  });
+
+  test('v8까지의 난이도별 승리 수를 전투 훈장으로 정확히 한 번 소급한다', () => {
+    const legacySave = {
+      saveVersion: SAVE_MIGRATIONS.battleMedalMigrationVersion - 1,
+      cookies: 777,
+      lifetimeCookies: 888,
+      giantDiscCount: 9,
+      difficultyWinCounts: {
+        [DIFFICULTIES[0].id]: PROGRESSION.winsToUnlockNextDifficulty,
+        [DIFFICULTIES[1].id]: 3,
+      },
+    };
+    const migrated = mergeSavedGame(legacySave);
+    const reloaded = mergeSavedGame(migrated);
+
+    expect(migrated.battleMedals).toBe(
+      (PROGRESSION.winsToUnlockNextDifficulty + 3)
+        * SAVE_MIGRATIONS.battleMedalsPerLegacyWin,
+    );
+    expect(reloaded.battleMedals).toBe(migrated.battleMedals);
+    expect(migrated.saveVersion).toBe(SAVE_MIGRATIONS.currentSaveVersion);
+    expect(migrated.cookies).toBe(legacySave.cookies);
+    expect(migrated.lifetimeCookies).toBe(legacySave.lifetimeCookies);
+    expect(migrated.giantDiscCount).toBe(legacySave.giantDiscCount);
+  });
+
+  test('현재 저장과 미래 저장은 저장된 전투 훈장을 소급 없이 보존한다', () => {
+    const difficultyWinCounts = {
+      ...initialGameState.difficultyWinCounts,
+      [DIFFICULTIES[0].id]: PROGRESSION.winsToUnlockNextDifficulty,
+    };
+    const current = mergeSavedGame({
+      saveVersion: SAVE_MIGRATIONS.currentSaveVersion,
+      battleMedals: 7,
+      difficultyWinCounts,
+    });
+    const future = prepareSavedGame({
+      saveVersion: SAVE_MIGRATIONS.currentSaveVersion + 1,
+      battleMedals: 9,
+      difficultyWinCounts,
+    }, 10_000);
+
+    expect(current.battleMedals).toBe(7);
+    expect(future.state.battleMedals).toBe(9);
+    expect(future.persistenceWritable).toBe(false);
+  });
+
+  test('전투 훈장은 쿠키 진화 단계와 무관하게 클릭·자동 생산·성 체력을 영구 강화한다', () => {
+    const upgradeLevels = {
+      ...initialGameState.upgradeLevels,
+      clickPower: 8,
+      autoProduction: 6,
+      cookieHealth: 6,
+    };
+    const baseState = { ...initialGameState, upgradeLevels };
+    const rewardedState = {
+      ...baseState,
+      battleMedals: 20,
+    };
+    const baseStats = calculateCookieStats(baseState);
+    const rewardedStats = calculateCookieStats(rewardedState);
+    const bonuses = getBattleMedalBonuses(rewardedState);
+
+    expect(bonuses).toMatchObject({
+      battleMedals: 20,
+      clickPowerBonusPercent: 20,
+      autoProductionBonusPercent: 20,
+      castleHealthBonusPercent: 20,
+    });
+    expect(rewardedStats.clickPower).toBe(Math.round(baseStats.clickPower * 1.2));
+    expect(rewardedStats.autoProduction).toBe(
+      Math.round(baseStats.autoProduction * 1.2),
+    );
+    expect(rewardedStats.maxHealth).toBe(Math.round(baseStats.maxHealth * 1.2));
+    expect(rewardedStats.activeCookieId).toBe(baseStats.activeCookieId);
+    expect(rewardedStats.cookieLevel).toBe(baseStats.cookieLevel);
   });
 
   test('이전 난이도 단위 보상 저장을 불러와도 같은 스테이지 보상을 다시 주지 않는다', () => {
@@ -236,6 +352,9 @@ describe('게임 저장 상태', () => {
 
     expect(transition.result.firstClear).toBe(false);
     expect(transition.result.giantDiscReward).toBe(0);
+    expect(transition.result.battleMedalReward).toBe(
+      BATTLE_REWARDS.battleMedalsPerStageClear,
+    );
     expect(transition.result.stageNumber).toBe(1);
     expect(transition.result.difficultyWins).toBe(1);
     expect(transition.state.giantDiscCount).toBe(7);
@@ -260,6 +379,8 @@ describe('게임 저장 상태', () => {
     expect(second.lifetimeCookies).toBe(funded.lifetimeCookies);
     expect(first.giantDiscCount).toBe(1);
     expect(second.giantDiscCount).toBe(2);
+    expect(first.battleMedals).toBe(BATTLE_REWARDS.battleMedalsPerStageClear);
+    expect(second.battleMedals).toBe(BATTLE_REWARDS.battleMedalsPerStageClear * 2);
 
     let completed = second;
     for (let win = 2; win < PROGRESSION.winsToUnlockNextDifficulty; win += 1) {
@@ -274,6 +395,11 @@ describe('게임 저장 상태', () => {
     });
     expect(replay.cookies).toBe(completed.cookies);
     expect(replay.giantDiscCount).toBe(completed.giantDiscCount);
+    expect(replay.battleMedals).toBe(completed.battleMedals);
+    expect(completed.battleMedals).toBe(
+      PROGRESSION.winsToUnlockNextDifficulty
+        * BATTLE_REWARDS.battleMedalsPerStageClear,
+    );
     expect(completed.giantDiscCount).toBe(PROGRESSION.winsToUnlockNextDifficulty);
     expect(replay.rewardClaimedStageIds).toHaveLength(PROGRESSION.winsToUnlockNextDifficulty);
     expect(replay.rewardClaimedStageIds).toContain(getBattleStageId(DIFFICULTIES[0].id, 20));
@@ -727,6 +853,7 @@ describe('게임 저장 상태', () => {
         [DIFFICULTIES[2].id]: -8,
       },
       giantDiscCount: -3,
+      battleMedals: Number.NaN,
       soundEnabled: 'yes',
       soundVolumeLevel: Number.POSITIVE_INFINITY,
       vibrationEnabled: 1,
@@ -743,6 +870,7 @@ describe('게임 저장 상태', () => {
     expect(restored.difficultyWinCounts).toEqual(initialGameState.difficultyWinCounts);
     expect(restored.highestUnlockedDifficultyIndex).toBe(0);
     expect(restored.giantDiscCount).toBe(0);
+    expect(restored.battleMedals).toBe(0);
     expect(restored.soundEnabled).toBe(initialGameState.soundEnabled);
     expect(restored.soundVolumeLevel).toBe(AUDIO_SETTINGS.defaultLevel);
     expect(restored.vibrationEnabled).toBe(initialGameState.vibrationEnabled);
@@ -771,6 +899,7 @@ describe('게임 저장 상태', () => {
         [DIFFICULTIES[1].id]: 3.9,
       },
       giantDiscCount: Number.MAX_VALUE,
+      battleMedals: Number.MAX_VALUE,
       soundVolumeLevel: 3.9,
       lastSavedAt: Number.MAX_VALUE,
     } as any);
@@ -788,6 +917,7 @@ describe('게임 저장 상태', () => {
     expect(restored.difficultyWinCounts[DIFFICULTIES[1].id]).toBe(3);
     expect(restored.highestUnlockedDifficultyIndex).toBe(1);
     expect(restored.giantDiscCount).toBe(Number.MAX_SAFE_INTEGER);
+    expect(restored.battleMedals).toBe(Number.MAX_SAFE_INTEGER);
     expect(restored.soundVolumeLevel).toBe(3);
     expect(restored.lastSavedAt).toBe(Number.MAX_SAFE_INTEGER);
   });

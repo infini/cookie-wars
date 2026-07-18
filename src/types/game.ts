@@ -33,4 +33,8 @@ export type {
 } from './economy';
 export type { BattleRewardResult, CookieStats, GameState } from './gameState';
 export type { TabId } from './navigation';
-export type { ProgressionConfig, SaveMigrationsConfig } from './system';
+export type {
+  BattleRewardsConfig,
+  ProgressionConfig,
+  SaveMigrationsConfig,
+} from './system';

@@ -19,6 +19,7 @@ import {
 import { GameState, SoundVolumeLevel } from '../types/game';
 import { initialGameState } from './gameInitialState';
 import { resolveCookieEvolutionBonusLevels } from './saveMigrations/cookieEvolutionMigration';
+import { resolveBattleMedals } from './saveMigrations/battleMedalMigration';
 import { isFutureSaveVersion } from './saveMigrations/saveVersion';
 
 interface LegacyDiscSave {
@@ -181,6 +182,11 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     ...currentSaved
   } = saved;
   const difficultyWinCounts = normalizeDifficultyWins(saved);
+  const battleMedals = resolveBattleMedals({
+    savedVersion: saved.saveVersion,
+    savedBattleMedals: saved.battleMedals,
+    normalizedDifficultyWinCounts: difficultyWinCounts,
+  });
   const highestUnlockedDifficultyIndex = unlockedDifficultyIndex(difficultyWinCounts);
   const selectedIndex = DIFFICULTIES.findIndex(
     (difficulty) => difficulty.id === saved.selectedDifficultyId,
@@ -247,6 +253,7 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     clearedDifficultyIds,
     rewardClaimedStageIds,
     giantDiscCount: normalizeStoredInteger(saved.giantDiscCount, { fallback: 0 }),
+    battleMedals,
     discoveredMonsterIds,
     newMonsterIds,
     soundEnabled: normalizeStoredBoolean(saved.soundEnabled, initialGameState.soundEnabled),

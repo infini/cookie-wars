@@ -16,6 +16,7 @@ import {
   saturatingSubtract,
 } from '../safeNumbers';
 import { getUpgradeProgress, UpgradeProgress } from './upgradeSelectors';
+import { getBattleMedalBonuses } from './battleRewardSelectors';
 
 export interface CookieEvolutionProgress {
   visibleUpgradeLevels: number;
@@ -35,19 +36,32 @@ export function calculateCookieStats(state: GameState): CookieStats {
     return progress(upgradeId)?.current.value ?? 0;
   };
   const evolution = getCookieEvolutionProgress(state);
+  const medalBonuses = getBattleMedalBonuses(state);
+  const clickPower = saturatingProductInteger(
+    value('clickPower'),
+    evolution.active.clickMultiplier,
+  );
+  const autoProduction = saturatingProductInteger(
+    value('autoProduction'),
+    evolution.active.autoProductionMultiplier,
+  );
+  const maxHealth = saturatingProductInteger(
+    value('cookieHealth'),
+    evolution.active.healthMultiplier,
+  );
   return {
     clickPower: saturatingProductInteger(
-      value('clickPower'),
-      evolution.active.clickMultiplier,
+      clickPower,
+      medalBonuses.clickPowerMultiplier,
     ),
     cookieRenderSize: clampFiniteNumber(getMaximumCookieRenderSize()),
     autoProduction: saturatingProductInteger(
-      value('autoProduction'),
-      evolution.active.autoProductionMultiplier,
+      autoProduction,
+      medalBonuses.autoProductionMultiplier,
     ),
     maxHealth: saturatingProductInteger(
-      value('cookieHealth'),
-      evolution.active.healthMultiplier,
+      maxHealth,
+      medalBonuses.castleHealthMultiplier,
     ),
     cookieLevel: evolution.totalUpgradeLevels,
     activeCookieId: evolution.active.id,

@@ -2,6 +2,7 @@ import {
   AUDIO_SETTINGS,
   BATTLE_STAGE_RULES,
   BATTLE_RULES,
+  BATTLE_REWARDS,
   BATTLE_FEEDBACK,
   BATTLE_MAPS,
   BOSS_BALANCE,
@@ -107,8 +108,16 @@ describe('데이터 테이블', () => {
   test('진행·음량·상점 값은 데이터 테이블에서 제공한다', () => {
     expect(PROGRESSION.winsToUnlockNextDifficulty).toBe(20);
     expect(PROGRESSION.giantDiscRewardPerFirstClear).toBe(1);
-    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(8);
+    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(9);
     expect(SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion).toBe(8);
+    expect(SAVE_MIGRATIONS.battleMedalMigrationVersion).toBe(9);
+    expect(SAVE_MIGRATIONS.battleMedalsPerLegacyWin).toBe(1);
+    expect(BATTLE_REWARDS).toEqual({
+      battleMedalsPerStageClear: 1,
+      clickPowerBonusPercentPerMedal: 1,
+      autoProductionBonusPercentPerMedal: 1,
+      castleHealthBonusPercentPerMedal: 1,
+    });
     expect(SAVE_MIGRATIONS.cookieEvolutionLegacyUpgrade).toEqual({
       id: 'cookieSize',
       baseLevel: 1,
@@ -428,9 +437,39 @@ describe('데이터 테이블 런타임 검증', () => {
     );
 
     const migrationAfterCurrentVersion = cloneConfig();
-    migrationAfterCurrentVersion.SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion = 9;
+    migrationAfterCurrentVersion.SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion = 10;
     expect(() => validateGameConfig(migrationAfterCurrentVersion)).toThrow(
       'SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion',
+    );
+
+    const medalMigrationAfterCurrentVersion = cloneConfig();
+    medalMigrationAfterCurrentVersion.SAVE_MIGRATIONS.battleMedalMigrationVersion = 10;
+    expect(() => validateGameConfig(medalMigrationAfterCurrentVersion)).toThrow(
+      'SAVE_MIGRATIONS.battleMedalMigrationVersion',
+    );
+
+    const invalidLegacyMedalReward = cloneConfig();
+    invalidLegacyMedalReward.SAVE_MIGRATIONS.battleMedalsPerLegacyWin = 0;
+    expect(() => validateGameConfig(invalidLegacyMedalReward)).toThrow(
+      'SAVE_MIGRATIONS.battleMedalsPerLegacyWin',
+    );
+
+    const invalidStageMedalReward = cloneConfig();
+    invalidStageMedalReward.BATTLE_REWARDS.battleMedalsPerStageClear = 0;
+    expect(() => validateGameConfig(invalidStageMedalReward)).toThrow(
+      'BATTLE_REWARDS.battleMedalsPerStageClear',
+    );
+
+    const invalidMedalBonus = cloneConfig();
+    invalidMedalBonus.BATTLE_REWARDS.autoProductionBonusPercentPerMedal = 0;
+    expect(() => validateGameConfig(invalidMedalBonus)).toThrow(
+      'BATTLE_REWARDS.autoProductionBonusPercentPerMedal',
+    );
+
+    const fractionalMedalBonus = cloneConfig();
+    fractionalMedalBonus.BATTLE_REWARDS.castleHealthBonusPercentPerMedal = 1.5;
+    expect(() => validateGameConfig(fractionalMedalBonus)).toThrow(
+      'BATTLE_REWARDS.castleHealthBonusPercentPerMedal',
     );
 
     const missingLegacyUpgrade = cloneConfig();

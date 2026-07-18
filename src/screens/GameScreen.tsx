@@ -10,7 +10,10 @@ import { CookieImage } from '../components/CookieImage';
 import { GameButton } from '../components/GameButton';
 import { StatChip } from '../components/StatChip';
 import { getCookie } from '../config';
-import { getCookieEvolutionProgress } from '../domain/gameSelectors';
+import {
+  getBattleMedalBonuses,
+  getCookieEvolutionProgress,
+} from '../domain/gameSelectors';
 
 interface FloatingGainProps {
   id: number;
@@ -49,6 +52,11 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
   const [gains, setGains] = useState<{ id: number; amount: number }[]>([]);
   const activeCookie = getCookie(stats.activeCookieId);
   const evolution = getCookieEvolutionProgress(state);
+  const medalBonuses = getBattleMedalBonuses(state);
+  const uniformMedalBonus = medalBonuses.clickPowerBonusPercent
+    === medalBonuses.autoProductionBonusPercent
+    && medalBonuses.clickPowerBonusPercent
+      === medalBonuses.castleHealthBonusPercent;
 
   const handleCookiePress = () => {
     const amount = clickCookie();
@@ -69,6 +77,18 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
         <StatChip icon="cookie" label="현재 쿠키" value={formatNumber(state.cookies)} />
         <StatChip icon="arrow-up-bold" label="진화 레벨" value={`Lv.${stats.cookieLevel}`} tint={colors.purple} />
         <StatChip icon="gesture-tap" label="한 번에" value={`+${formatNumber(stats.clickPower)}`} tint={colors.blue} />
+      </View>
+      <View
+        accessible
+        accessibilityRole="text"
+        accessibilityLabel={`전투 훈장 ${formatNumber(medalBonuses.battleMedals)}개, 클릭 힘 영구 보너스 ${formatNumber(medalBonuses.clickPowerBonusPercent)}퍼센트, 자동 생산 영구 보너스 ${formatNumber(medalBonuses.autoProductionBonusPercent)}퍼센트, 쿠키 성 체력 영구 보너스 ${formatNumber(medalBonuses.castleHealthBonusPercent)}퍼센트`}
+        style={styles.medalPill}
+      >
+        <Text numberOfLines={1} adjustsFontSizeToFit style={styles.medalText}>
+          🏅 전투 훈장 {formatNumber(medalBonuses.battleMedals)}개 · {uniformMedalBonus
+            ? `쿠키 성장 +${formatNumber(medalBonuses.clickPowerBonusPercent)}%`
+            : '영구 성장 보너스'}
+        </Text>
       </View>
 
       <Pressable
@@ -138,6 +158,8 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
 const styles = StyleSheet.create({
   root: { flex: 1, paddingVertical: 4 },
   statsRow: { flexDirection: 'row', gap: 6 },
+  medalPill: { alignSelf: 'center', maxWidth: '94%', minHeight: 30, justifyContent: 'center', marginTop: 4, paddingHorizontal: 12, borderRadius: 15, backgroundColor: '#F3E8FF', borderWidth: 1, borderColor: '#D9BEFF' },
+  medalText: { fontFamily: fonts.extraBold, fontSize: 12, color: colors.purple, textAlign: 'center' },
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 0 },
   guide: { fontFamily: fonts.display, fontSize: 25, color: colors.cookieDark, marginBottom: 4 },
   evolutionSummary: { width: '92%', maxWidth: 360, alignItems: 'center', marginBottom: 2, paddingHorizontal: 2 },

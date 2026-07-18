@@ -5,9 +5,18 @@ export interface ProgressionConfig {
   autoProductionIntervalMs: number;
 }
 
+export interface BattleRewardsConfig {
+  battleMedalsPerStageClear: number;
+  clickPowerBonusPercentPerMedal: number;
+  autoProductionBonusPercentPerMedal: number;
+  castleHealthBonusPercentPerMedal: number;
+}
+
 export interface SaveMigrationsConfig {
   currentSaveVersion: number;
   cookieEvolutionBonusMigrationVersion: number;
+  battleMedalMigrationVersion: number;
+  battleMedalsPerLegacyWin: number;
   cookieEvolutionLegacyUpgrade: {
     id: string;
     baseLevel: number;

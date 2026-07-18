@@ -42,6 +42,8 @@ export const styles = StyleSheet.create({
   replayBox: { backgroundColor: '#EEEAE6' },
   rewardLabel: { fontFamily: fonts.medium, fontSize: 10, color: colors.muted },
   rewardValue: { fontFamily: fonts.extraBold, fontSize: 17, color: colors.cookieDark },
+  medalRewardValue: { fontFamily: fonts.extraBold, fontSize: 15, color: colors.purple, marginTop: 1 },
+  growthRewardText: { fontFamily: fonts.bold, fontSize: 11, color: colors.greenDark, marginTop: 1 },
   defeatText: { fontFamily: fonts.medium, fontSize: 12, lineHeight: 18, color: colors.muted, textAlign: 'center', marginVertical: 12 },
   progressText: { fontFamily: fonts.extraBold, fontSize: 13, color: colors.blueDark, marginTop: 10 },
   unlockText: { fontFamily: fonts.extraBold, fontSize: 13, color: colors.purple, marginTop: 10 },
