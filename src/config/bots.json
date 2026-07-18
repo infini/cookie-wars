@@ -1,0 +1,11 @@
+[
+  {
+    "id": "cookie-bot",
+    "name": "쿠키봇",
+    "description": "전투에서 가장 가까운 적을 자동으로 공격해요.",
+    "baseCost": 140,
+    "costMultiplier": 1.65,
+    "damage": 2,
+    "attackIntervalMs": 900
+  }
+]

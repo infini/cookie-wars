@@ -1,0 +1,14 @@
+[
+  {
+    "id": "classic-cookie",
+    "name": "클래식 초코칩 쿠키",
+    "description": "쿠키전쟁의 첫 번째 쿠키예요.",
+    "unlocked": true
+  },
+  {
+    "id": "strawberry-cookie",
+    "name": "딸기 쿠키",
+    "description": "새로운 쿠키가 곧 찾아와요.",
+    "unlocked": false
+  }
+]

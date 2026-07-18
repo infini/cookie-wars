@@ -1,0 +1,60 @@
+[
+  {
+    "id": "clickPower",
+    "name": "클릭 힘",
+    "description": "쿠키를 누를 때 받는 쿠키가 늘어나요.",
+    "unit": "개",
+    "levels": [
+      { "level": 1, "value": 1, "cost": 0 },
+      { "level": 2, "value": 2, "cost": 25 },
+      { "level": 3, "value": 4, "cost": 90 },
+      { "level": 4, "value": 7, "cost": 280 },
+      { "level": 5, "value": 12, "cost": 850 },
+      { "level": 6, "value": 20, "cost": 2400 },
+      { "level": 7, "value": 34, "cost": 6500 },
+      { "level": 8, "value": 55, "cost": 16000 }
+    ]
+  },
+  {
+    "id": "cookieSize",
+    "name": "쿠키 크기",
+    "description": "누르기 좋은 커다란 쿠키로 자라나요.",
+    "unit": "%",
+    "levels": [
+      { "level": 1, "value": 100, "cost": 0 },
+      { "level": 2, "value": 106, "cost": 40 },
+      { "level": 3, "value": 112, "cost": 130 },
+      { "level": 4, "value": 118, "cost": 390 },
+      { "level": 5, "value": 124, "cost": 1100 },
+      { "level": 6, "value": 130, "cost": 3000 }
+    ]
+  },
+  {
+    "id": "autoProduction",
+    "name": "자동 생산",
+    "description": "가만히 있어도 쿠키를 구워요.",
+    "unit": "개/초",
+    "levels": [
+      { "level": 1, "value": 0, "cost": 0 },
+      { "level": 2, "value": 1, "cost": 120 },
+      { "level": 3, "value": 3, "cost": 420 },
+      { "level": 4, "value": 7, "cost": 1350 },
+      { "level": 5, "value": 15, "cost": 3900 },
+      { "level": 6, "value": 30, "cost": 9800 }
+    ]
+  },
+  {
+    "id": "cookieHealth",
+    "name": "쿠키 성 체력",
+    "description": "전투에서 지켜야 할 쿠키 성이 튼튼해져요.",
+    "unit": "HP",
+    "levels": [
+      { "level": 1, "value": 100, "cost": 0 },
+      { "level": 2, "value": 130, "cost": 100 },
+      { "level": 3, "value": 175, "cost": 360 },
+      { "level": 4, "value": 240, "cost": 1050 },
+      { "level": 5, "value": 330, "cost": 2900 },
+      { "level": 6, "value": 460, "cost": 7600 }
+    ]
+  }
+]

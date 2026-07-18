@@ -1,0 +1,13 @@
+{
+  "id": "cookieDisc",
+  "name": "쿠키 원반",
+  "purchaseCost": 180,
+  "description": "한 번 사면 전투에서 영원히 사용할 수 있어요.",
+  "levels": [
+    { "level": 1, "damage": 3, "size": 44, "speed": 280, "cooldownMs": 1000, "cost": 0 },
+    { "level": 2, "damage": 5, "size": 48, "speed": 310, "cooldownMs": 900, "cost": 220 },
+    { "level": 3, "damage": 8, "size": 52, "speed": 345, "cooldownMs": 800, "cost": 650 },
+    { "level": 4, "damage": 12, "size": 57, "speed": 385, "cooldownMs": 700, "cost": 1800 },
+    { "level": 5, "damage": 18, "size": 63, "speed": 430, "cooldownMs": 600, "cost": 4800 }
+  ]
+}

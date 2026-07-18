@@ -1,0 +1,26 @@
+[
+  {
+    "id": "crumb-goblin",
+    "name": "부스러기 고블린",
+    "baseHp": 36,
+    "baseAttack": 4,
+    "rewardCookie": 8,
+    "description": "달콤한 쿠키 냄새를 맡고 찾아온 장난꾸러기 몬스터예요."
+  },
+  {
+    "id": "sugar-slime",
+    "name": "설탕 슬라임",
+    "baseHp": 80,
+    "baseAttack": 7,
+    "rewardCookie": 16,
+    "description": "아직 발견하지 못한 몬스터예요."
+  },
+  {
+    "id": "choco-dragon",
+    "name": "초코 드래곤",
+    "baseHp": 180,
+    "baseAttack": 14,
+    "rewardCookie": 34,
+    "description": "아직 발견하지 못한 몬스터예요."
+  }
+]
