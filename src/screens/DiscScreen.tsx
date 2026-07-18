@@ -65,7 +65,11 @@ export function DiscScreen() {
           </View>
           {disc.owned ? (
             <View style={styles.nextLine}>
-              <Text style={styles.nextText}>다음: 공격력 {next.damage} · 쿨타임 {formatSeconds(next.cooldownMs)}</Text>
+              <Text style={styles.nextText}>
+                {next
+                  ? `다음: 공격력 ${next.damage} · 쿨타임 ${formatSeconds(next.cooldownMs)}`
+                  : '모든 강화 완료!'}
+              </Text>
             </View>
           ) : null}
           <View style={styles.offerButtons}>
@@ -90,9 +94,9 @@ export function DiscScreen() {
             )}
             {disc.owned ? (
               <GameButton
-                title={`🍪 ${formatNumber(next.cost)} 강화`}
+                title={next ? `🍪 ${formatNumber(next.cost)} 강화` : '최고 레벨'}
                 onPress={() => resultFeedback(upgradeDisc(disc.config.id))}
-                disabled={!disc.upgradeAffordable}
+                disabled={!next || !disc.upgradeAffordable}
                 variant="purple"
                 compact
                 style={styles.offerButton}

@@ -5,11 +5,15 @@ import {
   DIFFICULTIES,
   DISC_UPGRADE_RULES,
   DISCS,
+  MONSTERS,
   PROGRESSION,
+  SAVE_MIGRATIONS,
 } from '../src/config';
+import { completeBattleTransition } from '../src/domain/battleCompletion';
 import {
   calculateBotPrice,
   calculateCookieStats,
+  getBotOffer,
   getCookieEvolutionProgress,
   getBattleStageId,
   getDiscProgress,
@@ -19,12 +23,227 @@ import {
 } from '../src/domain/gameSelectors';
 import {
   consumeGiantDiscInventory,
+  type GameAction,
   gameReducer,
   initialGameState,
   mergeSavedGame,
+  prepareSavedGame,
 } from '../src/state/gameReducer';
+import { createProjectedGameDispatcher } from '../src/state/gameRuntime';
+import { createGameCommands } from '../src/state/useGameCommands';
+import type { GameState } from '../src/types/game';
+
+function createTestCommands(actions: GameAction[], stateRef: { current: GameState }) {
+  return createGameCommands(
+    createProjectedGameDispatcher((action) => {
+      actions.push(action);
+    }, stateRef),
+    stateRef,
+  );
+}
 
 describe('게임 저장 상태', () => {
+  test('전투 완료 순수 전이가 최초 보상 결과와 reducer 상태를 함께 만든다', () => {
+    const funded = { ...initialGameState, cookies: 123, giantDiscCount: 4 };
+    const transition = completeBattleTransition(funded, DIFFICULTIES[0].id);
+    const reduced = gameReducer(funded, {
+      type: 'COMPLETE_BATTLE',
+      difficultyId: DIFFICULTIES[0].id,
+    });
+
+    expect(transition.result).toEqual({
+      firstClear: true,
+      giantDiscReward: PROGRESSION.giantDiscRewardPerFirstClear,
+      stageNumber: 1,
+      difficultyWins: 1,
+      winsRequired: PROGRESSION.winsToUnlockNextDifficulty,
+      unlockedNextDifficulty: false,
+    });
+    expect(transition.state).toEqual(reduced);
+    expect(transition.state.cookies).toBe(funded.cookies);
+    expect(transition.state.lifetimeCookies).toBe(funded.lifetimeCookies);
+    expect(transition.state.giantDiscCount).toBe(
+      funded.giantDiscCount + PROGRESSION.giantDiscRewardPerFirstClear,
+    );
+    expect(transition.state.rewardClaimedStageIds).toEqual([
+      getBattleStageId(DIFFICULTIES[0].id, 1),
+    ]);
+    expect(transition.state.clearedDifficultyIds).toEqual([DIFFICULTIES[0].id]);
+  });
+
+  test('렌더 전 연속 전투 완료도 projected 상태와 reducer 진행이 일치한다', () => {
+    const actions: GameAction[] = [];
+    const stateRef = { current: initialGameState };
+    const commands = createTestCommands(actions, stateRef);
+    const results = [
+      commands.completeBattle(DIFFICULTIES[0].id),
+      commands.completeBattle(DIFFICULTIES[0].id),
+    ];
+    const reduced = actions.reduce(gameReducer, initialGameState);
+
+    expect(stateRef.current).toEqual(reduced);
+    expect(results.map((result) => result.stageNumber)).toEqual([1, 2]);
+    expect(results.map((result) => result.difficultyWins)).toEqual([1, 2]);
+    expect(stateRef.current.giantDiscCount).toBe(
+      PROGRESSION.giantDiscRewardPerFirstClear * 2,
+    );
+    expect(actions).toEqual([
+      { type: 'COMPLETE_BATTLE', difficultyId: DIFFICULTIES[0].id },
+      { type: 'COMPLETE_BATTLE', difficultyId: DIFFICULTIES[0].id },
+    ]);
+  });
+
+  test('정확히 한 번 강화할 쿠키로 빠르게 두 번 누르면 첫 구매만 승인한다', () => {
+    const upgradeId = 'clickPower';
+    const pricingState = { ...initialGameState, cookies: Number.MAX_SAFE_INTEGER };
+    const firstUpgrade = getUpgradeProgress(pricingState, upgradeId)!.next!;
+    const startingState = { ...initialGameState, cookies: firstUpgrade.cost };
+    const actions: GameAction[] = [];
+    const stateRef = { current: startingState };
+    const commands = createTestCommands(actions, stateRef);
+
+    expect([
+      commands.buyUpgrade(upgradeId),
+      commands.buyUpgrade(upgradeId),
+    ]).toEqual([true, false]);
+    expect(stateRef.current.cookies).toBe(0);
+    expect(stateRef.current.upgradeLevels[upgradeId]).toBe(firstUpgrade.level);
+    expect(actions).toEqual([{ type: 'BUY_UPGRADE', upgradeId }]);
+    expect(actions.reduce(gameReducer, startingState)).toEqual(stateRef.current);
+  });
+
+  test('두 단계 비용이 있으면 빠른 연속 강화가 각 단계 가격을 순서대로 적용한다', () => {
+    const upgradeId = 'clickPower';
+    const pricingState = { ...initialGameState, cookies: Number.MAX_SAFE_INTEGER };
+    const firstUpgrade = getUpgradeProgress(pricingState, upgradeId)!.next!;
+    const afterFirst = gameReducer(pricingState, { type: 'BUY_UPGRADE', upgradeId });
+    const secondUpgrade = getUpgradeProgress(afterFirst, upgradeId)!.next!;
+    const startingState = {
+      ...initialGameState,
+      cookies: firstUpgrade.cost + secondUpgrade.cost,
+    };
+    const actions: GameAction[] = [];
+    const stateRef = { current: startingState };
+    const commands = createTestCommands(actions, stateRef);
+
+    expect([
+      commands.buyUpgrade(upgradeId),
+      commands.buyUpgrade(upgradeId),
+      commands.buyUpgrade(upgradeId),
+    ]).toEqual([true, true, false]);
+    expect(stateRef.current.cookies).toBe(0);
+    expect(stateRef.current.upgradeLevels[upgradeId]).toBe(secondUpgrade.level);
+    expect(actions).toEqual([
+      { type: 'BUY_UPGRADE', upgradeId },
+      { type: 'BUY_UPGRADE', upgradeId },
+    ]);
+    expect(actions.reduce(gameReducer, startingState)).toEqual(stateRef.current);
+  });
+
+  test('클릭·설정·도감 명령도 렌더 전 projected 상태에 순서대로 직렬화한다', () => {
+    const actions: GameAction[] = [];
+    const stateRef = { current: initialGameState };
+    const commands = createTestCommands(actions, stateRef);
+    const clickPower = calculateCookieStats(initialGameState).clickPower;
+    const monsterId = MONSTERS[0].id;
+
+    expect(commands.clickCookie()).toBe(clickPower);
+    expect(commands.clickCookie()).toBe(clickPower);
+    commands.toggleSound();
+    commands.setSoundVolume(5);
+    commands.toggleVibration();
+    commands.discoverMonster(monsterId);
+    commands.acknowledgeMonsters();
+
+    expect(stateRef.current.cookies).toBe(clickPower * 2);
+    expect(stateRef.current.lifetimeCookies).toBe(clickPower * 2);
+    expect(stateRef.current.soundEnabled).toBe(false);
+    expect(stateRef.current.soundVolumeLevel).toBe(5);
+    expect(stateRef.current.vibrationEnabled).toBe(false);
+    expect(stateRef.current.discoveredMonsterIds).toContain(monsterId);
+    expect(stateRef.current.newMonsterIds).toEqual([]);
+    expect(actions.reduce(gameReducer, initialGameState)).toEqual(stateRef.current);
+  });
+
+  test('마지막 스테이지 최초 승리는 다음 난이도를 정확히 한 번 해금한다', () => {
+    const difficulty = DIFFICULTIES[0];
+    const previousWins = PROGRESSION.winsToUnlockNextDifficulty - 1;
+    const beforeLastStage = {
+      ...initialGameState,
+      giantDiscCount: previousWins,
+      difficultyWinCounts: {
+        ...initialGameState.difficultyWinCounts,
+        [difficulty.id]: previousWins,
+      },
+      clearedDifficultyIds: [difficulty.id],
+      rewardClaimedStageIds: Array.from(
+        { length: previousWins },
+        (_, index) => getBattleStageId(difficulty.id, index + 1),
+      ),
+    };
+
+    const completed = completeBattleTransition(beforeLastStage, difficulty.id);
+    const replayed = completeBattleTransition(completed.state, difficulty.id);
+
+    expect(completed.result).toEqual({
+      firstClear: true,
+      giantDiscReward: PROGRESSION.giantDiscRewardPerFirstClear,
+      stageNumber: PROGRESSION.winsToUnlockNextDifficulty,
+      difficultyWins: PROGRESSION.winsToUnlockNextDifficulty,
+      winsRequired: PROGRESSION.winsToUnlockNextDifficulty,
+      unlockedNextDifficulty: true,
+    });
+    expect(completed.state.highestUnlockedDifficultyIndex).toBe(1);
+    expect(completed.state.giantDiscCount).toBe(
+      previousWins + PROGRESSION.giantDiscRewardPerFirstClear,
+    );
+    expect(replayed.result).toEqual({
+      ...completed.result,
+      firstClear: false,
+      giantDiscReward: 0,
+      unlockedNextDifficulty: false,
+    });
+    expect(replayed.state.giantDiscCount).toBe(completed.state.giantDiscCount);
+    expect(replayed.state.rewardClaimedStageIds).toEqual(
+      completed.state.rewardClaimedStageIds,
+    );
+  });
+
+  test('잠긴 난이도와 알 수 없는 난이도의 완료 요청은 상태와 보상을 바꾸지 않는다', () => {
+    for (const difficultyId of [DIFFICULTIES[1].id, 'unknown-difficulty']) {
+      const transition = completeBattleTransition(initialGameState, difficultyId);
+      const reduced = gameReducer(initialGameState, {
+        type: 'COMPLETE_BATTLE',
+        difficultyId,
+      });
+
+      expect(transition.state).toBe(initialGameState);
+      expect(reduced).toBe(initialGameState);
+      expect(transition.result.firstClear).toBe(false);
+      expect(transition.result.giantDiscReward).toBe(0);
+      expect(transition.result.difficultyWins).toBe(0);
+      expect(transition.result.unlockedNextDifficulty).toBe(false);
+    }
+  });
+
+  test('이전 난이도 단위 보상 저장을 불러와도 같은 스테이지 보상을 다시 주지 않는다', () => {
+    const difficultyId = DIFFICULTIES[0].id;
+    const migrated = mergeSavedGame({
+      rewardClaimedDifficultyIds: [difficultyId],
+      giantDiscCount: 7,
+    });
+    const transition = completeBattleTransition(migrated, difficultyId);
+
+    expect(transition.result.firstClear).toBe(false);
+    expect(transition.result.giantDiscReward).toBe(0);
+    expect(transition.result.stageNumber).toBe(1);
+    expect(transition.result.difficultyWins).toBe(1);
+    expect(transition.state.giantDiscCount).toBe(7);
+    expect(transition.state.rewardClaimedStageIds).toEqual([
+      getBattleStageId(difficultyId, 1),
+    ]);
+  });
+
   test('각 전투 스테이지는 최초 클리어마다 거대 원반을 주고 쿠키는 주지 않는다', () => {
     const funded = { ...initialGameState, cookies: 10 };
     const first = gameReducer(funded, {
@@ -72,17 +291,16 @@ describe('게임 저장 상태', () => {
   });
 
   test('렌더 전 연속 소비도 projected 재고에서 두 번째 요청을 거부한다', () => {
-    let projected = { ...initialGameState, giantDiscCount: 1 };
-    const consume = () => {
-      const next = consumeGiantDiscInventory(projected);
-      if (!next) return false;
-      projected = next;
-      return true;
-    };
+    const startingState = { ...initialGameState, giantDiscCount: 1 };
+    const actions: GameAction[] = [];
+    const stateRef = { current: startingState };
+    const commands = createTestCommands(actions, stateRef);
 
-    expect(consume()).toBe(true);
-    expect(consume()).toBe(false);
-    expect(projected.giantDiscCount).toBe(0);
+    expect(commands.consumeGiantDisc()).toBe(true);
+    expect(commands.consumeGiantDisc()).toBe(false);
+    expect(stateRef.current.giantDiscCount).toBe(0);
+    expect(actions).toEqual([{ type: 'USE_GIANT_DISC' }]);
+    expect(actions.reduce(gameReducer, startingState)).toEqual(stateRef.current);
   });
 
   test('같은 난이도에서 20번 승리해야 다음 난이도가 열린다', () => {
@@ -114,6 +332,51 @@ describe('게임 저장 상태', () => {
     expect(purchasedAgain).toEqual(purchased);
   });
 
+  test('명시적으로 잘못된 상점 ID는 기본 상품으로 바뀌지 않고 모든 계층에서 거부된다', () => {
+    const unknownId = 'unknown-shop-item';
+    const purchaseState = { ...initialGameState, cookies: Number.MAX_SAFE_INTEGER };
+    const ownedDiscState = {
+      ...purchaseState,
+      ownedDiscIds: [DISCS[0].id],
+      selectedDiscId: DISCS[0].id,
+    };
+
+    expect(getDiscProgress(purchaseState).config.id).toBe(DISCS[0].id);
+    expect(getDiscProgress(
+      { ...purchaseState, selectedDiscId: unknownId },
+    ).config.id).toBe(DISCS[0].id);
+    expect(getDiscProgress(purchaseState, unknownId)).toBeUndefined();
+    expect(getUpgradeProgress(purchaseState, unknownId)).toBeUndefined();
+    expect(getBotOffer(purchaseState, unknownId)).toBeUndefined();
+
+    expect(gameReducer(purchaseState, { type: 'BUY_DISC', discId: unknownId }))
+      .toBe(purchaseState);
+    expect(gameReducer(ownedDiscState, { type: 'UPGRADE_DISC', discId: unknownId }))
+      .toBe(ownedDiscState);
+    expect(gameReducer(purchaseState, { type: 'BUY_UPGRADE', upgradeId: unknownId }))
+      .toBe(purchaseState);
+    expect(gameReducer(purchaseState, { type: 'BUY_BOT', botId: unknownId }))
+      .toBe(purchaseState);
+
+    const purchaseActions: GameAction[] = [];
+    const purchaseRef = { current: purchaseState };
+    const purchaseCommands = createTestCommands(purchaseActions, purchaseRef);
+    expect([
+      purchaseCommands.buyDisc(unknownId),
+      purchaseCommands.buyUpgrade(unknownId),
+      purchaseCommands.buyBot(unknownId),
+    ]).toEqual([false, false, false]);
+    expect(purchaseRef.current).toBe(purchaseState);
+    expect(purchaseActions).toEqual([]);
+
+    const upgradeActions: GameAction[] = [];
+    const upgradeRef = { current: ownedDiscState };
+    const upgradeCommands = createTestCommands(upgradeActions, upgradeRef);
+    expect(upgradeCommands.upgradeDisc(unknownId)).toBe(false);
+    expect(upgradeRef.current).toBe(ownedDiscState);
+    expect(upgradeActions).toEqual([]);
+  });
+
   test('쿠키봇 구매 수량을 저장한다', () => {
     const bot = BOTS[0];
     const funded = { ...initialGameState, cookies: 1000 };
@@ -142,13 +405,14 @@ describe('게임 저장 상태', () => {
       selectedDiscId: disc.id,
       discLevels: { ...initialGameState.discLevels, [disc.id]: 100 },
     };
-    const before = getDiscProgress(highLevelState, disc.id);
+    const before = getDiscProgress(highLevelState, disc.id)!;
     const upgraded = gameReducer(highLevelState, { type: 'UPGRADE_DISC', discId: disc.id });
-    expect(before.next?.level).toBe(101);
+    expect(before.next).toBeDefined();
+    expect(before.next!.level).toBe(101);
     expect(before.current.cooldownMs).toBe(DISC_UPGRADE_RULES.minimumCooldownMs);
-    expect(before.next.damage).toBeGreaterThan(before.current.damage);
-    expect(before.next.size).toBeGreaterThan(before.current.size);
-    expect(before.next.speed).toBeGreaterThan(before.current.speed);
+    expect(before.next!.damage).toBeGreaterThan(before.current.damage);
+    expect(before.next!.size).toBeGreaterThan(before.current.size);
+    expect(before.next!.speed).toBeGreaterThan(before.current.speed);
     expect(upgraded.discLevels[disc.id]).toBe(101);
   });
 
@@ -158,11 +422,27 @@ describe('게임 저장 상태', () => {
       discLevel: 4,
       botCounts: { 'cookie-bot': 3 },
     });
-    expect(migrated.saveVersion).toBe(7);
+    expect(migrated.saveVersion).toBe(SAVE_MIGRATIONS.currentSaveVersion);
     expect(migrated.ownedDiscIds).toEqual([DISCS[0].id]);
     expect(migrated.discLevels[DISCS[0].id]).toBe(4);
     expect(migrated.botCounts[BOTS[0].id]).toBe(3);
     expect('autoBattleEnabled' in migrated).toBe(false);
+  });
+
+  test('더 최신 앱의 저장은 정규화해 읽되 현재 버전으로 덮어쓰지 않는다', () => {
+    const prepared = prepareSavedGame({
+      ...initialGameState,
+      saveVersion: initialGameState.saveVersion + 1,
+      cookies: 321,
+      lifetimeCookies: 654,
+      lastSavedAt: 1_000,
+    }, 10_000);
+
+    expect(prepared.persistenceWritable).toBe(false);
+    expect(prepared.state.saveVersion).toBe(initialGameState.saveVersion);
+    expect(prepared.state.cookies).toBe(321);
+    expect(prepared.state.lifetimeCookies).toBe(654);
+    expect(prepared.state.lastSavedAt).toBe(1_000);
   });
 
   test('10종 시절의 원반과 쿠키봇 저장은 현재 5종에 합쳐서 이전한다', () => {
@@ -293,5 +573,146 @@ describe('게임 저장 상태', () => {
     expect(sorted.slice(0, 2).every((item) => item.affordable)).toBe(true);
     expect(sorted[2].affordable).toBe(false);
     expect(sorted.some((item) => item.config.id === 'cookieSize')).toBe(false);
+  });
+
+  test('NaN·Infinity·음수 저장 숫자는 모든 진행 필드에서 안전한 값으로 복구한다', () => {
+    const restored = mergeSavedGame({
+      saveVersion: Number.NaN,
+      cookies: Number.NaN,
+      lifetimeCookies: Number.POSITIVE_INFINITY,
+      upgradeLevels: {
+        clickPower: Number.NaN,
+        cookieSize: -6,
+        autoProduction: Number.POSITIVE_INFINITY,
+        cookieHealth: Number.NEGATIVE_INFINITY,
+      },
+      discLevels: {
+        [DISCS[0].id]: Number.NaN,
+        [DISCS[1].id]: Number.POSITIVE_INFINITY,
+        [DISCS[2].id]: -10,
+      },
+      discLevel: Number.POSITIVE_INFINITY,
+      botCounts: {
+        [BOTS[0].id]: Number.NaN,
+        [BOTS[1].id]: Number.POSITIVE_INFINITY,
+        [BOTS[2].id]: -4,
+        'cookie-bot': Number.NEGATIVE_INFINITY,
+      },
+      highestUnlockedDifficultyIndex: Number.POSITIVE_INFINITY,
+      difficultyWinCounts: {
+        [DIFFICULTIES[0].id]: Number.NaN,
+        [DIFFICULTIES[1].id]: Number.POSITIVE_INFINITY,
+        [DIFFICULTIES[2].id]: -8,
+      },
+      giantDiscCount: -3,
+      soundEnabled: 'yes',
+      soundVolumeLevel: Number.POSITIVE_INFINITY,
+      vibrationEnabled: 1,
+      lastSavedAt: Number.NEGATIVE_INFINITY,
+    } as any);
+
+    expect(restored.saveVersion).toBe(initialGameState.saveVersion);
+    expect(restored.cookies).toBe(0);
+    expect(restored.lifetimeCookies).toBe(0);
+    expect(restored.upgradeLevels).toEqual(initialGameState.upgradeLevels);
+    expect(restored.discLevels).toEqual(initialGameState.discLevels);
+    expect(restored.botCounts).toEqual(initialGameState.botCounts);
+    expect(restored.difficultyWinCounts).toEqual(initialGameState.difficultyWinCounts);
+    expect(restored.highestUnlockedDifficultyIndex).toBe(0);
+    expect(restored.giantDiscCount).toBe(0);
+    expect(restored.soundEnabled).toBe(initialGameState.soundEnabled);
+    expect(restored.soundVolumeLevel).toBe(AUDIO_SETTINGS.defaultLevel);
+    expect(restored.vibrationEnabled).toBe(initialGameState.vibrationEnabled);
+    expect(restored.lastSavedAt).toBe(0);
+  });
+
+  test('외부 저장 숫자는 정수화하고 필드별 상한에서 포화시킨다', () => {
+    const restored = mergeSavedGame({
+      cookies: Number.MAX_VALUE,
+      lifetimeCookies: 123.9,
+      upgradeLevels: {
+        ...initialGameState.upgradeLevels,
+        clickPower: 12.9,
+      },
+      discLevels: {
+        [DISCS[0].id]: 8.9,
+      },
+      botCounts: {
+        [BOTS[0].id]: Number.MAX_VALUE,
+        [BOTS[1].id]: 4.9,
+      },
+      difficultyWinCounts: {
+        [DIFFICULTIES[0].id]: Number.MAX_VALUE,
+        [DIFFICULTIES[1].id]: 3.9,
+      },
+      giantDiscCount: Number.MAX_VALUE,
+      soundVolumeLevel: 3.9,
+      lastSavedAt: Number.MAX_VALUE,
+    } as any);
+
+    expect(restored.cookies).toBe(Number.MAX_SAFE_INTEGER);
+    expect(restored.lifetimeCookies).toBe(Number.MAX_SAFE_INTEGER);
+    expect(restored.upgradeLevels.clickPower).toBe(12);
+    expect(restored.discLevels[DISCS[0].id]).toBe(8);
+    expect(restored.botCounts[BOTS[0].id]).toBe(Number.MAX_SAFE_INTEGER);
+    expect(restored.botCounts[BOTS[1].id]).toBe(4);
+    expect(restored.difficultyWinCounts[DIFFICULTIES[0].id]).toBe(
+      PROGRESSION.winsToUnlockNextDifficulty,
+    );
+    expect(restored.difficultyWinCounts[DIFFICULTIES[1].id]).toBe(3);
+    expect(restored.highestUnlockedDifficultyIndex).toBe(1);
+    expect(restored.giantDiscCount).toBe(Number.MAX_SAFE_INTEGER);
+    expect(restored.soundVolumeLevel).toBe(3);
+    expect(restored.lastSavedAt).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
+  test('누적 쿠키와 클리어 목록은 정규화된 진행 상태의 불변식을 따른다', () => {
+    const restored = mergeSavedGame({
+      cookies: 12,
+      lifetimeCookies: 5,
+      difficultyWinCounts: {
+        [DIFFICULTIES[0].id]: 2,
+        'unknown-difficulty': 20,
+      },
+      clearedDifficultyIds: [DIFFICULTIES[1].id, 'unknown-difficulty'],
+    });
+
+    expect(restored.lifetimeCookies).toBe(12);
+    expect(restored.clearedDifficultyIds).toEqual([
+      DIFFICULTIES[0].id,
+      DIFFICULTIES[1].id,
+    ]);
+    expect(restored.difficultyWinCounts[DIFFICULTIES[0].id]).toBe(2);
+    expect(restored.difficultyWinCounts[DIFFICULTIES[1].id]).toBe(1);
+    expect(restored.difficultyWinCounts).not.toHaveProperty('unknown-difficulty');
+  });
+
+  test('저장 배열 자리에 잘못된 타입이 들어와도 진행 복구가 중단되지 않는다', () => {
+    let restored: ReturnType<typeof mergeSavedGame> | undefined;
+    expect(() => {
+      restored = mergeSavedGame({
+        ownedDiscIds: 'choco-chip-disc',
+        clearedDifficultyIds: DIFFICULTIES[0].id,
+        rewardClaimedStageIds: 123,
+        discoveredMonsterIds: {},
+        newMonsterIds: false,
+      } as any);
+    }).not.toThrow();
+    expect(restored!.ownedDiscIds).toEqual([]);
+    expect(restored!.clearedDifficultyIds).toEqual([]);
+    expect(restored!.rewardClaimedStageIds).toEqual([]);
+    expect(restored!.discoveredMonsterIds).toEqual([]);
+    expect(restored!.newMonsterIds).toEqual([]);
+  });
+
+  test('이전·현재 쿠키봇 수량을 합칠 때도 안전 정수 상한을 넘지 않는다', () => {
+    const restored = mergeSavedGame({
+      botCounts: {
+        [BOTS[0].id]: Number.MAX_SAFE_INTEGER,
+        'cookie-bot': 50,
+      },
+    });
+
+    expect(restored.botCounts[BOTS[0].id]).toBe(Number.MAX_SAFE_INTEGER);
   });
 });

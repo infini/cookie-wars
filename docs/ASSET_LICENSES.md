@@ -8,8 +8,9 @@
 |---|---|---|
 | `cookie.png`, 앱 아이콘·스플래시 | Google Noto Emoji | Apache License 2.0 |
 | `assets/images/cookies/*.png` 20종 진화 이미지 | Google Noto Emoji | Apache License 2.0 |
+| `monster-body.png`, `monster-eye.png`, `monster-mouth.png` 보관 원본 | Kenney Monster Builder Pack | CC0 1.0 |
 | `cookie-castle.png`, `cookie-bot.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
-| `assets/images/enemies/*.png` 5종 | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
+| `crumb-minion.png`, `sugar-guard.png`, `chocolate-brute.png`, `wafer-sorcerer.png`, `cookie-tyrant.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 | `assets/images/enemies/cookie-tyrant-hammer.png` | 기존 폭군과 신규 쿠키 전쟁망치를 결합한 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 | `assets/images/enemies/boss-*.webp` 15종 | 난이도별 고유 망치 보스 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 | `assets/images/maps/battle-map-*.jpg` 15종 | 난이도별 고유 전장 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
@@ -20,6 +21,8 @@
 | `flying-disc.png`, `enemy-disc.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 
 생성 이미지는 특정 상용 게임의 캐릭터나 로고를 복제하지 않고 독자적인 3D 모바일 게임 아트 방향으로 제작했습니다. 아군 원반은 파랑·금색, 적 원반은 빨강·검붉은색입니다. 현재 전투에서 사용하는 15개 JPG 맵은 모두 세로 9:16, 상단 고유 랜드마크, 낮은 디테일의 중앙 70%, 동적 쿠키 성을 위한 열린 하단 지면을 유지합니다. 초원·과수원·설원·침수 정글·폭풍 절벽·악마계 5종·신계 5종은 지형과 건축 자체가 다르며 단순 색상·재질 변형을 사용하지 않았습니다. 15개 WebP 보스는 갑옷·몸체 재료·실루엣·전쟁망치가 모두 다르고, 모든 원본에서 망치를 처음부터 손으로 쥐고 있습니다.
+
+표에서 `프로젝트 전용 원본`으로 표시한 생성 이미지는 코드의 MIT License 범위에 포함하지 않습니다. 별도 표기가 없는 한 이미지 자체의 재사용·재배포에는 프로젝트 소유자의 별도 허가가 필요합니다.
 
 망치 보스는 Codex 내장 `imagegen`으로 제작했습니다. 먼저 `거대한 초콜릿 비스킷 망치 머리, 황금 보강재와 붉은 보석, 긴 코코아 목재 손잡이, 단일 무기, 3D 모바일 게임 렌더` 프롬프트로 망치를 생성했습니다. 이어 기존 `cookie-tyrant.png`를 편집 대상으로, 망치를 보조 입력으로 사용해 `기존 얼굴·왕관·갑옷·비율을 유지하고 왼손으로 망치를 쥔 전투 대기 자세`를 만들었습니다. 균일한 녹색 배경을 로컬 크로마키 처리해 최종 투명 PNG `cookie-tyrant-hammer.png`로 저장했습니다.
 
@@ -47,6 +50,11 @@
 | 적·거대 원반, 분노 | Kenney Digital Audio `phaserDown3.ogg`, `phaseJump3.ogg`, `powerUp10.ogg` | CC0 1.0 |
 | 약한 피격 3종, 강한 피격, 근접 타격 | Kenney Impact Sounds `impactGeneric_light_000~002.ogg`, `impactPunch_heavy_001.ogg`, `impactWood_heavy_003.ogg` | CC0 1.0 |
 | 전투 배경 음악 | MintoDog, `Hope (Orchestral battle music)` | CC0 1.0 |
+| 보관 중인 이전 피격·원반·적 처치 `hit.ogg`, `disc-throw.ogg`, `enemy-defeated.ogg` | Kenney Impact Sounds / Sci-Fi Sounds | CC0 1.0 |
+| 보관 중인 이전 쿠키봇 `bot-laser.ogg` | Kenney Sci-Fi Sounds | CC0 1.0 |
+| 보관 중인 이전 결과음 `victory.ogg`, `defeat.ogg` | Kenney Music Jingles | CC0 1.0 |
+
+`보관 중` 파일은 소스 호환과 원본 추적을 위해 저장소에 남아 있지만 현재 코드에서 불러오지 않으며, 클린 릴리스 APK에는 포함하지 않습니다.
 
 ## 글꼴과 아이콘
 
@@ -65,6 +73,8 @@
 - [Kenney Interface Sounds](https://kenney.nl/assets/interface-sounds)
 - [Kenney UI Audio](https://kenney.nl/assets/ui-audio)
 - [Kenney Impact Sounds](https://kenney.nl/assets/impact-sounds)
+- [Kenney Sci-Fi Sounds](https://kenney.nl/assets/sci-fi-sounds)
+- [Kenney Music Jingles](https://kenney.nl/assets/music-jingles)
 - [Kenney Digital Audio](https://kenney.nl/assets/digital-audio)
 - [Kenney RPG Audio](https://kenney.nl/assets/rpg-audio)
 - [Hope (Orchestral battle music)](https://opengameart.org/content/hopeorchestral-battle-music)

@@ -1,6 +1,13 @@
 import { PROGRESSION } from '../config';
 import { calculateCookieStats } from './gameSelectors';
-import { GameState } from '../types/game';
+import type { GameState } from '../types/game';
+import {
+  clampFiniteNumber,
+  clampSafeInteger,
+  MAX_GAME_INTEGER,
+  saturatingAdd,
+  saturatingProductInteger,
+} from './safeNumbers';
 
 export interface OfflineProductionResult {
   elapsedMs: number;
@@ -28,13 +35,15 @@ export function calculateProductionForElapsedTime(
   const completedIntervals = Math.floor(
     elapsedMs / PROGRESSION.autoProductionIntervalMs,
   );
-  const calculatedCookies = Math.floor(autoProduction * completedIntervals);
+  const safeCompletedIntervals = clampSafeInteger(completedIntervals);
   return {
-    elapsedMs,
-    completedIntervals,
-    cookiesEarned: Number.isFinite(calculatedCookies)
-      ? Math.min(Number.MAX_SAFE_INTEGER, calculatedCookies)
-      : Number.MAX_SAFE_INTEGER,
+    elapsedMs: clampFiniteNumber(elapsedMs),
+    completedIntervals: safeCompletedIntervals,
+    cookiesEarned: saturatingProductInteger(
+      autoProduction,
+      safeCompletedIntervals,
+      'floor',
+    ),
   };
 }
 
@@ -56,16 +65,27 @@ export function calculateOfflineProduction(
 
 export function settleOfflineProduction(state: GameState, now: number): GameState {
   const settlement = calculateOfflineProduction(state, now);
-  const nextSavedAt = Number.isFinite(now)
-    ? Math.max(state.lastSavedAt, Math.max(0, Math.floor(now)))
-    : state.lastSavedAt;
+  const savedAt = clampSafeInteger(state.lastSavedAt);
+  const validNow = Number.isFinite(now) && now >= 0
+    ? clampSafeInteger(now)
+    : undefined;
+  const saturatedFutureCheckpoint = savedAt === MAX_GAME_INTEGER
+    && validNow !== undefined
+    && validNow < savedAt;
+  const nextSavedAt = validNow === undefined
+    ? savedAt
+    : saturatedFutureCheckpoint
+      ? validNow
+      : Math.max(savedAt, validNow);
+  const currentCookies = clampSafeInteger(state.cookies);
+  const currentLifetimeCookies = Math.max(
+    currentCookies,
+    clampSafeInteger(state.lifetimeCookies),
+  );
   return {
     ...state,
-    cookies: Math.min(Number.MAX_SAFE_INTEGER, state.cookies + settlement.cookiesEarned),
-    lifetimeCookies: Math.min(
-      Number.MAX_SAFE_INTEGER,
-      state.lifetimeCookies + settlement.cookiesEarned,
-    ),
+    cookies: saturatingAdd(currentCookies, settlement.cookiesEarned),
+    lifetimeCookies: saturatingAdd(currentLifetimeCookies, settlement.cookiesEarned),
     lastSavedAt: nextSavedAt,
   };
 }

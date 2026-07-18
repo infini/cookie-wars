@@ -4,20 +4,19 @@ import {
   BATTLE_FEEDBACK,
   BATTLE_RULES,
   BATTLE_UI,
-  BOSS_BEHAVIOR,
-  BOSS_SPECIAL_ATTACK,
 } from '../../config';
 import {
   getBossSpecialAttackPose,
   getBossSpecialAttackProgress,
 } from '../../domain/bossSpecialAttack';
 import type { ActiveBot } from '../../domain/gameSelectors';
+import { selectEnemyCombatTiming } from '../../engine/enemyCombatSelector';
 import type {
   BattleEnemy,
   BattleEvent,
   BattleProjectile,
   BattleStatus,
-} from '../../engine/useBattleEngine';
+} from '../../engine/battleTypes';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 import { BossHammerSmashEffect } from '../BossHammerSmashEffect';
@@ -83,8 +82,8 @@ interface BattleEnemyLayerProps {
   status: BattleStatus;
   now: number;
   enemyDiscCooldownMs: number;
-  lastEvent: BattleEvent | null;
-  lastEventAgeMs: number;
+  presentationEvent: BattleEvent | null;
+  presentationEventAgeMs: number;
 }
 
 export function BattleEnemyLayer({
@@ -93,8 +92,8 @@ export function BattleEnemyLayer({
   status,
   now,
   enemyDiscCooldownMs,
-  lastEvent,
-  lastEventAgeMs,
+  presentationEvent,
+  presentationEventAgeMs,
 }: BattleEnemyLayerProps) {
   return (
     <>
@@ -109,53 +108,14 @@ export function BattleEnemyLayer({
               * getPerspectiveScale(enemy.y),
           ),
         );
-        const distanceToCastle = Math.hypot(
-          enemy.x - BATTLE_RULES.playerStartX,
-          enemy.y - BATTLE_RULES.playerStartY,
-        );
-        const alreadyFlying = enemyProjectiles.some(
-          (projectile) => projectile.sourceEnemyId === enemy.id,
-        );
-        const effectiveAttackCooldownMs = enemyDiscCooldownMs
-          * BOSS_BEHAVIOR.globalAttackCooldownMultiplier
-          * (enemy.enraged ? BOSS_BEHAVIOR.enrageAttackCooldownMultiplier : 1);
-        const timeUntilAttackMs = effectiveAttackCooldownMs
-          - (now - enemy.lastShotAt);
-        const effectiveMeleeCooldownMs = BATTLE_RULES.enemyMeleeIntervalMs
-          * BOSS_BEHAVIOR.globalAttackCooldownMultiplier
-          * (enemy.enraged ? BOSS_BEHAVIOR.enrageAttackCooldownMultiplier : 1);
-        const timeUntilMeleeMs = effectiveMeleeCooldownMs
-          - (now - enemy.lastMeleeAt);
-        const timeUntilSpecialAttackMs = BOSS_SPECIAL_ATTACK.intervalMs
-          - (now - enemy.lastSpecialAttackAt);
-        const projectileWindupVisible = status === 'active'
-          && distanceToCastle <= BATTLE_RULES.enemyAttackRadius
-          && !alreadyFlying
-          && timeUntilAttackMs > 0
-          && timeUntilAttackMs <= BATTLE_FEEDBACK.enemyAttackWindupMs;
-        const meleeWindupVisible = status === 'active'
-          && enemy.y >= BATTLE_RULES.enemyMeleeTriggerY
-          && timeUntilMeleeMs > 0
-          && timeUntilMeleeMs <= BATTLE_FEEDBACK.enemyAttackWindupMs;
-        const specialWindupVisible = status === 'active'
-          && distanceToCastle <= BATTLE_RULES.enemyAttackRadius
-          && !alreadyFlying
-          && timeUntilSpecialAttackMs > 0
-          && timeUntilSpecialAttackMs <= BOSS_SPECIAL_ATTACK.windupMs;
-        const windupVisible = projectileWindupVisible
-          || meleeWindupVisible
-          || specialWindupVisible;
-        const windupProgress = Math.max(
-          projectileWindupVisible
-            ? 1 - timeUntilAttackMs / BATTLE_FEEDBACK.enemyAttackWindupMs
-            : 0,
-          meleeWindupVisible
-            ? 1 - timeUntilMeleeMs / BATTLE_FEEDBACK.enemyAttackWindupMs
-            : 0,
-          specialWindupVisible
-            ? 1 - timeUntilSpecialAttackMs / BOSS_SPECIAL_ATTACK.windupMs
-            : 0,
-        );
+        const combatTiming = selectEnemyCombatTiming({
+          enemy,
+          enemyProjectiles,
+          status,
+          now,
+          enemyDiscCooldownMs,
+        });
+        const { windupVisible, windupProgress } = combatTiming;
         const specialAttackProgress = getBossSpecialAttackProgress(
           enemy.lastSpecialAttackAt,
           enemy.spawnAt,
@@ -163,31 +123,43 @@ export function BattleEnemyLayer({
         );
         const specialAttackVisible = specialAttackProgress !== null;
         const specialAttackPose = getBossSpecialAttackPose(specialAttackProgress ?? 1);
-        const targetsThisEnemy = lastEvent?.sourceEnemyId === enemy.id || (
-          lastEvent?.x !== undefined
-          && lastEvent.y !== undefined
-          && Math.abs(lastEvent.x - enemy.x) <= BATTLE_RULES.playerHitToleranceX
-          && Math.abs(lastEvent.y - enemy.y) <= BATTLE_RULES.playerHitToleranceY
+        const targetsThisEnemy = presentationEvent?.sourceEnemyId === enemy.id || (
+          presentationEvent?.x !== undefined
+          && presentationEvent.y !== undefined
+          && Math.abs(
+            presentationEvent.x - enemy.x,
+          ) <= BATTLE_RULES.playerHitToleranceX
+          && Math.abs(
+            presentationEvent.y - enemy.y,
+          ) <= BATTLE_RULES.playerHitToleranceY
         );
         const attackVisible = Boolean(
           targetsThisEnemy
           && (
-            lastEvent?.kind === 'enemyDisc'
-            || (lastEvent?.kind === 'castleHit' && lastEvent.attackKind === 'melee')
+            presentationEvent?.kind === 'enemyDisc'
+            || (
+              presentationEvent?.kind === 'castleHit'
+              && presentationEvent.attackKind === 'melee'
+            )
           )
-          && lastEventAgeMs <= BATTLE_FEEDBACK.enemyAttackDurationMs,
+          && presentationEventAgeMs <= BATTLE_FEEDBACK.enemyAttackDurationMs,
         );
         const attackProgress = attackVisible
-          ? Math.min(1, lastEventAgeMs / BATTLE_FEEDBACK.enemyAttackDurationMs)
+          ? Math.min(
+            1,
+            presentationEventAgeMs / BATTLE_FEEDBACK.enemyAttackDurationMs,
+          )
           : 1;
         const attackWave = attackVisible ? Math.sin(attackProgress * Math.PI) : 0;
         const hitVisible = Boolean(
           targetsThisEnemy
-          && ['enemyHit', 'bossEnraged', 'enemyDefeated'].includes(lastEvent?.kind ?? '')
-          && lastEventAgeMs <= BATTLE_FEEDBACK.enemyHitDurationMs,
+          && ['enemyHit', 'bossEnraged', 'enemyDefeated'].includes(
+            presentationEvent?.kind ?? '',
+          )
+          && presentationEventAgeMs <= BATTLE_FEEDBACK.enemyHitDurationMs,
         );
         const hitProgress = hitVisible
-          ? Math.min(1, lastEventAgeMs / BATTLE_FEEDBACK.enemyHitDurationMs)
+          ? Math.min(1, presentationEventAgeMs / BATTLE_FEEDBACK.enemyHitDurationMs)
           : 1;
         const hitWave = hitVisible ? Math.sin(hitProgress * Math.PI) : 0;
         const translateX = hitVisible

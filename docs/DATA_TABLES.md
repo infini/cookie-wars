@@ -1,6 +1,6 @@
 # 쿠키전쟁 데이터 테이블 가이드
 
-게임 밸런스와 동작 상수는 `src/config`의 JSON 파일이 원본입니다. TypeScript 코드는 값을 중복 선언하지 않고 `src/config/index.ts`를 통해 읽습니다. JSON을 바꾼 뒤 `npm run verify`로 타입과 규칙 테스트를 확인합니다.
+게임 밸런스와 동작 상수는 `src/config`의 JSON 파일이 원본이며 메뉴 구성은 `src/navigation/navigation.json`이 원본입니다. TypeScript 코드는 값을 중복 선언하지 않고 검증된 모델을 통해 읽습니다. JSON을 바꾼 뒤 `npm run verify`로 타입과 규칙 테스트를 확인합니다.
 
 ## 테이블 목록
 
@@ -28,7 +28,10 @@
 | `battle-audio.json` | 전투 효과음 그룹별 최소 간격과 음악·효과음 상대 음량 |
 | `audio-settings.json` | 효과음 5단계별 실제 볼륨과 기본 단계 |
 | `cookies.json` | 20종 쿠키의 자동 진화 조건, 이미지, 최종 능력 배율 |
-| `save-migrations.json` | 이전 버전 데이터 ID를 현재 ID로 옮기는 호환 규칙 |
+| `save-migrations.json` | 현재 저장 스키마 버전과 이전 데이터 ID 호환 규칙 |
+| `../navigation/navigation.json` | 4대 메뉴, 소메뉴 소속·순서·아이콘·제목·기본 화면·배지 |
+
+설정 로더는 레벨, 비용, 개수, 기준 HP·공격력, 원반 크기·속도·쿨타임처럼 게임 상태가 안전 정수로 다루는 필드에 소수나 `Number.MAX_SAFE_INTEGER` 초과 값을 허용하지 않습니다. 성장 배율, 난이도 배율, 좌표와 비율은 유한한 소수를 그대로 보존합니다. 불투명도·정규화 화면 비율·분노 체력 비율은 0~1, HSL 채도·명도는 0~100 범위로 제한합니다. 잘못된 값은 앱 시작 시 정확한 JSON 경로를 포함한 오류로 거부됩니다.
 
 ## 상점과 성장
 
@@ -254,10 +257,31 @@
 - `previewDelayMs`: 설정 버튼을 누른 뒤 새 볼륨으로 미리듣는 지연
 - `levels[].level`, `volume`: UI 단계와 오디오 엔진 볼륨(0~1)의 대응
 
+`levels`는 정확히 1, 2, 3, 4, 5 순서여야 하고 `volume`은 단계가 오를 때마다 반드시 커야 합니다. 누락·역순·같거나 낮아지는 음량은 설정 검증에서 거부합니다.
+
 `battle-audio.json`:
 
 - `minimumIntervalMs`: 아군·적·거대 원반, 약·강 피격, 보스 근접·분노 그룹별 최소 재생 간격
 - `volumeMultipliers`: 5단계 전역 음량에 곱하는 액션별 상대 음량. 오케스트라 배경 음악은 효과음을 가리지 않도록 현재 0.28
+
+## 메뉴와 저장 호환 테이블
+
+`src/navigation/navigation.json`:
+
+- `mainMenus[]`: 게임·전투·강화·정보 대분류의 순서, 라벨, 아이콘, 기본 화면
+- `mainMenus[].leafIds`: 대분류에 속한 실제 화면. 강화는 쿠키·원반·쿠키봇 강화, 정보는 쿠키 도감·난이도·몬스터
+- `leaves[]`: 화면별 한국어 라벨, 제목, 아이콘과 선택적 NEW 배지 키
+
+모든 대분류와 기존 8개 화면은 정확히 한 번씩 정의되어야 하며 한 화면을 두 대분류가 공유할 수 없습니다. 게임·전투처럼 자식이 하나인 대분류는 소메뉴를 렌더하지 않습니다.
+
+`save-migrations.json`:
+
+- `currentSaveVersion`: 새 저장에 기록하고 이전 저장을 정규화할 현재 스키마 버전
+- `botIdAliases`, `discIdAliases`, `monsterIdAliases`: 제거·변경된 ID를 현재 테이블 ID로 옮기는 대응표
+
+`currentSaveVersion`은 양의 정수여야 하며 별칭 대상은 실제 현재 데이터에 존재해야 합니다.
+
+앱이 `currentSaveVersion`보다 높은 저장을 발견하면 구버전 다운그레이드로 판단해 원본 저장을 덮어쓰지 않습니다. 새 스키마를 배포할 때는 버전 숫자만 올리지 말고 이전 버전에서 새 버전으로 올리는 정규화 규칙과 회귀 테스트를 함께 추가합니다.
 
 ## 안전하게 테이블을 변경하는 절차
 
@@ -268,6 +292,6 @@
 5. `npm run verify`를 실행합니다.
 6. Android 릴리스 APK를 빌드해 실제 기기에서 구매, 저장 복구, 전투를 확인합니다.
 
-새 필드가 필요할 때는 JSON만 임의로 추가하지 말고 `src/types/game.ts`의 계약, `src/config/index.ts`, 관련 selector/engine, 테스트, 이 문서를 함께 갱신합니다.
+새 필드가 필요할 때는 JSON만 임의로 추가하지 말고 `src/types`의 해당 영역 계약, 공개 재수출이 필요하면 `src/types/game.ts` 파사드, `src/config/index.ts`, 관련 selector/engine, 테스트, 이 문서를 함께 갱신합니다.
 
 기존 ID를 꼭 바꿔야 한다면 `save-migrations.json`에 이전 ID와 새 ID의 대응을 먼저 추가합니다. 현재 10종 시절 제거된 원반 5종의 소유·레벨과 쿠키봇 5종의 수량은 대응되는 현재 5종에 합산 복구됩니다. 이전 `cookie-bot` 수량과 이전 3종 몬스터 ID도 각각 현재 ID로 이전됩니다.

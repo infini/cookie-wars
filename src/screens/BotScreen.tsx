@@ -5,7 +5,7 @@ import { BotImage } from '../components/BotImage';
 import { GameButton } from '../components/GameButton';
 import { Panel } from '../components/Panel';
 import { getCookie } from '../config';
-import { getBotOffers } from '../domain/gameSelectors';
+import { getBotOffers, getTotalBotCount } from '../domain/gameSelectors';
 import { useFeedback } from '../services/FeedbackContext';
 import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
@@ -17,7 +17,7 @@ export function BotScreen() {
   const feedback = useFeedback();
   const botOffers = getBotOffers(state);
   const activeCookie = getCookie(stats.activeCookieId);
-  const totalBots = botOffers.reduce((sum, offer) => sum + offer.count, 0);
+  const totalBots = getTotalBotCount(state);
 
   const buy = (botId: string) => {
     const success = buyBot(botId);

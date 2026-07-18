@@ -4,6 +4,7 @@ import {
   calculateProductionForElapsedTime,
 } from '../src/domain/offlineProduction';
 import { gameReducer, initialGameState } from '../src/state/gameReducer';
+import { calculateAutoProductionTick } from '../src/state/useAutoProduction';
 
 describe('오프라인 자동 생산', () => {
   const savedAt = 1_000;
@@ -69,6 +70,32 @@ describe('오프라인 자동 생산', () => {
     expect(rolledBack.lastSavedAt).toBe(savedAt);
   });
 
+  test('MAX_SAFE로 손상된 미래 체크포인트는 현재 시각으로 복구되어 생산이 다시 시작된다', () => {
+    const now = 50_000;
+    const corrupted = {
+      ...autoProductionState,
+      lastSavedAt: Number.MAX_SAFE_INTEGER,
+    };
+    const recovered = gameReducer(initialGameState, {
+      type: 'HYDRATE',
+      payload: corrupted,
+      now,
+    });
+
+    expect(recovered.cookies).toBe(corrupted.cookies);
+    expect(recovered.lifetimeCookies).toBe(corrupted.lifetimeCookies);
+    expect(recovered.lastSavedAt).toBe(now);
+
+    const resumed = gameReducer(initialGameState, {
+      type: 'HYDRATE',
+      payload: recovered,
+      now: now + PROGRESSION.autoProductionIntervalMs,
+    });
+    expect(resumed.cookies).toBe(recovered.cookies + 1);
+    expect(resumed.lifetimeCookies).toBe(recovered.lifetimeCookies + 1);
+    expect(resumed.lastSavedAt).toBe(now + PROGRESSION.autoProductionIntervalMs);
+  });
+
   test('앱이 켜진 채 백그라운드에서 멈춘 시간도 같은 계산식으로 따라잡는다', () => {
     const production = calculateProductionForElapsedTime(
       3,
@@ -76,6 +103,31 @@ describe('오프라인 자동 생산', () => {
     );
     expect(production.completedIntervals).toBe(4);
     expect(production.cookiesEarned).toBe(12);
+  });
+
+  test('실행 중 생산 시계는 완성된 주기만 이동하고 남은 시간을 다음 틱에 이어 쓴다', () => {
+    const interval = PROGRESSION.autoProductionIntervalMs;
+    const first = calculateAutoProductionTick(3, savedAt, savedAt + interval * 4.5);
+    const second = calculateAutoProductionTick(
+      3,
+      first.lastProductionAt,
+      savedAt + interval * 5,
+    );
+
+    expect(first.production.completedIntervals).toBe(4);
+    expect(first.production.cookiesEarned).toBe(12);
+    expect(first.lastProductionAt).toBe(savedAt + interval * 4);
+    expect(second.production.completedIntervals).toBe(1);
+    expect(second.production.cookiesEarned).toBe(3);
+    expect(second.lastProductionAt).toBe(savedAt + interval * 5);
+  });
+
+  test('실행 중 기기 시계가 뒤로 가면 생산도 시계 기준점도 변경하지 않는다', () => {
+    const tick = calculateAutoProductionTick(3, savedAt, savedAt - 1);
+
+    expect(tick.production.completedIntervals).toBe(0);
+    expect(tick.production.cookiesEarned).toBe(0);
+    expect(tick.lastProductionAt).toBe(savedAt);
   });
 
   test('오프라인 시간에는 임의 최대 누적 제한을 두지 않는다', () => {

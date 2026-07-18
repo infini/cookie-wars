@@ -1,10 +1,12 @@
 # 쿠키전쟁 (Cookie Wars)
 
-아이가 기획한 손그림을 바탕으로 만든 Android 전용 세로형 싱글 플레이 게임입니다. 쿠키를 모으는 화면과 전투 화면을 완전히 분리했으며, 화면 아래의 8개 메뉴로 원하는 기능에 한 번에 이동합니다.
+아이가 기획한 손그림을 바탕으로 만든 Android 전용 세로형 싱글 플레이 게임입니다. 쿠키를 모으는 화면과 전투 화면을 완전히 분리했으며, 화면 아래의 게임·전투·강화·정보 4개 대분류와 간결한 소메뉴로 이동합니다.
 
 ## 설치
 
-- APK: [`artifacts/cookie-wars-v1.0.8.apk`](artifacts/cookie-wars-v1.0.8.apk)
+- APK: [`artifacts/cookie-wars-v1.0.9.apk`](artifacts/cookie-wars-v1.0.9.apk)
+- APK 크기: 90,682,728바이트 (86.48MiB)
+- SHA-256: `00e81de2fb77cf66775f2b2bb676ad6f83bfeeedb4b1dd90062d19d0b5ec861e`
 - 패키지명: `com.cookiewars.game`
 - 지원 범위: Android 7.0(API 24) 이상
 - 화면 방향: 세로 고정
@@ -26,7 +28,8 @@ APK를 Android 스마트폰으로 옮긴 뒤 파일을 열어 설치합니다. P
 - 적 수는 항상 한 마리이며 보스 능력치로 조절되는 난이도
 - 아군 이름 파란색, 적군 이름 빨간색 표시
 - 저렴하게 구매 가능하고 등급별 능력 격차가 큰 쿠키 원반 5종과 쿠키봇 5종
-- 원반과 쿠키봇을 각각 여는 독립 하단 메뉴
+- 강화 아래에서 쿠키·원반·쿠키봇 강화를 바로 고르는 3개 소메뉴
+- 정보 아래에서 쿠키 도감·난이도·몬스터를 바로 고르는 3개 소메뉴와 NEW 배지
 - 상위 종류로 갈수록 큰 폭으로 벌어지는 원반·쿠키봇 공격 능력
 - 종류별 영구 소유·장착과 제한 없는 원반 강화
 - 각 봇 위치에서 나오는 작은 자동 원반과 전투 화면 어디든 누르면 성에서 나오는 큰 2배 원반
@@ -74,19 +77,21 @@ npm run android:release
 src/
 ├── components/   공통 모바일 UI
 ├── config/       난이도·몬스터·업그레이드·무기 JSON 데이터
+├── domain/       성장·진행·보상 순수 계산
 ├── engine/       프레임 기반 전투 로직
-├── screens/      8개 독립 화면
+├── navigation/   4대 메뉴·소메뉴 데이터와 검증 모델
+├── screens/      8개 leaf 화면과 전투 화면 전용 모듈
 ├── services/     저장, 효과음, 진동
-├── state/        영구 게임 상태와 규칙
+├── state/        영구 상태·저장 이전·명령·자동 생산
 ├── theme/        색상과 글꼴
-└── types/        TypeScript 데이터 계약
+└── types/        전투·성장·저장·UI 영역별 TypeScript 데이터 계약
 ```
 
 상세 문서는 다음과 같습니다.
 
 - [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md): 화면, 플레이 흐름, 전투·보상·해금 규칙
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): 코드 계층, 상태 변경, 저장과 확장 구조
-- [`docs/CODE_REVIEW.md`](docs/CODE_REVIEW.md): 1.0.8 코드 리뷰 결과, 남은 위험과 개선 우선순위
+- [`docs/CODE_REVIEW.md`](docs/CODE_REVIEW.md): 1.0.9 코드 리뷰 결과, 해결 사항과 남은 위험
 - [`docs/DATA_TABLES.md`](docs/DATA_TABLES.md): 모든 JSON 테이블의 필드와 수정 방법
 - [`docs/ASSET_LICENSES.md`](docs/ASSET_LICENSES.md): 외부 리소스 출처와 라이선스
 - [`docs/GENERATED_ASSETS.md`](docs/GENERATED_ASSETS.md): 15개 전장·보스의 생성 프롬프트, 파일과 검수 기준

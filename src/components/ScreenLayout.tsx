@@ -2,18 +2,21 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { PropsWithChildren } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { MainMenuId, NavigationBadgeKey } from '../navigation/types';
 import { gradients } from '../theme/colors';
-import { TabId } from '../types/game';
+import type { TabId } from '../types/game';
 import { BottomNav } from './BottomNav';
+import { SubmenuNav } from './SubmenuNav';
 import { TopBar } from './TopBar';
 
 interface ScreenLayoutProps {
   title: string;
   cookies: number;
   activeTab: TabId;
+  onChangeMainMenu: (menuId: MainMenuId) => void;
   onChangeTab: (tab: TabId) => void;
   onOpenSettings: () => void;
-  hasNewMonster: boolean;
+  activeBadges: readonly NavigationBadgeKey[];
   contentStyle?: StyleProp<ViewStyle>;
 }
 
@@ -22,9 +25,10 @@ export function ScreenLayout({
   title,
   cookies,
   activeTab,
+  onChangeMainMenu,
   onChangeTab,
   onOpenSettings,
-  hasNewMonster,
+  activeBadges,
   contentStyle,
 }: PropsWithChildren<ScreenLayoutProps>) {
   const insets = useSafeAreaInsets();
@@ -32,11 +36,16 @@ export function ScreenLayout({
     <LinearGradient colors={gradients.app} style={styles.root}>
       <View style={[styles.safe, { paddingTop: insets.top + 6, paddingBottom: Math.max(insets.bottom, 6) }]}>
         <TopBar title={title} cookies={cookies} onOpenSettings={onOpenSettings} />
+        <SubmenuNav
+          activeTab={activeTab}
+          onChange={onChangeTab}
+          activeBadges={activeBadges}
+        />
         <View style={[styles.content, contentStyle]}>{children}</View>
         <BottomNav
           activeTab={activeTab}
-          onChange={onChangeTab}
-          hasNewMonster={hasNewMonster}
+          onChange={onChangeMainMenu}
+          activeBadges={activeBadges}
         />
       </View>
     </LinearGradient>
