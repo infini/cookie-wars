@@ -24,8 +24,9 @@ function activeBattle(): BattleState {
       moveSpeedMultiplier: 1,
       discDamageMultiplier: 1,
       sizeMultiplier: 1,
+      pathIndex: 1,
       x: 0.5,
-      y: 0.4,
+      y: 0.6,
       spawnAt: 0,
       lastShotAt: 1000,
       lastMeleeAt: 1000,
@@ -35,13 +36,14 @@ function activeBattle(): BattleState {
       id: 'disc-1',
       owner: 'player',
       x: 0.5,
-      y: 0.405,
+      y: 0.605,
       targetId: 'enemy-1',
       level: 1,
       damage: 3,
       size: 44,
       speed: 280,
       source: 'castle',
+      createdAt: 0,
     }],
     baseHealth: 100,
     baseMaxHealth: 100,
@@ -55,19 +57,49 @@ function activeBattle(): BattleState {
 }
 
 describe('전투 엔진', () => {
-  test('적은 균일한 가로 슬롯에서 한 마리씩 순차 등장한다', () => {
-    const difficulty = { ...DIFFICULTIES[0], enemyCount: BATTLE_RULES.enemyColumns + 1 };
+  test('적은 중앙 진입로의 행군 줄을 따라 촘촘한 무리로 등장한다', () => {
+    const difficulty = { ...DIFFICULTIES[0], enemyCount: BATTLE_RULES.enemyPaths.length + 2 };
     const startedAt = 1000;
     const enemies = createBattleEnemies(difficulty, startedAt);
-    const firstRow = enemies.slice(0, BATTLE_RULES.enemyColumns);
-    const gaps = firstRow.slice(1).map((enemy, index) => enemy.x - firstRow[index].x);
 
     expect(enemies[0].spawnAt).toBe(startedAt);
     expect(enemies[1].spawnAt).toBe(startedAt);
-    expect(enemies[2].spawnAt).toBe(startedAt + BATTLE_RULES.enemySpawnIntervalMs);
-    expect(new Set(firstRow.map((enemy) => enemy.x)).size).toBe(BATTLE_RULES.enemyColumns);
-    gaps.forEach((gap) => expect(gap).toBeCloseTo(BATTLE_RULES.enemyColumnGap));
-    expect(enemies[BATTLE_RULES.enemyColumns].x).toBe(enemies[0].x);
+    expect(enemies[2].spawnAt).toBe(startedAt);
+    expect(enemies[3].spawnAt).toBe(startedAt + BATTLE_RULES.enemySpawnIntervalMs);
+    expect(new Set(enemies.map((enemy) => enemy.pathIndex)).size).toBe(BATTLE_RULES.enemyPaths.length);
+    enemies.forEach((enemy) => {
+      expect(enemy.x).toBe(BATTLE_RULES.enemyPaths[enemy.pathIndex].waypoints[0].x);
+    });
+  });
+
+  test('같은 행군 줄의 적은 앞 적과 최소 간격을 유지한다', () => {
+    const difficulty = { ...DIFFICULTIES[0], enemyCount: 12, moveSpeed: 30 };
+    const startedAt = 1000;
+    const enemies = createBattleEnemies(difficulty, startedAt).map((enemy) => ({
+      ...enemy,
+      spawnAt: startedAt,
+    }));
+    const battle = activeBattle();
+    battle.enemies = enemies;
+    battle.playerProjectiles = [];
+    const next = advanceBattle(battle, {
+      difficulty,
+      enemyDisc: getEnemyDisc(difficulty.enemyDiscLevel),
+      playerDisc: DISCS[0].levels[0],
+      bots: [],
+      now: startedAt + 500,
+      deltaMs: 100,
+    });
+    BATTLE_RULES.enemyPaths.forEach((_, pathIndex) => {
+      const lane = next.enemies
+        .filter((enemy) => enemy.pathIndex === pathIndex)
+        .sort((a, b) => b.y - a.y);
+      lane.slice(1).forEach((enemy, index) => {
+        expect(lane[index].y - enemy.y).toBeGreaterThanOrEqual(
+          BATTLE_RULES.enemyMinimumLaneSpacingY - 0.000001,
+        );
+      });
+    });
   });
 
   test('일반 적 사이에 서로 다른 등급과 보스가 테이블 순서대로 등장한다', () => {
@@ -136,6 +168,32 @@ describe('전투 엔진', () => {
     expect(next.playerProjectiles[0].y).not.toBe(BATTLE_RULES.playerStartY);
     expect(next.playerProjectiles[0].size).toBe(calculateBotDiscSize(DISCS[0].levels[0]));
     expect(next.playerProjectiles[0].size).toBeLessThan(DISCS[0].levels[0].size);
+  });
+
+  test('공격 반경 밖의 먼 적에게는 성과 쿠키봇 모두 원반을 던지지 않는다', () => {
+    const difficulty = DIFFICULTIES[0];
+    const bot = BOTS[0];
+    const battle = activeBattle();
+    battle.enemies[0] = { ...battle.enemies[0], y: 0.2 };
+    battle.playerProjectiles = [];
+    battle.lastBotAttackAt = { [bot.id]: 0 };
+
+    expect(canThrowCastleDisc(
+      battle,
+      true,
+      DISCS[0].levels[0],
+      1000 + DISCS[0].levels[0].cooldownMs,
+    )).toBe(false);
+
+    const next = advanceBattle(battle, {
+      difficulty,
+      enemyDisc: getEnemyDisc(difficulty.enemyDiscLevel),
+      playerDisc: DISCS[0].levels[0],
+      bots: [{ config: bot, count: 1 }],
+      now: bot.attackIntervalMs + 1,
+      deltaMs: 0,
+    });
+    expect(next.playerProjectiles).toHaveLength(0);
   });
 
   test('쿠키봇이 없으면 전투 시간이 지나도 쿠키 성은 자동 공격하지 않는다', () => {

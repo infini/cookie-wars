@@ -138,23 +138,35 @@ export interface AudioSettingsConfig {
   levels: AudioLevelConfig[];
 }
 
+export interface BattleAudioConfig {
+  minimumIntervalMs: {
+    disc: number;
+    hit: number;
+    enemyDefeated: number;
+  };
+}
+
 export interface SaveMigrationsConfig {
   botIdAliases: Record<string, string>;
+  discIdAliases: Record<string, string>;
   monsterIdAliases: Record<string, string>;
 }
 
 export interface BattleRulesConfig {
   tickMs: number;
   maxDeltaMs: number;
-  enemyColumns: number;
-  enemyStartX: number;
-  enemyColumnGap: number;
+  enemyPaths: Array<{
+    id: string;
+    waypoints: Array<{ x: number; y: number }>;
+  }>;
+  enemyPathPattern: number[];
   enemyStartY: number;
   initialEnemySpawnCount: number;
   enemySpawnIntervalMs: number;
+  enemySpawnGroupSize: number;
+  enemySpawnGroupPauseMs: number;
+  enemyMinimumLaneSpacingY: number;
   enemyStopY: number;
-  enemyMinX: number;
-  enemyMaxX: number;
   enemyMoveDivisor: number;
   enemyFirstShotDelayMs: number;
   enemyShotStaggerMs: number;
@@ -165,10 +177,15 @@ export interface BattleRulesConfig {
   coreProjectileHitY: number;
   playerStartX: number;
   playerStartY: number;
+  castleAttackRadius: number;
+  botAttackRadius: number;
+  enemyAttackRadius: number;
+  maximumSimultaneousEnemyProjectiles: number;
   botFormationSlots: Array<{ x: number; y: number }>;
   botDiscSizeMultiplier: number;
   playerHomingMs: number;
   playerProjectileMoveDivisor: number;
+  playerProjectileMinimumFlightMs: number;
   playerHitToleranceY: number;
   playerHitToleranceX: number;
   playerProjectileEndY: number;
@@ -199,6 +216,16 @@ export interface BattleUiConfig {
   enemyLabelWidth: number;
   enemyHealthWidth: number;
   castleHealthWidth: number;
+  unitPerspectiveFarY: number;
+  unitPerspectiveNearY: number;
+  unitPerspectiveFarScale: number;
+  unitPerspectiveNearScale: number;
+  enemyAnchorLabelOffset: number;
+  groundShadowColor: string;
+  groundShadowWidthRatio: number;
+  groundShadowHeightRatio: number;
+  groundShadowBottomRatio: number;
+  projectileSpinDurationMs: number;
   healthBarHeight: number;
   healthBarOutlineWidth: number;
   healthBarOutlineColor: string;

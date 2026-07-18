@@ -28,6 +28,7 @@ export interface BattleEnemy {
   moveSpeedMultiplier: number;
   discDamageMultiplier: number;
   sizeMultiplier: number;
+  pathIndex: number;
   x: number;
   y: number;
   spawnAt: number;
@@ -48,6 +49,7 @@ export interface BattleProjectile {
   damage: number;
   size: number;
   speed: number;
+  createdAt: number;
 }
 
 interface BattleEvent {
@@ -113,6 +115,32 @@ function closestEnemy(enemies: BattleEnemy[], now: number): BattleEnemy | undefi
   return [...aliveEnemies(enemies, now)].sort((a, b) => b.y - a.y)[0];
 }
 
+export function closestEnemyWithinRadius(
+  enemies: BattleEnemy[],
+  now: number,
+  originX: number,
+  originY: number,
+  radius: number,
+): BattleEnemy | undefined {
+  return aliveEnemies(enemies, now)
+    .filter((enemy) => Math.hypot(enemy.x - originX, enemy.y - originY) <= radius)
+    .sort((a, b) => b.y - a.y)[0];
+}
+
+function getPathX(pathIndex: number, y: number): number {
+  const path = BATTLE_RULES.enemyPaths[pathIndex] ?? BATTLE_RULES.enemyPaths[0];
+  const points = path.waypoints;
+  if (y <= points[0].y) return points[0].x;
+  for (let index = 1; index < points.length; index += 1) {
+    const start = points[index - 1];
+    const end = points[index];
+    if (y > end.y) continue;
+    const progress = (y - start.y) / (end.y - start.y);
+    return start.x + (end.x - start.x) * progress;
+  }
+  return points[points.length - 1].x;
+}
+
 export function calculateCastleDiscDamage(playerDisc: DiscLevelConfig): number {
   return Math.round(playerDisc.damage * BATTLE_RULES.castleDiscDamageMultiplier);
 }
@@ -129,7 +157,14 @@ export function canThrowCastleDisc(
 ): boolean {
   return state.status === 'active'
     && discAvailable
-    && now - state.lastCastleThrowAt >= playerDisc.cooldownMs;
+    && now - state.lastCastleThrowAt >= playerDisc.cooldownMs
+    && Boolean(closestEnemyWithinRadius(
+      state.enemies,
+      now,
+      BATTLE_RULES.playerStartX,
+      BATTLE_RULES.playerStartY,
+      BATTLE_RULES.castleAttackRadius,
+    ));
 }
 
 export function createBattleEnemies(
@@ -147,9 +182,16 @@ export function createBattleEnemies(
       : wave.monsterPatternIds[index % wave.monsterPatternIds.length];
     const monster = getMonster(monsterId);
     const maxHp = Math.max(1, Math.round(monster.baseHp * difficulty.hpMultiplier));
-    const column = index % rules.enemyColumns;
-    const spawnStep = Math.max(0, index - rules.initialEnemySpawnCount + 1);
-    const spawnAt = now + spawnStep * rules.enemySpawnIntervalMs;
+    const pathIndex = monster.rank === '보스'
+      ? Math.floor(rules.enemyPaths.length / 2)
+      : rules.enemyPathPattern[index % rules.enemyPathPattern.length];
+    const queuedIndex = Math.max(0, index - rules.initialEnemySpawnCount);
+    const spawnGroup = Math.floor(queuedIndex / rules.enemySpawnGroupSize);
+    const spawnAt = index < rules.initialEnemySpawnCount
+      ? now
+      : now
+        + (queuedIndex + 1) * rules.enemySpawnIntervalMs
+        + spawnGroup * rules.enemySpawnGroupPauseMs;
     return {
       id: `enemy-${now}-${index}`,
       monsterId: monster.id,
@@ -162,13 +204,14 @@ export function createBattleEnemies(
       moveSpeedMultiplier: monster.moveSpeedMultiplier,
       discDamageMultiplier: monster.discDamageMultiplier,
       sizeMultiplier: monster.sizeMultiplier,
-      x: rules.enemyStartX + column * rules.enemyColumnGap,
+      pathIndex,
+      x: getPathX(pathIndex, rules.enemyStartY),
       y: rules.enemyStartY,
       spawnAt,
       lastShotAt: spawnAt
         - enemyDisc.cooldownMs
         + rules.enemyFirstShotDelayMs
-        + column * rules.enemyShotStaggerMs,
+        + pathIndex * rules.enemyShotStaggerMs,
       lastMeleeAt: spawnAt,
     };
   });
@@ -181,7 +224,7 @@ function moveEnemies(
   deltaMs: number,
 ): BattleEnemy[] {
   const rules = BATTLE_RULES;
-  return enemies.map((enemy) => {
+  const moved = enemies.map((enemy) => {
     if (enemy.hp <= 0 || enemy.spawnAt > now) return enemy;
     const approach = enemy.y < rules.enemyStopY
       ? difficulty.moveSpeed * enemy.moveSpeedMultiplier * deltaMs / rules.enemyMoveDivisor
@@ -191,6 +234,26 @@ function moveEnemies(
       y: Math.min(rules.enemyStopY, enemy.y + approach),
     };
   });
+  const spaced = [...moved];
+  for (const pathIndex of rules.enemyPaths.keys()) {
+    const pathEnemies = spaced
+      .filter((enemy) => (
+        enemy.pathIndex === pathIndex && enemy.hp > 0 && enemy.spawnAt <= now
+      ))
+      .sort((a, b) => b.y - a.y);
+    pathEnemies.slice(1).forEach((enemy, index) => {
+      const ahead = pathEnemies[index];
+      const maximumY = ahead.y - rules.enemyMinimumLaneSpacingY;
+      if (enemy.y <= maximumY) return;
+      const movedIndex = spaced.findIndex((item) => item.id === enemy.id);
+      spaced[movedIndex] = { ...enemy, y: maximumY };
+      pathEnemies[index + 1] = spaced[movedIndex];
+    });
+  }
+  return spaced.map((enemy) => ({
+    ...enemy,
+    x: getPathX(enemy.pathIndex, enemy.y),
+  }));
 }
 
 export function advanceBattle(state: BattleState, options: AdvanceOptions): BattleState {
@@ -229,6 +292,7 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
         - originalProjectile.speed * deltaMs / rules.playerProjectileMoveDivisor,
     };
     const hitTarget = target
+      && now - projectile.createdAt >= rules.playerProjectileMinimumFlightMs
       && Math.abs(projectile.y - target.y) < rules.playerHitToleranceY
       && Math.abs(projectile.x - target.x) < rules.playerHitToleranceX;
     if (hitTarget) {
@@ -247,7 +311,13 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
     const botId = activeBot.config.id;
     const botSlot = rules.botFormationSlots[botIndex % rules.botFormationSlots.length];
     const lastAttackAt = lastBotAttackAt[botId] ?? state.now;
-    const target = closestEnemy(enemies, now);
+    const target = closestEnemyWithinRadius(
+      enemies,
+      now,
+      botSlot.x,
+      botSlot.y,
+      rules.botAttackRadius,
+    );
     if (
       !target
       || now - lastAttackAt < activeBot.config.attackIntervalMs
@@ -266,12 +336,19 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
       ),
       size: calculateBotDiscSize(playerDisc),
       speed: playerDisc.speed,
+      createdAt: now,
     });
     lastBotAttackAt[botId] = now;
     lastEvent = event('disc');
   }
 
   for (const enemy of aliveEnemies(enemies, now)) {
+    if (enemyProjectiles.length >= rules.maximumSimultaneousEnemyProjectiles) break;
+    const inAttackRange = Math.hypot(
+      enemy.x - rules.playerStartX,
+      enemy.y - rules.playerStartY,
+    ) <= rules.enemyAttackRadius;
+    if (!inAttackRange) continue;
     const alreadyFlying = enemyProjectiles.some(
       (projectile) => projectile.sourceEnemyId === enemy.id,
     );
@@ -286,6 +363,7 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
       damage: enemyDisc.damage * enemy.discDamageMultiplier,
       size: enemyDisc.size,
       speed: enemyDisc.speed,
+      createdAt: now,
     });
     enemies = enemies.map((item) => item.id === enemy.id
       ? { ...item, lastShotAt: now }
@@ -419,7 +497,13 @@ export function useBattleEngine({
   const throwCastleDisc = useCallback((): boolean => {
     const now = Date.now();
     if (!canThrowCastleDisc(state, discAvailable, playerDisc, now)) return false;
-    const target = closestEnemy(state.enemies, now);
+    const target = closestEnemyWithinRadius(
+      state.enemies,
+      now,
+      BATTLE_RULES.playerStartX,
+      BATTLE_RULES.playerStartY,
+      BATTLE_RULES.castleAttackRadius,
+    );
     if (!target) return false;
     setState((current) => ({
       ...current,
@@ -436,6 +520,7 @@ export function useBattleEngine({
         damage: calculateCastleDiscDamage(playerDisc),
         size: playerDisc.size,
         speed: playerDisc.speed,
+        createdAt: now,
       }],
       lastEvent: {
         id: (current.lastEvent?.id ?? 0) + 1,

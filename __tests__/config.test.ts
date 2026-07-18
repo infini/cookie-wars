@@ -63,8 +63,8 @@ describe('데이터 테이블', () => {
   test('진행·음량·상점 값은 데이터 테이블에서 제공한다', () => {
     expect(PROGRESSION.winsToUnlockNextDifficulty).toBe(20);
     expect(AUDIO_SETTINGS.levels.map((item) => item.level)).toEqual([1, 2, 3, 4, 5]);
-    expect(DISCS).toHaveLength(10);
-    expect(BOTS).toHaveLength(10);
+    expect(DISCS).toHaveLength(5);
+    expect(BOTS).toHaveLength(5);
     expect(DISCS.every((disc) => disc.purchaseCost > 0)).toBe(true);
     expect(BOTS.every((bot) => bot.baseCost > 0 && bot.costMultiplier >= 1)).toBe(true);
     expect(BOTS[BOTS.length - 1].discDamageMultiplier).toBeGreaterThanOrEqual(
@@ -93,14 +93,35 @@ describe('데이터 테이블', () => {
     });
   });
 
+  test('전투 경로와 공격 반경은 데이터 테이블에서 제공한다', () => {
+    expect(BATTLE_RULES.enemyPaths.length).toBeGreaterThanOrEqual(3);
+    BATTLE_RULES.enemyPaths.forEach((path) => {
+      expect(path.waypoints.length).toBeGreaterThanOrEqual(2);
+      const destination = path.waypoints[path.waypoints.length - 1];
+      expect(Math.abs(destination.x - BATTLE_RULES.playerStartX)).toBeLessThanOrEqual(0.1);
+      expect(destination.y).toBe(BATTLE_RULES.enemyStopY);
+    });
+    expect(BATTLE_RULES.enemyPathPattern.every(
+      (pathIndex) => pathIndex >= 0 && pathIndex < BATTLE_RULES.enemyPaths.length,
+    )).toBe(true);
+    expect(BATTLE_RULES.castleAttackRadius).toBeGreaterThan(0);
+    expect(BATTLE_RULES.castleAttackRadius).toBeLessThan(1);
+    expect(BATTLE_RULES.botAttackRadius).toBeGreaterThan(0);
+    expect(BATTLE_RULES.botAttackRadius).toBeLessThan(1);
+    expect(BATTLE_RULES.botAttackRadius).toBeGreaterThan(BATTLE_RULES.castleAttackRadius);
+    expect(BATTLE_RULES.enemyAttackRadius).toBeGreaterThan(0);
+    expect(BATTLE_RULES.maximumSimultaneousEnemyProjectiles).toBeGreaterThan(0);
+  });
+
   test('같은 난이도도 승리할 때마다 다음 전투가 강해진다', () => {
     const first = getBattleDifficulty(DIFFICULTIES[0], 0);
     const second = getBattleDifficulty(DIFFICULTIES[0], 1);
     const final = getBattleDifficulty(DIFFICULTIES[0], PROGRESSION.winsToUnlockNextDifficulty - 1);
     expect(BATTLE_STAGE_RULES.hpMultiplierPerWin).toBeGreaterThan(0);
-    expect(BATTLE_STAGE_RULES.hpMultiplierPerWin).toBeGreaterThanOrEqual(0.3);
-    expect(BATTLE_STAGE_RULES.attackMultiplierPerWin).toBeGreaterThanOrEqual(0.2);
-    expect(BATTLE_STAGE_RULES.extraEnemiesPerStep).toBeGreaterThanOrEqual(3);
+    expect(BATTLE_STAGE_RULES.hpMultiplierPerWin).toBeCloseTo(0.05);
+    expect(BATTLE_STAGE_RULES.attackMultiplierPerWin).toBeCloseTo(0.03);
+    expect(BATTLE_STAGE_RULES.moveSpeedMultiplierPerWin).toBeCloseTo(0.015);
+    expect(BATTLE_STAGE_RULES.extraEnemiesPerStep).toBe(1);
     expect(second.hpMultiplier).toBeGreaterThan(first.hpMultiplier);
     expect(second.attackMultiplier).toBeGreaterThan(first.attackMultiplier);
     expect(second.moveSpeed).toBeGreaterThan(first.moveSpeed);

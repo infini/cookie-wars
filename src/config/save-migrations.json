@@ -1,6 +1,18 @@
 {
   "botIdAliases": {
-    "cookie-bot": "choco-bot"
+    "cookie-bot": "choco-bot",
+    "berry-bot": "choco-bot",
+    "caramel-bot": "milk-bot",
+    "peanut-bot": "mint-bot",
+    "star-bot": "rainbow-bot",
+    "lava-bot": "royal-bot"
+  },
+  "discIdAliases": {
+    "strawberry-disc": "choco-chip-disc",
+    "caramel-disc": "milk-disc",
+    "peanut-disc": "mint-disc",
+    "starlight-disc": "rainbow-disc",
+    "lava-disc": "crown-disc"
   },
   "monsterIdAliases": {
     "crumb-goblin": "crumb-minion",

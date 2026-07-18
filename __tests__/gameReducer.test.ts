@@ -121,11 +121,36 @@ describe('게임 저장 상태', () => {
       discLevel: 4,
       botCounts: { 'cookie-bot': 3 },
     });
-    expect(migrated.saveVersion).toBe(5);
+    expect(migrated.saveVersion).toBe(6);
     expect(migrated.ownedDiscIds).toEqual([DISCS[0].id]);
     expect(migrated.discLevels[DISCS[0].id]).toBe(4);
     expect(migrated.botCounts[BOTS[0].id]).toBe(3);
     expect('autoBattleEnabled' in migrated).toBe(false);
+  });
+
+  test('10종 시절의 원반과 쿠키봇 저장은 현재 5종에 합쳐서 이전한다', () => {
+    const migrated = mergeSavedGame({
+      ownedDiscIds: ['starlight-disc', 'rainbow-disc', 'lava-disc'],
+      selectedDiscId: 'starlight-disc',
+      discLevels: {
+        'starlight-disc': 12,
+        'rainbow-disc': 8,
+        'lava-disc': 15,
+      },
+      botCounts: {
+        'star-bot': 2,
+        'rainbow-bot': 3,
+        'lava-bot': 4,
+        'royal-bot': 1,
+      },
+    });
+
+    expect(migrated.ownedDiscIds).toEqual(['rainbow-disc', 'crown-disc']);
+    expect(migrated.selectedDiscId).toBe('rainbow-disc');
+    expect(migrated.discLevels['rainbow-disc']).toBe(12);
+    expect(migrated.discLevels['crown-disc']).toBe(15);
+    expect(migrated.botCounts['rainbow-bot']).toBe(5);
+    expect(migrated.botCounts['royal-bot']).toBe(5);
   });
 
   test('이전 몬스터 도감 ID를 새 다등급 몬스터 ID로 이전한다', () => {

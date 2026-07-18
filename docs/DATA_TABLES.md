@@ -8,7 +8,7 @@
 |---|---|
 | `cookie-upgrades.json` | 쿠키 업그레이드의 초기 레벨, 능력치, 가격 |
 | `cookie-upgrade-rules.json` | 클릭 힘·자동 생산·쿠키 성 체력의 무한 강화 증가량 |
-| `discs.json` | 10종 원반의 영구 구매 가격과 초기 레벨 능력·강화 가격 |
+| `discs.json` | 5종 원반의 영구 구매 가격과 초기 레벨 능력·강화 가격 |
 | `disc-upgrade-rules.json` | 명시 레벨 이후 무한 강화 증가량과 쿨타임 하한 |
 | `bots.json` | 봇 종류, 최초 가격, 가격 증가율, 피해, 공격 간격 |
 | `monsters.json` | 적 이미지·등급, 기본 HP·공격, 속도·원반·크기 배율 |
@@ -25,19 +25,14 @@
 
 ## 상점과 성장
 
-현재 10종 콘텐츠의 초기 가격은 다음과 같습니다. 실제 원본은 JSON이며 이 표도 변경 시 함께 갱신합니다.
+현재 원반·쿠키봇 각 5종의 초기 가격은 다음과 같습니다. 실제 원본은 JSON이며 이 표도 변경 시 함께 갱신합니다.
 
 | 원반 | 최초 가격 | Lv.1 공격력 | 쿠키봇 | 첫 가격 | 피해 배율 | 발사 간격 |
 |---|---:|---:|---|---:|---:|---:|
 | 초코칩 원반 | 30 | 3 | 초코 쿠키봇 | 35 | ×1 | 1.8초 |
-| 딸기 원반 | 45 | 6 | 베리 쿠키봇 | 45 | ×1.5 | 1.6초 |
 | 우유 원반 | 60 | 10 | 밀크 쿠키봇 | 60 | ×2.2 | 1.4초 |
-| 카라멜 원반 | 75 | 16 | 카라멜 쿠키봇 | 75 | ×3.2 | 1.2초 |
 | 민트 원반 | 90 | 24 | 민트 쿠키봇 | 90 | ×4.6 | 1.0초 |
-| 땅콩 원반 | 110 | 35 | 땅콩 쿠키봇 | 110 | ×6.5 | 0.85초 |
 | 무지개 원반 | 135 | 50 | 무지개 쿠키봇 | 135 | ×9 | 0.7초 |
-| 별빛 원반 | 165 | 70 | 별빛 쿠키봇 | 165 | ×12.5 | 0.575초 |
-| 용암 원반 | 200 | 95 | 용암 쿠키봇 | 205 | ×17.5 | 0.45초 |
 | 왕관 원반 | 250 | 130 | 로열 쿠키봇 | 250 | ×25 | 0.35초 |
 
 ### `cookie-upgrades.json`
@@ -100,7 +95,7 @@
 
 `progression.json`의 `winsToUnlockNextDifficulty`가 다음 단계 해금에 필요한 승리 수입니다. 현재 값은 20입니다. 1~20번 전투는 각각 처음 클리어할 때마다 `reward`를 지급합니다. 완료한 전투를 재도전할 때는 `rewardClaimedStageIds`에 같은 `난이도ID:전투번호` 키가 있으므로 다시 지급하지 않습니다. 20승 뒤 재도전은 20번 전투로 처리됩니다.
 
-현재 기본 적 수는 easy 28마리에서 시작해 난이도마다 10마리 이상 증가하고 extreme god은 170마리입니다. 첫 2마리가 동시에 진입한 뒤 0.3초마다 다음 적이 5개 가로 슬롯을 순환해 등장합니다.
+현재 기본 적 수는 easy 28마리에서 시작해 난이도마다 10마리 이상 증가하고 extreme god은 170마리입니다. 첫 3마리가 좌·중앙·우 길에 동시에 진입한 뒤 0.115초마다 다음 적이 행렬로 등장합니다. 30마리 묶음 사이의 추가 간격은 0.16초입니다.
 
 `enemy-waves.json`의 `monsterPatternIds`는 일반 적 순환 순서이고 `bossEveryEnemies`번째 적마다 `bossMonsterId`가 대신 등장합니다. 현재는 15번째마다 흑코코아 폭군이 등장합니다. `monsters.json`의 추가 필드는 다음과 같습니다.
 
@@ -121,7 +116,7 @@
 - `maximumExtraEnemies`: 한 난이도에서 추가할 수 있는 최대 적 수
 - `enemyDiscLevelEveryWins`: 적 원반 레벨을 하나 올리는 승리 간격
 
-현재 값은 승리 1회마다 HP 32%, 공격 24%, 이동 속도 8%를 기본 난이도 값에 추가하고 적 3마리를 늘립니다. 적 원반 레벨은 매 승리마다 1단계 오르며 추가 적 상한은 60마리입니다. 첫 승리 전에는 난이도 원본값을 그대로 사용합니다. 승리할 때만 다음 단계로 올라가고 패배는 진행도를 바꾸지 않습니다. 20승 후에는 20번째 전투의 배율을 유지하며 적 원반 레벨은 `enemy-discs.json`의 마지막 단계를 넘지 않습니다.
+현재 값은 승리 1회마다 HP 5%, 공격 3%, 이동 속도 1.5%를 기본 난이도 값에 추가합니다. 적 수와 적 원반 레벨은 2승마다 1씩 오르고 추가 적 상한은 10마리입니다. 첫 승리 전에는 난이도 원본값을 그대로 사용합니다. 승리할 때만 다음 단계로 올라가고 패배는 진행도를 바꾸지 않습니다. 20승 후에는 20번째 전투의 배율을 유지하며 적 원반 레벨은 `enemy-discs.json`의 마지막 단계를 넘지 않습니다.
 
 ## 쿠키 진화
 
@@ -140,12 +135,14 @@
 `battle-rules.json`의 좌표는 대부분 화면 비율(0~1)입니다. `*Ms`는 밀리초입니다.
 
 - 프레임: `tickMs`, `maxDeltaMs`
-- 적 배치: `enemyColumns`, `enemyStartX/Y`, `enemyColumnGap`
-- 적 순차 출현: `initialEnemySpawnCount`, `enemySpawnIntervalMs`
-- 적 이동 범위: `enemyStopY`, `enemyMinX`, `enemyMaxX`, `enemyMoveDivisor`
-- 적 공격: `enemyFirstShotDelayMs`, `enemyShotStaggerMs`, `enemyMeleeTriggerY`, `enemyMeleeIntervalMs`
+- 적 경로: `enemyPaths[].id`, `enemyPaths[].waypoints[].x/y`, `enemyPathPattern`. 경로 행을 추가하면 코드 변경 없이 길을 늘릴 수 있음
+- 적 순차 출현: `initialEnemySpawnCount`, `enemySpawnIntervalMs`, `enemySpawnGroupSize`, `enemySpawnGroupPauseMs`
+- 같은 경로 행렬 간격: `enemyMinimumLaneSpacingY`
+- 적 이동 범위: 경로의 마지막 웨이포인트, `enemyStopY`, `enemyMoveDivisor`
+- 적 공격: `enemyFirstShotDelayMs`, `enemyShotStaggerMs`, `enemyMeleeTriggerY`, `enemyMeleeIntervalMs`, `enemyAttackRadius`, `maximumSimultaneousEnemyProjectiles`
 - 적 원반: `enemyProjectileStartOffsetY`, `enemyProjectileMoveDivisor`, `coreProjectileHitY`
-- 아군 원반: `playerStartX/Y`, `playerHomingMs`, `playerProjectileMoveDivisor`, `playerHitToleranceX/Y`, `playerProjectileEndY`
+- 아군 원반: `playerStartX/Y`, `playerHomingMs`, `playerProjectileMoveDivisor`, `playerProjectileMinimumFlightMs`, `playerHitToleranceX/Y`, `playerProjectileEndY`
+- 공격 반경: `castleAttackRadius`, `botAttackRadius`. 현재 성 0.44, 봇 0.5이며 반경 밖의 적은 발사 대상으로 선택하지 않음
 - 쿠키봇 편성·발사: `botFormationSlots[].x/y`. 봇 그림과 실제 발사 시작점이 같은 슬롯을 사용
 - 쿠키봇 원반 크기: `botDiscSizeMultiplier`(성 원반 크기 대비 배율)
 - 쿠키 성: `castleDiscDamageMultiplier`(장착 원반 기본 피해 대비 배율)
@@ -161,6 +158,9 @@
 - `botRenderSize`, `botLabelWidth`: 봇 그림과 이름 영역
 - `enemyBaseRenderSize`, `enemyMinimumRenderSize`, `enemyMaximumRenderSize`: 등급별 배율 적용 전후 적 크기
 - `enemyLabelWidth`, `enemyHealthWidth`, `castleHealthWidth`: 이름과 체력 게이지 폭
+- `unitPerspective*`: 맵의 위·아래 위치에 따른 유닛 원근 크기
+- `groundShadow*`: 유닛 발밑 접촉 그림자 크기·위치·색상
+- `projectileSpinDurationMs`: 원반 한 바퀴 회전 시간
 - `healthBarHeight`, `healthBarOutlineWidth`, `healthBarOutlineColor`, `healthBarTrackColor`: 게이지 외곽선과 바탕
 - `healthBarLowHue`, `healthBarHighHue`, `healthBarSaturationPercent`, `healthBarLightnessPercent`: 남은 체력 비율에 따라 빨강에서 초록으로 보간하는 HSL 범위
 
@@ -178,6 +178,10 @@
 - `previewDelayMs`: 설정 버튼을 누른 뒤 새 볼륨으로 미리듣는 지연
 - `levels[].level`, `volume`: UI 단계와 오디오 엔진 볼륨(0~1)의 대응
 
+`battle-audio.json`:
+
+- `minimumIntervalMs.disc/hit/enemyDefeated`: 같은 전투 액션음의 최소 재생 간격
+
 ## 안전하게 테이블을 변경하는 절차
 
 1. JSON의 기존 ID는 저장 호환성을 위해 바꾸지 않습니다.
@@ -189,4 +193,4 @@
 
 새 필드가 필요할 때는 JSON만 임의로 추가하지 말고 `src/types/game.ts`의 계약, `src/config/index.ts`, 관련 selector/engine, 테스트, 이 문서를 함께 갱신합니다.
 
-기존 ID를 꼭 바꿔야 한다면 `save-migrations.json`에 이전 ID와 새 ID의 대응을 먼저 추가합니다. 현재 이전 버전의 `cookie-bot` 보유 수량은 첫 번째 봇인 `choco-bot`으로 합산 복구되며, 이전 3종 몬스터 ID는 새 다등급 몬스터 ID로 이전됩니다.
+기존 ID를 꼭 바꿔야 한다면 `save-migrations.json`에 이전 ID와 새 ID의 대응을 먼저 추가합니다. 현재 10종 시절 제거된 원반 5종의 소유·레벨과 쿠키봇 5종의 수량은 대응되는 현재 5종에 합산 복구됩니다. 이전 `cookie-bot` 수량과 이전 3종 몬스터 ID도 각각 현재 ID로 이전됩니다.

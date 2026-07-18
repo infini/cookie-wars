@@ -44,7 +44,7 @@ const initialDifficultyWinCounts = Object.fromEntries(
 );
 
 export const initialGameState: GameState = {
-  saveVersion: 5,
+  saveVersion: 6,
   cookies: 0,
   lifetimeCookies: 0,
   upgradeLevels: initialUpgradeLevels,
@@ -148,13 +148,17 @@ function normalizeDiscLevels(
   savedLevels: Record<string, number> | undefined,
   legacyDiscLevel: number | undefined,
 ): Record<string, number> {
-  return Object.fromEntries(DISCS.map((disc, index) => {
-    const firstLevel = disc.levels[0].level;
-    const savedLevel = savedLevels?.[disc.id]
-      ?? (index === 0 ? legacyDiscLevel : undefined)
-      ?? firstLevel;
-    return [disc.id, Math.max(firstLevel, Math.floor(savedLevel))];
-  }));
+  const levels = Object.fromEntries(DISCS.map((disc) => [disc.id, disc.levels[0].level]));
+  for (const [savedId, savedLevel] of Object.entries(savedLevels ?? {})) {
+    const currentId = SAVE_MIGRATIONS.discIdAliases[savedId] ?? savedId;
+    if (levels[currentId] === undefined || !Number.isFinite(savedLevel)) continue;
+    levels[currentId] = Math.max(levels[currentId], Math.floor(savedLevel));
+  }
+  if (legacyDiscLevel !== undefined && Number.isFinite(legacyDiscLevel)) {
+    const firstDiscId = DISCS[0].id;
+    levels[firstDiscId] = Math.max(levels[firstDiscId], Math.floor(legacyDiscLevel));
+  }
+  return levels;
 }
 
 function unlockedDifficultyIndex(winCounts: Record<string, number>): number {
@@ -186,13 +190,17 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     : DIFFICULTIES[highestUnlockedDifficultyIndex].id;
   const knownDiscIds = new Set(DISCS.map((disc) => disc.id));
   const ownedDiscIds = unique(
-    saved.ownedDiscIds?.filter((id) => knownDiscIds.has(id))
+    saved.ownedDiscIds?.map((id) => SAVE_MIGRATIONS.discIdAliases[id] ?? id)
+      .filter((id) => knownDiscIds.has(id))
       ?? (saved.discOwned ? [DISCS[0].id] : []),
   );
   const discLevels = normalizeDiscLevels(saved.discLevels, saved.discLevel);
-  const selectedDiscId = saved.selectedDiscId
-    && ownedDiscIds.includes(saved.selectedDiscId)
-    ? saved.selectedDiscId
+  const migratedSelectedDiscId = saved.selectedDiscId
+    ? SAVE_MIGRATIONS.discIdAliases[saved.selectedDiscId] ?? saved.selectedDiscId
+    : undefined;
+  const selectedDiscId = migratedSelectedDiscId
+    && ownedDiscIds.includes(migratedSelectedDiscId)
+    ? migratedSelectedDiscId
     : ownedDiscIds[0] ?? DISCS[0].id;
   const discoveredMonsterIds = normalizeMonsterIds(saved.discoveredMonsterIds);
   const newMonsterIds = normalizeMonsterIds(saved.newMonsterIds).filter((id) => (

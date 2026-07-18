@@ -6,13 +6,14 @@
 
 | 파일 | 원본 | 라이선스 |
 |---|---|---|
-| `cookie.png`, `flying-disc.png`, 앱 아이콘·스플래시 | Google Noto Emoji | Apache License 2.0 |
+| `cookie.png`, 앱 아이콘·스플래시 | Google Noto Emoji | Apache License 2.0 |
 | `assets/images/cookies/*.png` 10종 진화 이미지 | Google Noto Emoji | Apache License 2.0 |
 | `cookie-castle.png`, `cookie-bot.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 | `assets/images/enemies/*.png` 5종 | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 | `assets/images/maps/battle-map-medieval.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
+| `flying-disc.png`, `enemy-disc.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 
-생성 이미지는 특정 상용 게임의 캐릭터나 로고를 복제하지 않고, 독자적인 중세 쿠키 왕국 3D 아트 방향으로 제작했습니다. 성·봇·적은 녹색 단색 배경으로 생성한 뒤 로컬 크로마키 도구로 투명화하고 모바일용 PNG로 축소했습니다. 맵은 세로 9:16 구도이며 중앙 전투 영역을 비우도록 생성했습니다.
+생성 이미지는 특정 상용 게임의 캐릭터나 로고를 복제하지 않고, 독자적인 중세 쿠키 왕국 3D 아트 방향으로 제작했습니다. 성·봇·적·아군 및 적군 원반은 전투 맵과 같은 높은 시점과 조명으로 녹색 단색 배경에 생성한 뒤 로컬 크로마키 도구로 투명화하고 모바일용 PNG로 축소했습니다. 아군 원반은 파랑·금색, 적 원반은 빨강·검붉은색입니다. 맵은 세로 9:16 구도이며 좌·중앙·우의 세 석재 길이 쿠키 성 앞에서 합류합니다.
 
 ## 효과음
 

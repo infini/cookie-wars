@@ -7,9 +7,16 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
 } from 'react';
 import { AUDIO_SETTINGS } from '../config';
 import { useGame } from '../state/GameContext';
+import {
+  BATTLE_ACTION_SOUND_NAMES,
+  BattleActionSoundName,
+  canPlayBattleActionSound,
+  isBattleActionSound,
+} from './battleAudio';
 
 export type SoundName =
   | 'cookie'
@@ -22,6 +29,7 @@ export type SoundName =
 
 interface FeedbackContextValue {
   play: (name: SoundName) => void;
+  stopBattleSounds: () => void;
   tap: () => void;
   success: () => void;
   error: () => void;
@@ -43,6 +51,18 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     () => ({ cookie, menu, upgrade, blocked, hit, disc, enemyDefeated }),
     [cookie, menu, upgrade, blocked, hit, disc, enemyDefeated],
   );
+  const playbackEpoch = useRef(0);
+  const lastBattleSoundAt = useRef<Partial<Record<BattleActionSoundName, number>>>({});
+
+  const stopBattleSounds = useCallback(() => {
+    playbackEpoch.current += 1;
+    lastBattleSoundAt.current = {};
+    BATTLE_ACTION_SOUND_NAMES.forEach((name) => {
+      const player = players[name];
+      player.pause();
+      void player.seekTo(0).catch(() => undefined);
+    });
+  }, [players]);
 
   useEffect(() => {
     const volume = AUDIO_SETTINGS.levels.find(
@@ -53,11 +73,28 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     });
   }, [players, state.soundVolumeLevel]);
 
+  useEffect(() => {
+    if (state.soundEnabled) return;
+    playbackEpoch.current += 1;
+    Object.values(players).forEach((player) => {
+      player.pause();
+      void player.seekTo(0).catch(() => undefined);
+    });
+  }, [players, state.soundEnabled]);
+
   const play = useCallback(
     (name: SoundName) => {
       if (!state.soundEnabled) return;
+      const now = Date.now();
+      if (isBattleActionSound(name)) {
+        if (!canPlayBattleActionSound(name, lastBattleSoundAt.current, now)) return;
+        lastBattleSoundAt.current[name] = now;
+      }
+      const requestedEpoch = playbackEpoch.current;
       const player = players[name];
-      void player.seekTo(0).then(() => player.play()).catch(() => undefined);
+      void player.seekTo(0).then(() => {
+        if (requestedEpoch === playbackEpoch.current && state.soundEnabled) player.play();
+      }).catch(() => undefined);
     },
     [players, state.soundEnabled],
   );
@@ -77,7 +114,10 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
   }, [state.vibrationEnabled]);
 
-  const value = useMemo(() => ({ play, tap, success, error }), [play, tap, success, error]);
+  const value = useMemo(
+    () => ({ play, stopBattleSounds, tap, success, error }),
+    [play, stopBattleSounds, tap, success, error],
+  );
   return <FeedbackContext.Provider value={value}>{children}</FeedbackContext.Provider>;
 }
 

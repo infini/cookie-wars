@@ -1,0 +1,7 @@
+{
+  "minimumIntervalMs": {
+    "disc": 100,
+    "hit": 120,
+    "enemyDefeated": 160
+  }
+}

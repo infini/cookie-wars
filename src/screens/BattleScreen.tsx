@@ -36,6 +36,16 @@ export function getHealthColor(value: number, max: number): string {
   return `hsl(${Math.round(hue)}, ${BATTLE_UI.healthBarSaturationPercent}%, ${BATTLE_UI.healthBarLightnessPercent}%)`;
 }
 
+function getPerspectiveScale(y: number): number {
+  const progress = Math.max(0, Math.min(1, (
+    y - BATTLE_UI.unitPerspectiveFarY
+  ) / (
+    BATTLE_UI.unitPerspectiveNearY - BATTLE_UI.unitPerspectiveFarY
+  )));
+  return BATTLE_UI.unitPerspectiveFarScale
+    + (BATTLE_UI.unitPerspectiveNearScale - BATTLE_UI.unitPerspectiveFarScale) * progress;
+}
+
 function HealthBar({ value, max, width }: { value: number; max: number; width: number }) {
   const ratio = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
   return (
@@ -85,8 +95,14 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
     if (kind === 'disc') feedback.play('disc');
     if (kind === 'hit') feedback.play('hit');
     if (kind === 'enemyDefeated') feedback.play('enemyDefeated');
-    if (kind === 'victory') feedback.success();
-    if (kind === 'defeat') feedback.error();
+    if (kind === 'victory') {
+      feedback.stopBattleSounds();
+      feedback.success();
+    }
+    if (kind === 'defeat') {
+      feedback.stopBattleSounds();
+      feedback.error();
+    }
   }, [feedback]);
 
   const engine = useBattleEngine({
@@ -105,7 +121,16 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
     }
   }, [completeBattle, difficulty.id, engine.state.status]);
 
+  useEffect(() => {
+    if (engine.state.status !== 'active') feedback.stopBattleSounds();
+  }, [engine.state.status, feedback.stopBattleSounds]);
+
+  useEffect(() => () => {
+    feedback.stopBattleSounds();
+  }, [feedback.stopBattleSounds]);
+
   const startBattle = () => {
+    feedback.stopBattleSounds();
     handledResult.current = false;
     setRewardResult(null);
     getEnemyWaveMonsterIds(difficulty.enemyWaveId).forEach(discoverMonster);
@@ -115,14 +140,12 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
   };
 
   const leaveBattle = () => {
+    feedback.stopBattleSounds();
     engine.reset();
     setRewardResult(null);
     onReturnToGame();
   };
 
-  const visibleEnemies = useMemo(() => engine.state.enemies.filter(
-    (enemy) => enemy.hp > 0 && enemy.spawnAt <= engine.state.now,
-  ), [engine.state.enemies, engine.state.now]);
   const remainingEnemyCount = useMemo(() => engine.state.enemies.filter(
     (enemy) => enemy.hp > 0,
   ).length, [engine.state.enemies]);
@@ -138,7 +161,7 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
       >
         <View style={styles.compactHud} pointerEvents="none">
           <Text style={styles.stageHud}>{difficulty.name} · 전투 {difficultyProgress.currentBattleNumber}/{difficultyProgress.requiredWins}</Text>
-          <Text style={styles.enemyHud}>남은 적 {remainingEnemyCount} · 진입 {visibleEnemies.length}</Text>
+          <Text style={styles.enemyHud}>남은 적 {remainingEnemyCount}</Text>
         </View>
 
         {engine.state.enemies.map((enemy) => {
@@ -147,7 +170,9 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
             BATTLE_UI.enemyMinimumRenderSize,
             Math.min(
               BATTLE_UI.enemyMaximumRenderSize,
-              BATTLE_UI.enemyBaseRenderSize * enemy.sizeMultiplier,
+              BATTLE_UI.enemyBaseRenderSize
+                * enemy.sizeMultiplier
+                * getPerspectiveScale(enemy.y),
             ),
           );
           return (
@@ -160,12 +185,14 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
                   top: `${enemy.y * 100}%`,
                   width: BATTLE_UI.enemyLabelWidth,
                   marginLeft: -BATTLE_UI.enemyLabelWidth / 2,
+                  marginTop: -(renderSize + BATTLE_UI.enemyAnchorLabelOffset),
+                  zIndex: Math.round(enemy.y * 1000),
                 },
               ]}
             >
               <Text style={styles.enemyName} numberOfLines={1}>{enemy.name}</Text>
               <HealthBar value={enemy.hp} max={enemy.maxHp} width={BATTLE_UI.enemyHealthWidth} />
-              <MonsterSprite imageKey={enemy.imageKey} size={renderSize} />
+              <MonsterSprite imageKey={enemy.imageKey} size={renderSize} grounded />
             </View>
           );
         })}
@@ -183,10 +210,11 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
                 height: projectile.size,
                 marginLeft: -projectile.size / 2,
                 marginTop: -projectile.size / 2,
+                transform: [{ rotate: `${((engine.state.now - projectile.createdAt) / BATTLE_UI.projectileSpinDurationMs) * 360}deg` }],
               },
             ]}
           >
-            <DiscImage size={projectile.size - 4} />
+            <DiscImage size={projectile.size - 4} team="enemy" />
           </View>
         ))}
 
@@ -206,6 +234,7 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
                   top: `${projectile.y * 100}%`,
                   marginLeft: -renderedSize / 2,
                   marginTop: -renderedSize / 2,
+                  transform: [{ rotate: `${((engine.state.now - projectile.createdAt) / BATTLE_UI.projectileSpinDurationMs) * 360}deg` }],
                 },
               ]}
             >
@@ -229,13 +258,18 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
                   top: `${slot.y * 100}%`,
                   width: BATTLE_UI.botLabelWidth,
                   marginLeft: -BATTLE_UI.botLabelWidth / 2,
+                  marginTop: -(
+                    BATTLE_UI.botRenderSize * getPerspectiveScale(slot.y)
+                    + BATTLE_UI.enemyAnchorLabelOffset
+                  ),
+                  zIndex: Math.round(slot.y * 1000),
                 },
               ]}
             >
               <Text style={[styles.allyName, styles.botName]} numberOfLines={1}>
                 {bot.config.name}{bot.count > 1 ? ` ×${bot.count}` : ''}
               </Text>
-              <BotImage size={BATTLE_UI.botRenderSize} />
+              <BotImage size={BATTLE_UI.botRenderSize * getPerspectiveScale(slot.y)} grounded />
             </View>
           );
         })}
@@ -261,7 +295,7 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
             max={stats.maxHealth}
             width={BATTLE_UI.castleHealthWidth}
           />
-          <CookieCastle size={BATTLE_UI.castleRenderSize} cookieImageKey={activeCookie.imageKey} />
+          <CookieCastle size={BATTLE_UI.castleRenderSize} cookieImageKey={activeCookie.imageKey} grounded />
         </Pressable>
 
         {engine.state.status === 'idle' ? (
@@ -307,7 +341,20 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
             {engine.state.status === 'victory' && difficulty.id !== DIFFICULTIES[DIFFICULTIES.length - 1].id && rewardResult?.unlockedNextDifficulty ? (
               <Text style={styles.unlockText}>다음 난이도가 열렸어요!</Text>
             ) : null}
-            <GameButton title="메인 화면으로" onPress={leaveBattle} variant={engine.state.status === 'victory' ? 'green' : 'orange'} style={styles.resultButton} />
+            <View style={styles.resultButtonRow}>
+              <GameButton
+                title="로비 이동"
+                onPress={leaveBattle}
+                variant="orange"
+                style={styles.resultButton}
+              />
+              <GameButton
+                title="다음 전투"
+                onPress={startBattle}
+                variant="green"
+                style={styles.resultButton}
+              />
+            </View>
           </View>
         </View>
       </Modal>
@@ -319,25 +366,25 @@ const styles = StyleSheet.create({
   root: { flex: 1, paddingVertical: 2 },
   field: { flex: 1, minHeight: 410, borderRadius: 23, overflow: 'hidden', borderWidth: 2, borderColor: colors.white, position: 'relative' },
   mapImage: { borderRadius: 21 },
-  compactHud: { position: 'absolute', top: 5, left: 6, right: 6, zIndex: 11, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  compactHud: { position: 'absolute', top: 5, left: 6, right: 6, zIndex: 2000, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   stageHud: { fontFamily: fonts.extraBold, fontSize: 9, color: colors.white, backgroundColor: 'rgba(42,83,153,0.82)', borderRadius: 9, paddingHorizontal: 7, paddingVertical: 4 },
   enemyHud: { fontFamily: fonts.extraBold, fontSize: 9, color: colors.white, backgroundColor: 'rgba(167,37,48,0.84)', borderRadius: 9, paddingHorizontal: 7, paddingVertical: 4 },
-  enemy: { position: 'absolute', alignItems: 'center', marginTop: -8, zIndex: 3 },
+  enemy: { position: 'absolute', alignItems: 'center' },
   enemyName: { fontFamily: fonts.extraBold, fontSize: 7, color: colors.red, maxWidth: '100%', backgroundColor: 'rgba(255,255,255,0.9)', paddingHorizontal: 3, borderRadius: 4 },
   healthTrack: { borderRadius: 4, overflow: 'hidden', marginVertical: 1 },
   healthFill: { height: '100%' },
-  core: { position: 'absolute', left: '50%', bottom: 0, alignItems: 'center', zIndex: 6, borderRadius: 24 },
+  core: { position: 'absolute', left: '50%', bottom: 0, alignItems: 'center', zIndex: 1000, borderRadius: 24 },
   coreReady: { backgroundColor: 'rgba(255,220,91,0.22)', borderWidth: 2, borderColor: colors.yellow },
   corePressed: { transform: [{ scale: 0.92 }] },
-  bot: { position: 'absolute', alignItems: 'center', zIndex: 4, marginTop: -8 },
+  bot: { position: 'absolute', alignItems: 'center' },
   allyName: { fontFamily: fonts.extraBold, fontSize: 8, color: colors.blue, backgroundColor: 'rgba(255,255,255,0.9)', paddingHorizontal: 4, borderRadius: 5 },
   botName: { maxWidth: '100%', fontSize: 6, paddingHorizontal: 2 },
-  projectile: { position: 'absolute', zIndex: 8 },
+  projectile: { position: 'absolute', zIndex: 1800 },
   castleProjectile: { borderRadius: 50, backgroundColor: 'rgba(74,154,255,0.22)' },
   doubleDamage: { position: 'absolute', top: -9, alignSelf: 'center', zIndex: 2, fontFamily: fonts.extraBold, fontSize: 8, color: colors.blueDark, backgroundColor: colors.white, borderRadius: 5, paddingHorizontal: 3 },
   enemyProjectile: { borderWidth: 2, borderColor: colors.red, borderRadius: 30, backgroundColor: 'rgba(255,224,227,0.62)', alignItems: 'center', justifyContent: 'center' },
-  notice: { position: 'absolute', alignSelf: 'center', top: '42%', fontFamily: fonts.display, fontSize: 31, color: colors.purple, textShadowColor: colors.white, textShadowRadius: 7, zIndex: 12 },
-  startOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(255,248,231,0.88)', alignItems: 'center', justifyContent: 'center', zIndex: 15, padding: 20 },
+  notice: { position: 'absolute', alignSelf: 'center', top: '42%', fontFamily: fonts.display, fontSize: 31, color: colors.purple, textShadowColor: colors.white, textShadowRadius: 7, zIndex: 2100 },
+  startOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(255,248,231,0.88)', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: 20 },
   readyTitle: { fontFamily: fonts.display, fontSize: 31, color: colors.ink, marginTop: 5 },
   readyText: { fontFamily: fonts.medium, fontSize: 11, color: colors.muted, marginBottom: 12 },
   autoReadyText: { fontFamily: fonts.bold, fontSize: 10, color: colors.blueDark, marginTop: -7, marginBottom: 11, textAlign: 'center' },
@@ -356,5 +403,6 @@ const styles = StyleSheet.create({
   defeatText: { fontFamily: fonts.medium, fontSize: 12, lineHeight: 18, color: colors.muted, textAlign: 'center', marginVertical: 12 },
   progressText: { fontFamily: fonts.extraBold, fontSize: 13, color: colors.blueDark, marginTop: 10 },
   unlockText: { fontFamily: fonts.extraBold, fontSize: 13, color: colors.purple, marginTop: 10 },
-  resultButton: { width: '100%', marginTop: 14 },
+  resultButtonRow: { width: '100%', flexDirection: 'row', gap: 10, marginTop: 14 },
+  resultButton: { flex: 1 },
 });

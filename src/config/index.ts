@@ -1,5 +1,6 @@
 import botData from './bots.json';
 import audioSettingData from './audio-settings.json';
+import battleAudioData from './battle-audio.json';
 import battleRuleData from './battle-rules.json';
 import battleStageRuleData from './battle-stage-rules.json';
 import battleUiData from './battle-ui.json';
@@ -17,6 +18,7 @@ import saveMigrationData from './save-migrations.json';
 import {
   BotConfig,
   AudioSettingsConfig,
+  BattleAudioConfig,
   BattleRulesConfig,
   BattleStageRulesConfig,
   BattleUiConfig,
@@ -36,6 +38,7 @@ import {
 export const COOKIE_UPGRADES = cookieUpgradeData as UpgradeConfig[];
 export const COOKIE_UPGRADE_RULES = cookieUpgradeRuleData as CookieUpgradeRulesConfig;
 export const AUDIO_SETTINGS = audioSettingData as AudioSettingsConfig;
+export const BATTLE_AUDIO = battleAudioData as BattleAudioConfig;
 export const BATTLE_RULES = battleRuleData as BattleRulesConfig;
 export const BATTLE_STAGE_RULES = battleStageRuleData as BattleStageRulesConfig;
 export const BATTLE_UI = battleUiData as BattleUiConfig;
