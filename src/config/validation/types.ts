@@ -7,11 +7,14 @@ import {
   BattleRewardsConfig,
   BattleStageRulesConfig,
   BattleUiConfig,
+  BossAnimationConfig,
   BossBalanceConfig,
   BossBehaviorConfig,
   BossSpecialAttackConfig,
+  BotAnimationConfig,
   BotConfig,
   CookieConfig,
+  CookieCriticalConfig,
   CookieUpgradeRulesConfig,
   DifficultyConfig,
   DiscConfig,
@@ -34,12 +37,15 @@ export interface GameConfigInput {
   BATTLE_REWARDS: unknown;
   BATTLE_STAGE_RULES: unknown;
   BATTLE_UI: unknown;
+  BOSS_ANIMATION: unknown;
   BOSS_BALANCE: unknown;
   BOSS_BEHAVIOR: unknown;
   BOSS_SPECIAL_ATTACK: unknown;
+  BOT_ANIMATION: unknown;
   BOTS: unknown;
   COOKIE_UPGRADE_RULES: unknown;
   COOKIE_UPGRADES: unknown;
+  COOKIE_CRITICAL: unknown;
   COOKIES: unknown;
   DIFFICULTIES: unknown;
   DISC_UPGRADE_RULES: unknown;
@@ -61,12 +67,15 @@ export interface ValidatedGameConfig {
   BATTLE_REWARDS: BattleRewardsConfig;
   BATTLE_STAGE_RULES: BattleStageRulesConfig;
   BATTLE_UI: BattleUiConfig;
+  BOSS_ANIMATION: BossAnimationConfig;
   BOSS_BALANCE: BossBalanceConfig;
   BOSS_BEHAVIOR: BossBehaviorConfig;
   BOSS_SPECIAL_ATTACK: BossSpecialAttackConfig;
+  BOT_ANIMATION: BotAnimationConfig;
   BOTS: BotConfig[];
   COOKIE_UPGRADE_RULES: CookieUpgradeRulesConfig;
   COOKIE_UPGRADES: UpgradeConfig[];
+  COOKIE_CRITICAL: CookieCriticalConfig;
   COOKIES: CookieConfig[];
   DIFFICULTIES: DifficultyConfig[];
   DISC_UPGRADE_RULES: DiscUpgradeRulesConfig;

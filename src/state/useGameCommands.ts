@@ -1,11 +1,15 @@
 import { useMemo } from 'react';
 import { completeBattleTransition } from '../domain/battleCompletion';
-import { calculateCookieStats } from '../domain/gameSelectors';
-import type { BattleRewardResult, SoundVolumeLevel } from '../types/game';
+import { calculateCookieClickReward } from '../domain/cookieClick';
+import type {
+  BattleRewardResult,
+  CookieClickResult,
+  SoundVolumeLevel,
+} from '../types/game';
 import type { GameStateReference, ProjectedGameDispatch } from './gameRuntime';
 
 export interface GameCommands {
-  clickCookie: () => number;
+  clickCookie: () => CookieClickResult;
   buyUpgrade: (upgradeId: string) => boolean;
   buyDisc: (discId: string) => boolean;
   upgradeDisc: (discId: string) => boolean;
@@ -19,17 +23,19 @@ export interface GameCommands {
   toggleSound: () => void;
   setSoundVolume: (level: SoundVolumeLevel) => void;
   toggleVibration: () => void;
+  cycleBattleSpeed: () => void;
 }
 
 export function createGameCommands(
   dispatchProjectedAction: ProjectedGameDispatch,
   stateRef: GameStateReference,
+  randomSource: () => number = Math.random,
 ): GameCommands {
   return {
     clickCookie: () => {
-      const amount = calculateCookieStats(stateRef.current).clickPower;
-      dispatchProjectedAction({ type: 'GAIN_COOKIES', amount });
-      return amount;
+      const result = calculateCookieClickReward(stateRef.current, randomSource());
+      dispatchProjectedAction({ type: 'GAIN_COOKIES', amount: result.amount });
+      return result;
     },
     buyUpgrade: (upgradeId) => dispatchProjectedAction({ type: 'BUY_UPGRADE', upgradeId }),
     buyDisc: (discId) => dispatchProjectedAction({ type: 'BUY_DISC', discId }),
@@ -63,6 +69,9 @@ export function createGameCommands(
     },
     toggleVibration: () => {
       dispatchProjectedAction({ type: 'TOGGLE_VIBRATION' });
+    },
+    cycleBattleSpeed: () => {
+      dispatchProjectedAction({ type: 'CYCLE_BATTLE_SPEED' });
     },
   };
 }

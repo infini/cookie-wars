@@ -2,17 +2,14 @@ import React from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Ellipse, Path } from 'react-native-svg';
 import { BOSS_SPECIAL_ATTACK } from '../config';
-import { getBossSpecialAttackImpactProgress } from '../domain/bossSpecialAttack';
 
 export const BossHammerSmashEffect = React.memo(function BossHammerSmashEffect({
   size,
-  progress,
+  impactProgress,
 }: {
   size: number;
-  progress: number;
+  impactProgress: number;
 }) {
-  const impactProgress = getBossSpecialAttackImpactProgress(progress);
-  if (impactProgress === null) return null;
   const opacity = 1 - impactProgress;
   const width = size * BOSS_SPECIAL_ATTACK.impactWidthMultiplier;
   const height = size * BOSS_SPECIAL_ATTACK.impactHeightMultiplier;

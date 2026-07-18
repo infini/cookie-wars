@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { BATTLE_UI } from '../../config';
 import type { BattleEnemy, BattleStatus } from '../../engine/useBattleEngine';
 import { BattleHealthBar } from '../../components/battle/BattleHealthBar';
@@ -13,6 +13,8 @@ interface BattleHudProps {
   displayedBoss?: BattleEnemy;
   status: BattleStatus;
   screenWidth: number;
+  battleSpeedMultiplier: number;
+  onCycleBattleSpeed: () => void;
 }
 
 export function BattleHud({
@@ -23,11 +25,27 @@ export function BattleHud({
   displayedBoss,
   status,
   screenWidth,
+  battleSpeedMultiplier,
+  onCycleBattleSpeed,
 }: BattleHudProps) {
   return (
     <>
-      <View style={styles.compactHud} pointerEvents="none">
+      <View style={styles.compactHud}>
         <Text style={styles.stageHud}>{difficultyName} · 전투 {currentBattleNumber}/{requiredWins}</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`현재 전투 속도 ${battleSpeedMultiplier}배. 누르면 다음 속도`}
+          onPress={(event) => {
+            event.stopPropagation();
+            onCycleBattleSpeed();
+          }}
+          style={({ pressed }) => [
+            styles.battleSpeedButton,
+            pressed && styles.battleSpeedButtonPressed,
+          ]}
+        >
+          <Text style={styles.battleSpeedText}>X{battleSpeedMultiplier}</Text>
+        </Pressable>
         <Text style={styles.enemyHud}>남은 보스 {remainingEnemyCount}</Text>
       </View>
 

@@ -43,6 +43,7 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
     startBattle,
     leaveBattle,
     throwCastleDiscFromBattleField,
+    cycleBattleSpeed,
     hasWeapon,
   } = useBattleScreenSession(onReturnToGame);
   const giantDiscRenderSize = Math.round(screenWidth * GIANT_DISC.renderWidthRatio);
@@ -82,6 +83,11 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
             displayedBoss={presentation.displayedBoss}
             status={engine.state.status}
             screenWidth={screenWidth}
+            battleSpeedMultiplier={game.battleSpeedMultiplier}
+            onCycleBattleSpeed={() => {
+              cycleBattleSpeed();
+              feedback.tap();
+            }}
           />
 
           <BattleEnemyLayer
@@ -90,6 +96,7 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
             status={engine.state.status}
             now={engine.state.now}
             enemyDiscCooldownMs={engine.enemyDisc.cooldownMs}
+            enemyDiscSpeed={engine.enemyDisc.speed}
             presentationEvent={presentation.presentationEvent}
             presentationEventAgeMs={presentation.presentationEventAgeMs}
           />
@@ -144,7 +151,14 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
 
           {engine.state.notice ? <Text style={styles.notice}>{engine.state.notice}</Text> : null}
 
-          <BattleBotFormation bots={activeBots} />
+          <BattleBotFormation
+            bots={activeBots}
+            enemies={engine.state.enemies}
+            status={engine.state.status}
+            now={engine.state.now}
+            lastAttackAt={engine.state.lastBotAttackAt}
+            lastAttackPerformedAt={engine.state.lastBotAttackPerformedAt}
+          />
 
           <CookieCastleControl
             status={engine.state.status}

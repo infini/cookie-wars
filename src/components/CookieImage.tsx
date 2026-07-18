@@ -22,7 +22,21 @@ const cookieImages: Record<string, ImageSourcePropType> = {
   pie: require('../../assets/images/cookies/pie.png'),
   gem: require('../../assets/images/cookies/gem.png'),
   crown: require('../../assets/images/cookies/crown.png'),
+  'aurora-gem': require('../../assets/images/cookies/aurora-gem.png'),
+  'deepsea-pearl': require('../../assets/images/cookies/deepsea-pearl.png'),
+  'solar-flare': require('../../assets/images/cookies/solar-flare.png'),
+  'lunar-empress': require('../../assets/images/cookies/lunar-empress.png'),
+  clockwork: require('../../assets/images/cookies/clockwork.png'),
+  'dimension-rift': require('../../assets/images/cookies/dimension-rift.png'),
+  'dragon-scale': require('../../assets/images/cookies/dragon-scale.png'),
+  nebula: require('../../assets/images/cookies/nebula.png'),
+  'genesis-crystal': require('../../assets/images/cookies/genesis-crystal.png'),
+  'infinite-cosmos': require('../../assets/images/cookies/infinite-cosmos.png'),
 };
+
+export function hasCookieImage(imageKey: string): boolean {
+  return cookieImages[imageKey] !== undefined;
+}
 
 export const CookieImage = React.memo(function CookieImage({
   size,

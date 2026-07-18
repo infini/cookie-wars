@@ -41,6 +41,7 @@ function createTestCommands(actions: GameAction[], stateRef: { current: GameStat
       actions.push(action);
     }, stateRef),
     stateRef,
+    () => 1,
   );
 }
 
@@ -157,8 +158,8 @@ describe('게임 저장 상태', () => {
     const clickPower = calculateCookieStats(initialGameState).clickPower;
     const monsterId = MONSTERS[0].id;
 
-    expect(commands.clickCookie()).toBe(clickPower);
-    expect(commands.clickCookie()).toBe(clickPower);
+    expect(commands.clickCookie()).toEqual({ amount: clickPower, critical: false });
+    expect(commands.clickCookie()).toEqual({ amount: clickPower, critical: false });
     commands.toggleSound();
     commands.setSoundVolume(5);
     commands.toggleVibration();
@@ -522,6 +523,17 @@ describe('게임 저장 상태', () => {
     expect(oldSave.soundVolumeLevel).toBe(AUDIO_SETTINGS.defaultLevel);
   });
 
+  test('전투 속도는 X1, X2, X3 순환 후 저장 복원에서도 유지된다', () => {
+    const x2 = gameReducer(initialGameState, { type: 'CYCLE_BATTLE_SPEED' });
+    const x3 = gameReducer(x2, { type: 'CYCLE_BATTLE_SPEED' });
+    const x1 = gameReducer(x3, { type: 'CYCLE_BATTLE_SPEED' });
+
+    expect([x2.battleSpeedMultiplier, x3.battleSpeedMultiplier, x1.battleSpeedMultiplier])
+      .toEqual([2, 3, 1]);
+    expect(mergeSavedGame({ battleSpeedMultiplier: 3 }).battleSpeedMultiplier).toBe(3);
+    expect(mergeSavedGame({ battleSpeedMultiplier: 99 }).battleSpeedMultiplier).toBe(1);
+  });
+
   test('원반은 최고 레벨 없이 계속 강화된다', () => {
     const disc = DISCS[0];
     const highLevelState = {
@@ -631,7 +643,7 @@ describe('게임 저장 상태', () => {
     ]);
   });
 
-  test.each(['clickPower', 'autoProduction', 'cookieHealth'])(
+  test.each(['clickPower', 'cookieCritical', 'autoProduction', 'cookieHealth'])(
     '%s 업그레이드는 100레벨 이후에도 계속된다',
     (upgradeId) => {
       const config = COOKIE_UPGRADES.find((upgrade) => upgrade.id === upgradeId)!;
@@ -648,13 +660,13 @@ describe('게임 저장 상태', () => {
     },
   );
 
-  test('신규 저장의 쿠키 진화 합계는 보이는 3종 강화의 기본 레벨만 합산한 3이다', () => {
+  test('신규 저장의 쿠키 진화 합계는 보이는 4종 강화의 기본 레벨만 합산한 4이다', () => {
     const evolution = getCookieEvolutionProgress(initialGameState);
 
     expect(initialGameState.legacyCookieEvolutionBonusLevels).toBe(0);
-    expect(evolution.visibleUpgradeLevels).toBe(3);
+    expect(evolution.visibleUpgradeLevels).toBe(4);
     expect(evolution.legacyBonusLevels).toBe(0);
-    expect(evolution.totalUpgradeLevels).toBe(3);
+    expect(evolution.totalUpgradeLevels).toBe(4);
     expect(evolution.active.id).toBe('classic-cookie');
   });
 
@@ -668,10 +680,10 @@ describe('게임 저장 상태', () => {
     };
     const evolution = getCookieEvolutionProgress(evolvedState);
     const stats = calculateCookieStats(evolvedState);
-    expect(evolution.totalUpgradeLevels).toBe(9);
+    expect(evolution.totalUpgradeLevels).toBe(10);
     expect(evolution.active.id).toBe('fortune-cookie');
-    expect(evolution.remainingLevels).toBe(6);
-    expect(evolution.progressRatio).toBe(0);
+    expect(evolution.remainingLevels).toBe(5);
+    expect(evolution.progressRatio).toBeCloseTo(1 / 6);
     expect(stats.clickPower).toBeGreaterThan(34);
   });
 
@@ -705,7 +717,7 @@ describe('게임 저장 상태', () => {
     expect(blocked).toEqual(funded);
     expect(maximumSize.upgradeLevels.cookieSize).toBe(6);
     expect(maximumEvolution).toEqual(minimumEvolution);
-    expect(maximumEvolution.totalUpgradeLevels).toBe(13);
+    expect(maximumEvolution.totalUpgradeLevels).toBe(14);
     expect(calculateCookieStats(maximumSize).cookieRenderSize)
       .toBe(getMaximumCookieRenderSize());
     expect(getMaximumCookieRenderSize()).toBe(cookieSize.renderMaximumSizePixels);
@@ -717,24 +729,24 @@ describe('게임 저장 상태', () => {
       clickPowerLevel: 1,
       expectedBonus: 0,
       expectedCookieId: 'classic-cookie',
-      expectedRemainingLevels: 6,
-      expectedProgressRatio: 0,
+      expectedRemainingLevels: 5,
+      expectedProgressRatio: 1 / 6,
     },
     {
       cookieSizeLevel: 3,
       clickPowerLevel: 6,
       expectedBonus: 2,
       expectedCookieId: 'fortune-cookie',
-      expectedRemainingLevels: 5,
-      expectedProgressRatio: 1 / 6,
+      expectedRemainingLevels: 4,
+      expectedProgressRatio: 1 / 3,
     },
     {
       cookieSizeLevel: 6,
       clickPowerLevel: 9,
       expectedBonus: 5,
       expectedCookieId: 'donut-cookie',
-      expectedRemainingLevels: 5,
-      expectedProgressRatio: 1 / 6,
+      expectedRemainingLevels: 4,
+      expectedProgressRatio: 1 / 3,
     },
   ])(
     'v7 쿠키 크기 Lv$cookieSizeLevel은 고정 보너스로 한 번만 이전해 기존 진화 진행을 보존한다',
@@ -762,8 +774,8 @@ describe('게임 저장 상태', () => {
 
       expect(migrated.saveVersion).toBe(SAVE_MIGRATIONS.currentSaveVersion);
       expect(migrated.legacyCookieEvolutionBonusLevels).toBe(expectedBonus);
-      expect(evolution.visibleUpgradeLevels).toBe(clickPowerLevel + 2);
-      expect(evolution.totalUpgradeLevels).toBe(legacyTotalUpgradeLevels - 1);
+      expect(evolution.visibleUpgradeLevels).toBe(clickPowerLevel + 3);
+      expect(evolution.totalUpgradeLevels).toBe(legacyTotalUpgradeLevels);
       expect(evolution.active.id).toBe(expectedCookieId);
       expect(evolution.remainingLevels).toBe(expectedRemainingLevels);
       expect(evolution.progressRatio).toBeCloseTo(expectedProgressRatio);
@@ -800,9 +812,9 @@ describe('게임 저장 상태', () => {
     };
     const evolution = getCookieEvolutionProgress(midwayState);
 
-    expect(evolution.totalUpgradeLevels).toBe(12);
-    expect(evolution.remainingLevels).toBe(3);
-    expect(evolution.progressRatio).toBe(0.5);
+    expect(evolution.totalUpgradeLevels).toBe(13);
+    expect(evolution.remainingLevels).toBe(2);
+    expect(evolution.progressRatio).toBeCloseTo(2 / 3);
   });
 
   test('강화 가능 항목을 위에, 완료 항목을 가장 아래에 정렬한다', () => {
@@ -814,11 +826,12 @@ describe('게임 저장 상태', () => {
     const sorted = getSortedUpgradeProgress(state);
     expect(sorted.map((item) => item.config.id)).toEqual([
       'clickPower',
+      'cookieCritical',
       'cookieHealth',
       'autoProduction',
     ]);
-    expect(sorted.slice(0, 2).every((item) => item.affordable)).toBe(true);
-    expect(sorted[2].affordable).toBe(false);
+    expect(sorted.slice(0, 3).every((item) => item.affordable)).toBe(true);
+    expect(sorted[3].affordable).toBe(false);
     expect(sorted.some((item) => item.config.id === 'cookieSize')).toBe(false);
   });
 
@@ -857,6 +870,7 @@ describe('게임 저장 상태', () => {
       soundEnabled: 'yes',
       soundVolumeLevel: Number.POSITIVE_INFINITY,
       vibrationEnabled: 1,
+      battleSpeedMultiplier: Number.POSITIVE_INFINITY,
       lastSavedAt: Number.NEGATIVE_INFINITY,
     } as any);
 
@@ -874,6 +888,7 @@ describe('게임 저장 상태', () => {
     expect(restored.soundEnabled).toBe(initialGameState.soundEnabled);
     expect(restored.soundVolumeLevel).toBe(AUDIO_SETTINGS.defaultLevel);
     expect(restored.vibrationEnabled).toBe(initialGameState.vibrationEnabled);
+    expect(restored.battleSpeedMultiplier).toBe(initialGameState.battleSpeedMultiplier);
     expect(restored.lastSavedAt).toBe(0);
   });
 

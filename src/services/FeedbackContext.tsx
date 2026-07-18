@@ -22,6 +22,7 @@ import {
 
 export type SoundName =
   | 'cookie'
+  | 'critical'
   | 'menu'
   | 'upgrade'
   | 'blocked'
@@ -41,6 +42,7 @@ const FeedbackContext = createContext<FeedbackContextValue | null>(null);
 export function FeedbackProvider({ children }: PropsWithChildren) {
   const { state } = useGame();
   const cookie = useAudioPlayer(require('../../assets/audio/cookie-click.ogg'));
+  const critical = useAudioPlayer(require('../../assets/audio/cookie-critical-explosion.wav'));
   const menu = useAudioPlayer(require('../../assets/audio/menu-select.ogg'));
   const upgrade = useAudioPlayer(require('../../assets/audio/upgrade.ogg'));
   const blocked = useAudioPlayer(require('../../assets/audio/blocked.ogg'));
@@ -58,6 +60,7 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
   const players = useMemo(
     () => ({
       cookie,
+      critical,
       menu,
       upgrade,
       blocked,
@@ -74,6 +77,7 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     }),
     [
       cookie,
+      critical,
       menu,
       upgrade,
       blocked,
@@ -109,12 +113,14 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
       (item) => item.level === state.soundVolumeLevel,
     )?.volume ?? AUDIO_SETTINGS.levels[0].volume;
     Object.entries(players).forEach(([name, player]) => {
-      const battleMultiplier = name in BATTLE_AUDIO.volumeMultipliers
+      const soundMultiplier = name in BATTLE_AUDIO.volumeMultipliers
         ? BATTLE_AUDIO.volumeMultipliers[
           name as keyof typeof BATTLE_AUDIO.volumeMultipliers
         ]
-        : 1;
-      player.volume = volume * battleMultiplier;
+        : AUDIO_SETTINGS.soundVolumeMultipliers[
+          name as keyof typeof AUDIO_SETTINGS.soundVolumeMultipliers
+        ];
+      player.volume = volume * soundMultiplier;
     });
     battleMusic.loop = true;
   }, [players, state.soundVolumeLevel]);

@@ -11,6 +11,10 @@ import {
   getEnemyWave,
 } from '../src/config';
 import { getBattleDifficulty } from '../src/domain/gameSelectors';
+import {
+  getBotCombatPosition,
+  getBotProjectileOrigin,
+} from '../src/domain/botCombatMotion';
 import { MAX_GAME_INTEGER } from '../src/domain/safeNumbers';
 import {
   BattleEventJournal,
@@ -18,6 +22,7 @@ import {
   MAX_RETAINED_BATTLE_EVENTS,
   acknowledgeBattleEvents,
   advanceBattle,
+  advanceBattleAtSpeed,
   appendBattleEvent,
   calculateBotDiscSize,
   calculateBotArmyDps,
@@ -38,6 +43,7 @@ import {
   tryThrowCastleDisc,
   tryThrowGiantDisc,
 } from '../src/engine/useBattleEngine';
+import { moveEnemies } from '../src/engine/enemyBattleSimulation';
 import {
   consumeGiantDiscInventory,
   initialGameState,
@@ -64,6 +70,7 @@ function activeBattle(): BattleState {
       spawnAt: 0,
       lastShotAt: 1000,
       lastMeleeAt: 1000,
+      specialAttackCycleStartedAt: 1000,
       lastSpecialAttackAt: 1000,
       enraged: false,
     }],
@@ -86,6 +93,7 @@ function activeBattle(): BattleState {
     killedEnemies: 0,
     lastCastleThrowAt: 1000,
     lastBotAttackAt: {},
+    lastBotAttackPerformedAt: {},
     notice: null,
     noticeUntil: 0,
     eventSequence: 0,
@@ -114,6 +122,55 @@ function expectFiniteBoundedNumbers(value: unknown): void {
 }
 
 describe('전투 엔진', () => {
+  test('보스 강공격 주기는 성 공격 사거리에 진입한 순간부터 시작한다', () => {
+    const enemy = {
+      ...activeBattle().enemies[0],
+      y: BATTLE_RULES.playerStartY - BATTLE_RULES.enemyAttackRadius - 0.001,
+      lastShotAt: 0,
+      specialAttackCycleStartedAt: 0,
+      lastSpecialAttackAt: 0,
+    };
+    const enteredAt = 10_000;
+    const [moved] = moveEnemies([enemy], {
+      difficulty: DIFFICULTIES[0],
+      now: enteredAt,
+      deltaMs: BATTLE_RULES.maxDeltaMs,
+    });
+
+    expect(moved.y).toBeGreaterThan(enemy.y);
+    expect(moved.lastShotAt).toBe(enteredAt);
+    expect(moved.specialAttackCycleStartedAt).toBe(enteredAt);
+    expect(moved.lastSpecialAttackAt).toBe(0);
+  });
+
+  test('X3 전투 속도는 같은 실시간 프레임에서 시뮬레이션을 정확히 세 단계 진행한다', () => {
+    const difficulty = DIFFICULTIES[0];
+    const enemyDisc = getEnemyDisc(difficulty.enemyDiscLevel);
+    const battle = activeBattle();
+    battle.playerProjectiles = [];
+    const x1 = advanceBattleAtSpeed(battle, {
+      difficulty,
+      enemyDisc,
+      playerDisc: DISCS[0].levels[0],
+      bots: [],
+      deltaMs: BATTLE_RULES.tickMs,
+      speedMultiplier: 1,
+    });
+    const x3 = advanceBattleAtSpeed(battle, {
+      difficulty,
+      enemyDisc,
+      playerDisc: DISCS[0].levels[0],
+      bots: [],
+      deltaMs: BATTLE_RULES.tickMs,
+      speedMultiplier: 3,
+    });
+
+    expect(x1.now - battle.now).toBe(BATTLE_RULES.tickMs);
+    expect(x3.now - battle.now).toBe(BATTLE_RULES.tickMs * 3);
+    expect(x3.enemies[0].y - battle.enemies[0].y)
+      .toBeCloseTo((x1.enemies[0].y - battle.enemies[0].y) * 3);
+  });
+
   test('모든 전투에는 중앙의 거대 보스 한 마리만 등장한다', () => {
     const difficulty = DIFFICULTIES[0];
     const startedAt = 1000;
@@ -673,9 +730,16 @@ describe('전투 엔진', () => {
     expect(next.playerProjectiles).toHaveLength(1);
     expect(next.playerProjectiles[0].source).toBe('bot');
     expect(next.playerProjectiles[0].damage).toBe(DISCS[0].levels[0].damage);
-    expect(next.playerProjectiles[0].x).toBeCloseTo(BATTLE_RULES.botFormationSlots[0].x);
+    const expectedPosition = getBotProjectileOrigin(
+      getBotCombatPosition(
+        0,
+        bot.attackIntervalMs + 1,
+        battle.enemies[0],
+      ),
+    );
+    expect(next.playerProjectiles[0].x).toBeCloseTo(expectedPosition.x);
     expect(next.playerProjectiles[0].x).not.toBe(BATTLE_RULES.playerStartX);
-    expect(next.playerProjectiles[0].y).toBe(BATTLE_RULES.botFormationSlots[0].y);
+    expect(next.playerProjectiles[0].y).toBeCloseTo(expectedPosition.y);
     expect(next.playerProjectiles[0].y).not.toBe(BATTLE_RULES.playerStartY);
     expect(next.playerProjectiles[0].size).toBe(calculateBotDiscSize(DISCS[0].levels[0]));
     expect(next.playerProjectiles[0].size).toBeLessThan(DISCS[0].levels[0].size);
@@ -742,7 +806,7 @@ describe('전투 엔진', () => {
     expect(fired.enemies[0].lastSpecialAttackAt).toBe(fired.now);
   });
 
-  test('강공격 주기 전에는 같은 보스 원반이 일반 공격으로 유지된다', () => {
+  test('강공격 직전에는 일반 원반을 새로 쏘지 않고 망치 동작의 공격 통로를 비운다', () => {
     const difficulty = DIFFICULTIES[0];
     const enemyDisc = getEnemyDisc(difficulty.enemyDiscLevel);
     const battle = activeBattle();
@@ -756,9 +820,8 @@ describe('전투 엔진', () => {
       deltaMs: 0,
     });
 
-    expect(fired.enemyProjectiles).toHaveLength(1);
-    expect(fired.enemyProjectiles[0].attackKind).toBe('projectile');
-    expect(latestEvent(fired)?.kind).toBe('enemyDisc');
+    expect(fired.enemyProjectiles).toHaveLength(0);
+    expect(latestEvent(fired)).toBeNull();
     expect(fired.enemies[0].lastSpecialAttackAt).toBe(
       battle.enemies[0].lastSpecialAttackAt,
     );

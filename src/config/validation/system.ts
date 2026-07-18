@@ -18,6 +18,13 @@ export function validateAudioSettings(value: unknown): void {
     max: 5,
   });
   numberField(config, 'previewDelayMs', path, { integer: true, min: 0 });
+  const volumeMultipliers = record(
+    config.soundVolumeMultipliers,
+    `${path}.soundVolumeMultipliers`,
+  );
+  validateNumberFields(volumeMultipliers, `${path}.soundVolumeMultipliers`, [
+    'cookie', 'critical', 'menu', 'upgrade', 'blocked',
+  ], { min: 0, max: 1 });
   const levels = array(config.levels, `${path}.levels`).map((item, index) => {
     const itemPath = `${path}.levels[${index}]`;
     const level = record(item, itemPath);
@@ -171,13 +178,7 @@ export function validateBossSpecialAttack(value: unknown): void {
   const path = 'BOSS_SPECIAL_ATTACK';
   const config = record(value, path);
   validateNumberFields(config, path, [
-    'intervalMs', 'windupMs', 'animationDurationMs', 'windupPeakProgress',
-    'slamPeakProgress', 'recoveryPeakProgress', 'spritePivotXRatio', 'spritePivotYRatio',
-    'windupRotationDeg', 'slamRotationDeg', 'recoveryRotationDeg', 'windupLeanDeg',
-    'slamLeanDeg', 'recoveryLeanDeg', 'windupTranslateXPixels', 'slamTranslateXPixels',
-    'recoveryTranslateXPixels', 'windupLiftPixels', 'slamDropPixels',
-    'recoveryTranslateYPixels', 'windupScale', 'slamScaleX', 'slamScaleY',
-    'recoveryScaleX', 'recoveryScaleY', 'impactWidthMultiplier', 'impactHeightMultiplier',
+    'intervalMs', 'windupMs', 'impactWidthMultiplier', 'impactHeightMultiplier',
     'impactTopRatio', 'impactLayerIndex', 'impactCenterX', 'impactCenterY',
     'impactOuterRadiusX', 'impactOuterRadiusY', 'impactInnerRadiusX', 'impactInnerRadiusY',
     'impactStartScale', 'impactEndScale', 'impactStrokeWidth', 'impactGlowStrokeMultiplier',
@@ -190,45 +191,16 @@ export function validateBossSpecialAttack(value: unknown): void {
     'projectileBorderColor', 'projectileBackgroundColor', 'projectileTrailColor',
     'projectileGlowColor',
   ]);
-  validatePositiveNumberFields(config, path, ['intervalMs', 'windupMs', 'animationDurationMs']);
+  validatePositiveNumberFields(config, path, ['intervalMs', 'windupMs']);
   [
-    'spritePivotXRatio', 'spritePivotYRatio', 'impactTopRatio',
-    'screenFlashMaximumOpacity',
+    'impactTopRatio', 'screenFlashMaximumOpacity',
   ].forEach((field) => numberField(config, field, path, { min: 0, max: 1 }));
   validatePositiveNumberFields(config, path, [
-    'windupScale', 'slamScaleX', 'slamScaleY', 'recoveryScaleX', 'recoveryScaleY',
     'impactOuterRadiusX', 'impactOuterRadiusY', 'impactInnerRadiusX', 'impactInnerRadiusY',
     'impactStartScale', 'impactEndScale', 'projectileScale',
   ]);
-  const windupPeak = config.windupPeakProgress as number;
-  const slamPeak = config.slamPeakProgress as number;
-  const recoveryPeak = config.recoveryPeakProgress as number;
-  if (windupPeak <= 0 || windupPeak >= 1) {
-    throw new ConfigValidationError(
-      `${path}.windupPeakProgress`,
-      '0보다 크고 1보다 작아야 합니다.',
-    );
-  }
-  if (slamPeak <= windupPeak || slamPeak >= 1) {
-    throw new ConfigValidationError(
-      `${path}.slamPeakProgress`,
-      'windupPeakProgress보다 크고 1보다 작아야 합니다.',
-    );
-  }
-  if (recoveryPeak <= slamPeak || recoveryPeak >= 1) {
-    throw new ConfigValidationError(
-      `${path}.recoveryPeakProgress`,
-      'slamPeakProgress보다 크고 1보다 작아야 합니다.',
-    );
-  }
   if ((config.windupMs as number) >= (config.intervalMs as number)) {
     throw new ConfigValidationError(`${path}.windupMs`, 'intervalMs보다 작아야 합니다.');
-  }
-  if ((config.animationDurationMs as number) > (config.intervalMs as number)) {
-    throw new ConfigValidationError(
-      `${path}.animationDurationMs`,
-      'intervalMs 이하여야 합니다.',
-    );
   }
   if (
     (config.impactInnerRadiusX as number) > (config.impactOuterRadiusX as number)

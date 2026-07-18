@@ -1,6 +1,8 @@
 {
   "tickMs": 50,
   "maxDeltaMs": 100,
+  "battleSpeedMultipliers": [1, 2, 3],
+  "defaultBattleSpeedMultiplier": 1,
   "enemyX": 0.5,
   "enemyStartY": 0.19,
   "enemyStopY": 0.75,

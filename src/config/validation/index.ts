@@ -11,9 +11,15 @@ import {
   validateProgression,
 } from './combat';
 import {
+  validateAnimationFrameVisibility,
+  validateBossAnimation,
+  validateBotAnimation,
+} from './animation';
+import {
   validateBots,
   validateCookieUpgradeRules,
   validateCookieUpgrades,
+  validateCookieCritical,
   validateCookies,
   validateDiscUpgradeRules,
   validateDiscs,
@@ -44,12 +50,20 @@ export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig 
   validateBattleRewards(input.BATTLE_REWARDS);
   validateBattleStageRules(input.BATTLE_STAGE_RULES);
   validateBattleUi(input.BATTLE_UI);
+  const bossAnimations = validateBossAnimation(input.BOSS_ANIMATION);
   validateBossBalance(input.BOSS_BALANCE);
   validateBossBehavior(input.BOSS_BEHAVIOR);
   validateBossSpecialAttack(input.BOSS_SPECIAL_ATTACK);
+  const botAnimations = validateBotAnimation(input.BOT_ANIMATION);
+  validateAnimationFrameVisibility(
+    input.BATTLE_RULES,
+    input.BOSS_ANIMATION,
+    input.BOT_ANIMATION,
+  );
   const bots = validateBots(input.BOTS);
   const upgradeRules = validateCookieUpgradeRules(input.COOKIE_UPGRADE_RULES);
   const upgrades = validateCookieUpgrades(input.COOKIE_UPGRADES);
+  const cookieCritical = validateCookieCritical(input.COOKIE_CRITICAL);
   validateCookies(input.COOKIES);
   const difficulties = validateDifficulties(input.DIFFICULTIES);
   validateDiscUpgradeRules(input.DISC_UPGRADE_RULES);
@@ -71,6 +85,9 @@ export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig 
     bots,
     discs,
     migrations,
+    bossAnimations,
+    botAnimations,
+    cookieCritical,
   });
 
   return input as ValidatedGameConfig;

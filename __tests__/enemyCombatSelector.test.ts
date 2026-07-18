@@ -30,6 +30,7 @@ function enemyAt(y: number): BattleEnemy {
     spawnAt: 0,
     lastShotAt: 0,
     lastMeleeAt: 0,
+    specialAttackCycleStartedAt: 0,
     lastSpecialAttackAt: 0,
     enraged: false,
   };
@@ -60,6 +61,7 @@ describe('보스 공격 타이밍 selector', () => {
       * BOSS_BEHAVIOR.globalAttackCooldownMultiplier;
     enemy.lastShotAt = now - cooldownMs;
     enemy.lastSpecialAttackAt = now;
+    enemy.specialAttackCycleStartedAt = now;
 
     const ready = selectEnemyCombatTiming({
       enemy,
@@ -67,6 +69,7 @@ describe('보스 공격 타이밍 selector', () => {
       status: 'active',
       now,
       enemyDiscCooldownMs: enemyDisc.cooldownMs,
+      enemyDiscSpeed: enemyDisc.speed,
     });
     expect(ready.inAttackRange).toBe(true);
     expect(ready.projectileAttackReady).toBe(true);
@@ -77,6 +80,7 @@ describe('보스 공격 타이밍 selector', () => {
       status: 'active',
       now,
       enemyDiscCooldownMs: enemyDisc.cooldownMs,
+      enemyDiscSpeed: enemyDisc.speed,
     });
     expect(blocked.hasProjectileInFlight).toBe(true);
     expect(blocked.projectileAttackReady).toBe(false);
@@ -90,6 +94,7 @@ describe('보스 공격 타이밍 selector', () => {
     const remainingMs = BATTLE_FEEDBACK.enemyAttackWindupMs / 2;
     enemy.lastShotAt = now - (cooldownMs - remainingMs);
     enemy.lastSpecialAttackAt = now;
+    enemy.specialAttackCycleStartedAt = now;
 
     const timing = selectEnemyCombatTiming({
       enemy,
@@ -97,6 +102,7 @@ describe('보스 공격 타이밍 selector', () => {
       status: 'active',
       now,
       enemyDiscCooldownMs: enemyDisc.cooldownMs,
+      enemyDiscSpeed: enemyDisc.speed,
     });
     expect(timing.projectileAttackReady).toBe(false);
     expect(timing.projectileWindupVisible).toBe(true);
@@ -112,6 +118,7 @@ describe('보스 공격 타이밍 selector', () => {
     enemy.lastMeleeAt = now - (meleeCooldownMs - remainingMs);
     enemy.lastShotAt = now;
     enemy.lastSpecialAttackAt = now;
+    enemy.specialAttackCycleStartedAt = now;
 
     const windup = selectEnemyCombatTiming({
       enemy,
@@ -119,6 +126,7 @@ describe('보스 공격 타이밍 selector', () => {
       status: 'active',
       now,
       enemyDiscCooldownMs: enemyDisc.cooldownMs,
+      enemyDiscSpeed: enemyDisc.speed,
     });
     expect(windup.meleeWindupVisible).toBe(true);
     expect(windup.meleeAttackReady).toBe(false);
@@ -130,6 +138,7 @@ describe('보스 공격 타이밍 selector', () => {
       status: 'active',
       now,
       enemyDiscCooldownMs: enemyDisc.cooldownMs,
+      enemyDiscSpeed: enemyDisc.speed,
     });
     expect(ready.meleeWindupVisible).toBe(false);
     expect(ready.meleeAttackReady).toBe(true);
@@ -142,6 +151,7 @@ describe('보스 공격 타이밍 selector', () => {
     enemy.lastSpecialAttackAt = now - (
       BOSS_SPECIAL_ATTACK.intervalMs - BOSS_SPECIAL_ATTACK.windupMs / 2
     );
+    enemy.specialAttackCycleStartedAt = enemy.lastSpecialAttackAt;
 
     const timing = selectEnemyCombatTiming({
       enemy,
@@ -149,6 +159,7 @@ describe('보스 공격 타이밍 selector', () => {
       status: 'active',
       now,
       enemyDiscCooldownMs: enemyDisc.cooldownMs,
+      enemyDiscSpeed: enemyDisc.speed,
     });
     expect(timing.attackCooldownMs).toBe(
       enemyDisc.cooldownMs
@@ -159,14 +170,31 @@ describe('보스 공격 타이밍 selector', () => {
     expect(timing.specialAttackDue).toBe(false);
 
     enemy.lastSpecialAttackAt = now - BOSS_SPECIAL_ATTACK.intervalMs;
+    enemy.specialAttackCycleStartedAt = enemy.lastSpecialAttackAt;
     const due = selectEnemyCombatTiming({
       enemy,
       enemyProjectiles: [],
       status: 'active',
       now,
       enemyDiscCooldownMs: enemyDisc.cooldownMs,
+      enemyDiscSpeed: enemyDisc.speed,
     });
     expect(due.specialAttackDue).toBe(true);
+    expect(due.projectileAttackReady).toBe(true);
+    expect(due.specialWindupVisible).toBe(true);
+    expect(due.windupProgress).toBe(1);
+
+    const heldForProjectile = selectEnemyCombatTiming({
+      enemy,
+      enemyProjectiles: [flyingProjectile(enemy.id)],
+      status: 'active',
+      now,
+      enemyDiscCooldownMs: enemyDisc.cooldownMs,
+      enemyDiscSpeed: enemyDisc.speed,
+    });
+    expect(heldForProjectile.projectileAttackReady).toBe(false);
+    expect(heldForProjectile.specialWindupVisible).toBe(true);
+    expect(heldForProjectile.windupProgress).toBe(1);
   });
 
   test('전투가 끝났거나 사거리 밖이면 공격과 windup을 모두 비활성화한다', () => {
@@ -181,6 +209,7 @@ describe('보스 공격 타이밍 selector', () => {
       status: 'active',
       now,
       enemyDiscCooldownMs: enemyDisc.cooldownMs,
+      enemyDiscSpeed: enemyDisc.speed,
     });
     expect(outside.inAttackRange).toBe(false);
     expect(outside.projectileAttackReady).toBe(false);
@@ -193,6 +222,7 @@ describe('보스 공격 타이밍 selector', () => {
       status: 'victory',
       now,
       enemyDiscCooldownMs: enemyDisc.cooldownMs,
+      enemyDiscSpeed: enemyDisc.speed,
     });
     expect(ended.projectileAttackReady).toBe(false);
     expect(ended.meleeAttackReady).toBe(false);

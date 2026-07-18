@@ -10,6 +10,7 @@ import {
   SAVE_MIGRATIONS,
 } from '../config';
 import { getBattleStageId } from '../domain/gameSelectors';
+import { normalizeBattleSpeedMultiplier } from '../domain/battleSpeedSettings';
 import { settleOfflineProduction } from '../domain/offlineProduction';
 import {
   clampSafeInteger,
@@ -262,6 +263,7 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
       saved.vibrationEnabled,
       initialGameState.vibrationEnabled,
     ),
+    battleSpeedMultiplier: normalizeBattleSpeedMultiplier(saved.battleSpeedMultiplier),
     lastSavedAt: normalizeStoredInteger(saved.lastSavedAt, { fallback: 0 }),
   };
 }

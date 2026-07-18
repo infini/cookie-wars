@@ -8,6 +8,13 @@ export interface AudioLevelConfig {
 export interface AudioSettingsConfig {
   defaultLevel: SoundVolumeLevel;
   previewDelayMs: number;
+  soundVolumeMultipliers: {
+    cookie: number;
+    critical: number;
+    menu: number;
+    upgrade: number;
+    blocked: number;
+  };
   levels: AudioLevelConfig[];
 }
 

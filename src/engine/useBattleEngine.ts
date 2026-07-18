@@ -18,7 +18,7 @@ import {
   getLatestBattlePresentationEvent,
 } from './battleEvents';
 import { createBattleEnemies } from './battleModel';
-import { advanceBattle } from './battleSimulation';
+import { advanceBattleAtSpeed } from './battleSpeed';
 import {
   type BattleEvent,
   type BattleState,
@@ -31,6 +31,7 @@ export * from './battleEvents';
 export * from './battleModel';
 export * from './battleNumbers';
 export * from './battleSimulation';
+export * from './battleSpeed';
 export * from './battleTypes';
 export * from './enemyBattleSimulation';
 export * from './enemyCombatSelector';
@@ -44,6 +45,7 @@ interface EngineOptions {
   maxHealth: number;
   consumeGiantDisc: () => boolean;
   onEvent: (event: BattleEvent) => void;
+  speedMultiplier: number;
 }
 
 const INITIAL_BATTLE_STATE = createInitialBattleState(Date.now());
@@ -56,6 +58,7 @@ export function useBattleEngine({
   maxHealth,
   consumeGiantDisc,
   onEvent,
+  speedMultiplier,
 }: EngineOptions) {
   const [state, setState] = useState<BattleState>(INITIAL_BATTLE_STATE);
   const stateRef = useRef<BattleState>(INITIAL_BATTLE_STATE);
@@ -88,17 +91,25 @@ export function useBattleEngine({
       const now = Date.now();
       const deltaMs = clampBattleDeltaMs(now - previous);
       previous = now;
-      updateBattleState((current) => advanceBattle(current, {
+      updateBattleState((current) => advanceBattleAtSpeed(current, {
         difficulty,
         enemyDisc,
         playerDisc,
         bots,
-        now,
         deltaMs,
+        speedMultiplier,
       }));
     }, BATTLE_RULES.tickMs);
     return () => clearInterval(timer);
-  }, [state.status, difficulty, enemyDisc, playerDisc, bots, updateBattleState]);
+  }, [
+    state.status,
+    difficulty,
+    enemyDisc,
+    playerDisc,
+    bots,
+    speedMultiplier,
+    updateBattleState,
+  ]);
 
   useEffect(() => {
     if (!onEvent) {
@@ -132,11 +143,12 @@ export function useBattleEngine({
       baseHealth: safeMaxHealth,
       baseMaxHealth: safeMaxHealth,
       lastBotAttackAt: Object.fromEntries(bots.map((bot) => [bot.config.id, now])),
+      lastBotAttackPerformedAt: {},
     }));
   }, [difficulty, playerDisc, bots, maxHealth, updateBattleState]);
 
   const throwCastleDisc = useCallback((): boolean => {
-    const now = Date.now();
+    const now = stateRef.current.now;
     if (!canThrowCastleDisc(stateRef.current, discAvailable, playerDisc, now)) return false;
     manualProjectileSequenceRef.current += 1;
     return updateBattleState((current) => tryThrowCastleDisc(
@@ -149,7 +161,7 @@ export function useBattleEngine({
   }, [discAvailable, playerDisc, updateBattleState]);
 
   const throwGiantDisc = useCallback((): boolean => {
-    const now = Date.now();
+    const now = stateRef.current.now;
     const sequence = manualProjectileSequenceRef.current + 1;
     const launched = updateBattleState(
       (current) => tryThrowGiantDisc(

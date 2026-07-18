@@ -40,29 +40,6 @@ export interface BossBehaviorConfig {
 export interface BossSpecialAttackConfig {
   intervalMs: number;
   windupMs: number;
-  animationDurationMs: number;
-  windupPeakProgress: number;
-  slamPeakProgress: number;
-  recoveryPeakProgress: number;
-  spritePivotXRatio: number;
-  spritePivotYRatio: number;
-  windupRotationDeg: number;
-  slamRotationDeg: number;
-  recoveryRotationDeg: number;
-  windupLeanDeg: number;
-  slamLeanDeg: number;
-  recoveryLeanDeg: number;
-  windupTranslateXPixels: number;
-  slamTranslateXPixels: number;
-  recoveryTranslateXPixels: number;
-  windupLiftPixels: number;
-  slamDropPixels: number;
-  recoveryTranslateYPixels: number;
-  windupScale: number;
-  slamScaleX: number;
-  slamScaleY: number;
-  recoveryScaleX: number;
-  recoveryScaleY: number;
   impactWidthMultiplier: number;
   impactHeightMultiplier: number;
   impactTopRatio: number;
@@ -97,6 +74,46 @@ export interface BossSpecialAttackConfig {
   projectileTrailColor: string;
   projectileGlowColor: string;
   projectileGlowRadius: number;
+}
+
+export interface BossAnimationSetConfig {
+  id: string;
+  walkImageKeys: string[];
+  hammerWindupImageKey: string;
+  hammerImpactImageKey: string;
+  hammerRecoveryImageKey: string;
+}
+
+export interface BossAnimationConfig {
+  walkDistancePerCycle: number;
+  walkFrameSequence: number[];
+  impactHoldMs: number;
+  recoveryMs: number;
+  impactEffectDurationMs: number;
+  sets: BossAnimationSetConfig[];
+}
+
+export interface BotAnimationSetConfig {
+  id: string;
+  runImageKeys: string[];
+  throwWindupImageKey: string;
+  throwReleaseImageKey: string;
+  throwRecoveryImageKey: string;
+}
+
+export interface BotAnimationConfig {
+  patrolCycleMs: number;
+  patrolPhaseOffsetMs: number;
+  patrolHorizontalRadius: number;
+  patrolForwardDistance: number;
+  targetFollowRatio: number;
+  projectileReleaseOffsetX: number;
+  projectileReleaseOffsetY: number;
+  runFrameSequence: number[];
+  throwWindupMs: number;
+  throwReleaseHoldMs: number;
+  throwRecoveryMs: number;
+  sets: BotAnimationSetConfig[];
 }
 
 export interface BattleMapConfig {

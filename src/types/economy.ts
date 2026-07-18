@@ -24,6 +24,36 @@ export interface InfiniteUpgradeRuleConfig {
 
 export type CookieUpgradeRulesConfig = Record<string, InfiniteUpgradeRuleConfig>;
 
+export interface CookieCriticalConfig {
+  upgradeId: string;
+  probabilityScale: number;
+  maximumChanceUnits: number;
+  baseRewardMultiplier: number;
+  rewardMultiplierIncreasePerLevel: number;
+  displayMaximumFractionDigits: number;
+  effectDurationMs: number;
+  effectSizePixels: number;
+  flashMaximumOpacity: number;
+  coreStartScale: number;
+  coreEndScale: number;
+  coreSizeRatio: number;
+  coreBorderWidth: number;
+  ringStartScale: number;
+  ringEndScale: number;
+  ringBorderWidth: number;
+  particleCount: number;
+  particleStartDistancePixels: number;
+  particleEndDistancePixels: number;
+  particleWidthPixels: number;
+  particleHeightPixels: number;
+  flashColor: string;
+  coreColor: string;
+  coreHighlightColor: string;
+  ringColor: string;
+  particleColor: string;
+  particleHighlightColor: string;
+}
+
 export interface DiscLevelConfig {
   level: number;
   damage: number;

@@ -66,6 +66,9 @@ export function moveEnemies(
       ...enemy,
       y: nextY,
       lastShotAt: enteredAttackRange ? now : enemy.lastShotAt,
+      specialAttackCycleStartedAt: enteredAttackRange
+        ? now
+        : enemy.specialAttackCycleStartedAt,
       lastMeleeAt: enteredMeleeRange ? now : enemy.lastMeleeAt,
     };
   });
@@ -117,6 +120,7 @@ export function resolveBossAttacks(
       status: 'active',
       now,
       enemyDiscCooldownMs: enemyDisc.cooldownMs,
+      enemyDiscSpeed: enemyDisc.speed,
     });
     if (!combat.projectileAttackReady) continue;
 
@@ -141,6 +145,9 @@ export function resolveBossAttacks(
       ? {
         ...item,
         lastShotAt: now,
+        specialAttackCycleStartedAt: combat.specialAttackDue
+          ? now
+          : item.specialAttackCycleStartedAt,
         lastSpecialAttackAt: combat.specialAttackDue
           ? now
           : item.lastSpecialAttackAt,
@@ -190,6 +197,7 @@ export function resolveBossAttacks(
       status: 'active',
       now,
       enemyDiscCooldownMs: enemyDisc.cooldownMs,
+      enemyDiscSpeed: enemyDisc.speed,
     });
     if (!combat.meleeAttackReady) continue;
 
@@ -202,7 +210,10 @@ export function resolveBossAttacks(
     ], 'round', 1);
     baseHealth = saturatingSubtract(baseHealth, damage);
     enemies = enemies.map((item) => item.id === enemy.id
-      ? { ...item, lastMeleeAt: now }
+      ? {
+        ...item,
+        lastMeleeAt: now,
+      }
       : item);
     eventJournal = appendBattleEvent(eventJournal, 'castleHit', now, {
       amount: damage,

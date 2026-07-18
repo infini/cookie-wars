@@ -1,5 +1,6 @@
 import { DIFFICULTIES } from '../config';
 import { completeBattleTransition } from '../domain/battleCompletion';
+import { getNextBattleSpeedMultiplier } from '../domain/battleSpeedSettings';
 import {
   getBotOffer,
   getDiscProgress,
@@ -11,7 +12,10 @@ import {
   saturatingSubtract,
 } from '../domain/safeNumbers';
 import { GameState, SoundVolumeLevel } from '../types/game';
-import { normalizeSoundVolumeLevel, restoreSavedGame } from './gameSave';
+import {
+  normalizeSoundVolumeLevel,
+  restoreSavedGame,
+} from './gameSave';
 
 export { initialGameState } from './gameInitialState';
 export { mergeSavedGame, prepareSavedGame, restoreSavedGame } from './gameSave';
@@ -31,7 +35,8 @@ export type GameAction =
   | { type: 'USE_GIANT_DISC' }
   | { type: 'TOGGLE_SOUND' }
   | { type: 'SET_SOUND_VOLUME'; level: SoundVolumeLevel }
-  | { type: 'TOGGLE_VIBRATION' };
+  | { type: 'TOGGLE_VIBRATION' }
+  | { type: 'CYCLE_BATTLE_SPEED' };
 
 function unique(values: string[]): string[] {
   return [...new Set(values)];
@@ -131,6 +136,14 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, soundVolumeLevel: normalizeSoundVolumeLevel(action.level) };
     case 'TOGGLE_VIBRATION':
       return { ...state, vibrationEnabled: !state.vibrationEnabled };
+    case 'CYCLE_BATTLE_SPEED': {
+      return {
+        ...state,
+        battleSpeedMultiplier: getNextBattleSpeedMultiplier(
+          state.battleSpeedMultiplier,
+        ),
+      };
+    }
     default:
       return state;
   }

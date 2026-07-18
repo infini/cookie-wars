@@ -1,0 +1,114 @@
+{
+  "walkDistancePerCycle": 0.045,
+  "walkFrameSequence": [0, 1, 2, 1],
+  "impactHoldMs": 250,
+  "recoveryMs": 330,
+  "impactEffectDurationMs": 520,
+  "sets": [
+    {
+      "id": "boss-easy-crumb-knight",
+      "walkImageKeys": ["boss-easy-crumb-knight-walk-1", "boss-easy-crumb-knight-walk-2", "boss-easy-crumb-knight-walk-3"],
+      "hammerWindupImageKey": "boss-easy-crumb-knight-hammer-windup",
+      "hammerImpactImageKey": "boss-easy-crumb-knight-hammer-impact",
+      "hammerRecoveryImageKey": "boss-easy-crumb-knight-hammer-recovery"
+    },
+    {
+      "id": "boss-normal-caramel-general",
+      "walkImageKeys": ["boss-normal-caramel-general-walk-1", "boss-normal-caramel-general-walk-2", "boss-normal-caramel-general-walk-3"],
+      "hammerWindupImageKey": "boss-normal-caramel-general-hammer-windup",
+      "hammerImpactImageKey": "boss-normal-caramel-general-hammer-impact",
+      "hammerRecoveryImageKey": "boss-normal-caramel-general-hammer-recovery"
+    },
+    {
+      "id": "boss-hard-frost-viking",
+      "walkImageKeys": ["boss-hard-frost-viking-walk-1", "boss-hard-frost-viking-walk-2", "boss-hard-frost-viking-walk-3"],
+      "hammerWindupImageKey": "boss-hard-frost-viking-hammer-windup",
+      "hammerImpactImageKey": "boss-hard-frost-viking-hammer-impact",
+      "hammerRecoveryImageKey": "boss-hard-frost-viking-hammer-recovery"
+    },
+    {
+      "id": "boss-harder-jungle-golem",
+      "walkImageKeys": ["boss-harder-jungle-golem-walk-1", "boss-harder-jungle-golem-walk-2", "boss-harder-jungle-golem-walk-3"],
+      "hammerWindupImageKey": "boss-harder-jungle-golem-hammer-windup",
+      "hammerImpactImageKey": "boss-harder-jungle-golem-hammer-impact",
+      "hammerRecoveryImageKey": "boss-harder-jungle-golem-hammer-recovery"
+    },
+    {
+      "id": "boss-insane-storm-warden",
+      "walkImageKeys": ["boss-insane-storm-warden-walk-1", "boss-insane-storm-warden-walk-2", "boss-insane-storm-warden-walk-3"],
+      "hammerWindupImageKey": "boss-insane-storm-warden-hammer-windup",
+      "hammerImpactImageKey": "boss-insane-storm-warden-hammer-impact",
+      "hammerRecoveryImageKey": "boss-insane-storm-warden-hammer-recovery"
+    },
+    {
+      "id": "boss-easy-demon-ember-brute",
+      "walkImageKeys": ["boss-easy-demon-ember-brute-walk-1", "boss-easy-demon-ember-brute-walk-2", "boss-easy-demon-ember-brute-walk-3"],
+      "hammerWindupImageKey": "boss-easy-demon-ember-brute-hammer-windup",
+      "hammerImpactImageKey": "boss-easy-demon-ember-brute-hammer-impact",
+      "hammerRecoveryImageKey": "boss-easy-demon-ember-brute-hammer-recovery"
+    },
+    {
+      "id": "boss-medium-demon-marsh-witch",
+      "walkImageKeys": ["boss-medium-demon-marsh-witch-walk-1", "boss-medium-demon-marsh-witch-walk-2", "boss-medium-demon-marsh-witch-walk-3"],
+      "hammerWindupImageKey": "boss-medium-demon-marsh-witch-hammer-windup",
+      "hammerImpactImageKey": "boss-medium-demon-marsh-witch-hammer-impact",
+      "hammerRecoveryImageKey": "boss-medium-demon-marsh-witch-hammer-recovery"
+    },
+    {
+      "id": "boss-hard-demon-bone-king",
+      "walkImageKeys": ["boss-hard-demon-bone-king-walk-1", "boss-hard-demon-bone-king-walk-2", "boss-hard-demon-bone-king-walk-3"],
+      "hammerWindupImageKey": "boss-hard-demon-bone-king-hammer-windup",
+      "hammerImpactImageKey": "boss-hard-demon-bone-king-hammer-impact",
+      "hammerRecoveryImageKey": "boss-hard-demon-bone-king-hammer-recovery"
+    },
+    {
+      "id": "boss-insane-demon-blood-knight",
+      "walkImageKeys": ["boss-insane-demon-blood-knight-walk-1", "boss-insane-demon-blood-knight-walk-2", "boss-insane-demon-blood-knight-walk-3"],
+      "hammerWindupImageKey": "boss-insane-demon-blood-knight-hammer-windup",
+      "hammerImpactImageKey": "boss-insane-demon-blood-knight-hammer-impact",
+      "hammerRecoveryImageKey": "boss-insane-demon-blood-knight-hammer-recovery"
+    },
+    {
+      "id": "boss-extreme-demon-inferno-titan",
+      "walkImageKeys": ["boss-extreme-demon-inferno-titan-walk-1", "boss-extreme-demon-inferno-titan-walk-2", "boss-extreme-demon-inferno-titan-walk-3"],
+      "hammerWindupImageKey": "boss-extreme-demon-inferno-titan-hammer-windup",
+      "hammerImpactImageKey": "boss-extreme-demon-inferno-titan-hammer-impact",
+      "hammerRecoveryImageKey": "boss-extreme-demon-inferno-titan-hammer-recovery"
+    },
+    {
+      "id": "boss-easy-god-cloud-guardian",
+      "walkImageKeys": ["boss-easy-god-cloud-guardian-walk-1", "boss-easy-god-cloud-guardian-walk-2", "boss-easy-god-cloud-guardian-walk-3"],
+      "hammerWindupImageKey": "boss-easy-god-cloud-guardian-hammer-windup",
+      "hammerImpactImageKey": "boss-easy-god-cloud-guardian-hammer-impact",
+      "hammerRecoveryImageKey": "boss-easy-god-cloud-guardian-hammer-recovery"
+    },
+    {
+      "id": "boss-medium-god-crystal-seraph",
+      "walkImageKeys": ["boss-medium-god-crystal-seraph-walk-1", "boss-medium-god-crystal-seraph-walk-2", "boss-medium-god-crystal-seraph-walk-3"],
+      "hammerWindupImageKey": "boss-medium-god-crystal-seraph-hammer-windup",
+      "hammerImpactImageKey": "boss-medium-god-crystal-seraph-hammer-impact",
+      "hammerRecoveryImageKey": "boss-medium-god-crystal-seraph-hammer-recovery"
+    },
+    {
+      "id": "boss-hard-god-time-colossus",
+      "walkImageKeys": ["boss-hard-god-time-colossus-walk-1", "boss-hard-god-time-colossus-walk-2", "boss-hard-god-time-colossus-walk-3"],
+      "hammerWindupImageKey": "boss-hard-god-time-colossus-hammer-windup",
+      "hammerImpactImageKey": "boss-hard-god-time-colossus-hammer-impact",
+      "hammerRecoveryImageKey": "boss-hard-god-time-colossus-hammer-recovery"
+    },
+    {
+      "id": "boss-insane-god-thunder-titan",
+      "walkImageKeys": ["boss-insane-god-thunder-titan-walk-1", "boss-insane-god-thunder-titan-walk-2", "boss-insane-god-thunder-titan-walk-3"],
+      "hammerWindupImageKey": "boss-insane-god-thunder-titan-hammer-windup",
+      "hammerImpactImageKey": "boss-insane-god-thunder-titan-hammer-impact",
+      "hammerRecoveryImageKey": "boss-insane-god-thunder-titan-hammer-recovery"
+    },
+    {
+      "id": "boss-extreme-god-void-emperor",
+      "walkImageKeys": ["boss-extreme-god-void-emperor-walk-1", "boss-extreme-god-void-emperor-walk-2", "boss-extreme-god-void-emperor-walk-3"],
+      "hammerWindupImageKey": "boss-extreme-god-void-emperor-hammer-windup",
+      "hammerImpactImageKey": "boss-extreme-god-void-emperor-hammer-impact",
+      "hammerRecoveryImageKey": "boss-extreme-god-void-emperor-hammer-recovery"
+    }
+  ]
+}

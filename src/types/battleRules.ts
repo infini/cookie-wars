@@ -1,6 +1,8 @@
 export interface BattleRulesConfig {
   tickMs: number;
   maxDeltaMs: number;
+  battleSpeedMultipliers: number[];
+  defaultBattleSpeedMultiplier: number;
   enemyX: number;
   enemyStartY: number;
   enemyStopY: number;

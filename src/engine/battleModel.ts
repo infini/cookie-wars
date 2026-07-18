@@ -172,6 +172,7 @@ export function createBattleEnemies(
         - enemyDisc.cooldownMs * BOSS_BEHAVIOR.globalAttackCooldownMultiplier
         + BATTLE_RULES.enemyFirstShotDelayMs,
       lastMeleeAt: now,
+      specialAttackCycleStartedAt: now,
       lastSpecialAttackAt: now,
       enraged: false,
     };

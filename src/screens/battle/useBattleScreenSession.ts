@@ -24,6 +24,7 @@ export function useBattleScreenSession(onReturnToGame: () => void) {
     discoverMonster,
     completeBattle,
     consumeGiantDisc,
+    cycleBattleSpeed,
   } = useGame();
   const feedback = useFeedback();
   const baseDifficulty = getDifficulty(game.selectedDifficultyId);
@@ -85,6 +86,7 @@ export function useBattleScreenSession(onReturnToGame: () => void) {
     maxHealth: stats.maxHealth,
     consumeGiantDisc,
     onEvent,
+    speedMultiplier: game.battleSpeedMultiplier,
   });
 
   useEffect(() => {
@@ -139,6 +141,7 @@ export function useBattleScreenSession(onReturnToGame: () => void) {
     startBattle,
     leaveBattle,
     throwCastleDiscFromBattleField,
+    cycleBattleSpeed,
     hasWeapon: discAvailable && activeBots.length > 0,
   };
 }

@@ -1,0 +1,11 @@
+Cookie Wars bundled sound source record
+
+Asset: Short explosion
+Local file: assets/audio/cookie-critical-explosion.wav
+Source page: https://mixkit.co/free-sound-effects/boom/
+License page: https://mixkit.co/license/
+Item type: Sound Effects — Free License
+Retrieved and verified: 2026-07-18
+
+This file records the source and applicable license page. Refer to the linked
+Mixkit license for the complete current terms.

@@ -7,6 +7,7 @@ import {
   calculateOfflineProduction,
   calculateProductionForElapsedTime,
 } from '../src/domain/offlineProduction';
+import { calculateCookieStats } from '../src/domain/gameSelectors';
 import { gameReducer, initialGameState } from '../src/state/gameReducer';
 import { calculateAutoProductionTick } from '../src/state/useAutoProduction';
 
@@ -77,8 +78,11 @@ describe('오프라인 자동 생산', () => {
     });
 
     expect(restored.battleMedals).toBe(completedStages);
-    expect(restored.cookies).toBe(autoProductionState.cookies + 180);
-    expect(restored.lifetimeCookies).toBe(autoProductionState.lifetimeCookies + 180);
+    const expectedProduction = calculateCookieStats(restored).autoProduction * 5;
+    expect(restored.cookies).toBe(autoProductionState.cookies + expectedProduction);
+    expect(restored.lifetimeCookies).toBe(
+      autoProductionState.lifetimeCookies + expectedProduction,
+    );
   });
 
   test('기존 저장처럼 시각이 없거나 기기 시계가 뒤로 간 경우 보상을 만들지 않는다', () => {

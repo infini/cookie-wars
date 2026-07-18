@@ -1,0 +1,50 @@
+{
+  "patrolCycleMs": 2400,
+  "patrolPhaseOffsetMs": 390,
+  "patrolHorizontalRadius": 0.035,
+  "patrolForwardDistance": 0.06,
+  "targetFollowRatio": 0.08,
+  "projectileReleaseOffsetX": 0,
+  "projectileReleaseOffsetY": -0.04,
+  "runFrameSequence": [0, 1, 2, 1],
+  "throwWindupMs": 220,
+  "throwReleaseHoldMs": 250,
+  "throwRecoveryMs": 230,
+  "sets": [
+    {
+      "id": "choco-bot",
+      "runImageKeys": ["choco-bot-run-1", "choco-bot-run-2", "choco-bot-run-3"],
+      "throwWindupImageKey": "choco-bot-throw-windup",
+      "throwReleaseImageKey": "choco-bot-throw-release",
+      "throwRecoveryImageKey": "choco-bot-throw-recovery"
+    },
+    {
+      "id": "milk-bot",
+      "runImageKeys": ["milk-bot-run-1", "milk-bot-run-2", "milk-bot-run-3"],
+      "throwWindupImageKey": "milk-bot-throw-windup",
+      "throwReleaseImageKey": "milk-bot-throw-release",
+      "throwRecoveryImageKey": "milk-bot-throw-recovery"
+    },
+    {
+      "id": "mint-bot",
+      "runImageKeys": ["mint-bot-run-1", "mint-bot-run-2", "mint-bot-run-3"],
+      "throwWindupImageKey": "mint-bot-throw-windup",
+      "throwReleaseImageKey": "mint-bot-throw-release",
+      "throwRecoveryImageKey": "mint-bot-throw-recovery"
+    },
+    {
+      "id": "rainbow-bot",
+      "runImageKeys": ["rainbow-bot-run-1", "rainbow-bot-run-2", "rainbow-bot-run-3"],
+      "throwWindupImageKey": "rainbow-bot-throw-windup",
+      "throwReleaseImageKey": "rainbow-bot-throw-release",
+      "throwRecoveryImageKey": "rainbow-bot-throw-recovery"
+    },
+    {
+      "id": "royal-bot",
+      "runImageKeys": ["royal-bot-run-1", "royal-bot-run-2", "royal-bot-run-3"],
+      "throwWindupImageKey": "royal-bot-throw-windup",
+      "throwReleaseImageKey": "royal-bot-throw-release",
+      "throwRecoveryImageKey": "royal-bot-throw-recovery"
+    }
+  ]
+}

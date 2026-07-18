@@ -6,9 +6,12 @@ import {
   BATTLE_FEEDBACK,
   BATTLE_MAPS,
   BOSS_BALANCE,
+  BOSS_ANIMATION,
   BOSS_BEHAVIOR,
   BOSS_SPECIAL_ATTACK,
+  BOT_ANIMATION,
   BOTS,
+  COOKIE_CRITICAL,
   COOKIE_UPGRADES,
   COOKIE_UPGRADE_RULES,
   COOKIES,
@@ -108,7 +111,7 @@ describe('데이터 테이블', () => {
   test('진행·음량·상점 값은 데이터 테이블에서 제공한다', () => {
     expect(PROGRESSION.winsToUnlockNextDifficulty).toBe(20);
     expect(PROGRESSION.giantDiscRewardPerFirstClear).toBe(1);
-    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(9);
+    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(10);
     expect(SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion).toBe(8);
     expect(SAVE_MIGRATIONS.battleMedalMigrationVersion).toBe(9);
     expect(SAVE_MIGRATIONS.battleMedalsPerLegacyWin).toBe(1);
@@ -145,6 +148,7 @@ describe('데이터 테이블', () => {
     expect(Object.keys(COOKIE_UPGRADE_RULES).sort()).toEqual([
       'autoProduction',
       'clickPower',
+      'cookieCritical',
       'cookieHealth',
     ]);
     const cookieSize = COOKIE_UPGRADES.find((upgrade) => upgrade.id === 'cookieSize');
@@ -159,23 +163,28 @@ describe('데이터 테이블', () => {
       COOKIE_UPGRADES
         .filter((upgrade) => upgrade.countsTowardCookieEvolution)
         .map((upgrade) => upgrade.id),
-    ).toEqual(['clickPower', 'autoProduction', 'cookieHealth']);
+    ).toEqual(['clickPower', 'cookieCritical', 'autoProduction', 'cookieHealth']);
     expect(COOKIE_UPGRADES.every(
       (upgrade) => typeof upgrade.countsTowardCookieEvolution === 'boolean',
     )).toBe(true);
     expect(Math.max(...cookieSize!.levels.map((level) => level.value))).toBeGreaterThan(0);
-    expect(COOKIES).toHaveLength(20);
+    expect(COOKIES).toHaveLength(30);
     expect(COOKIES.map((cookie) => cookie.requiredTotalUpgradeLevels)).toEqual(
-      Array.from({ length: 20 }, (_, index) => 3 + index * 6),
+      Array.from({ length: 30 }, (_, index) => 3 + index * 6),
     );
     COOKIES.slice(1).forEach((cookie, index) => {
       expect(cookie.requiredTotalUpgradeLevels).toBeGreaterThan(
         COOKIES[index].requiredTotalUpgradeLevels,
       );
       expect(cookie.clickMultiplier).toBeGreaterThan(COOKIES[index].clickMultiplier);
+      expect(cookie.autoProductionMultiplier).toBe(cookie.clickMultiplier);
+      expect(cookie.healthMultiplier).toBe(cookie.clickMultiplier);
     });
     expect(COOKIES[10].name).toBe('별사탕 쿠키');
-    expect(COOKIES[COOKIES.length - 1].name).toBe('천상 왕관 쿠키');
+    expect(COOKIES[COOKIES.length - 1].name).toBe('무한 우주 쿠키');
+    expect(COOKIE_CRITICAL.probabilityScale).toBe(10_000);
+    expect(COOKIE_CRITICAL.maximumChanceUnits).toBe(5_000);
+    expect(COOKIE_CRITICAL.baseRewardMultiplier).toBe(10);
     expect(BOSS_BALANCE.playerPowerBaseSurvivalSeconds).toBeGreaterThan(0);
     expect(BOSS_BALANCE.hpMultiplierReference).toBeGreaterThan(0);
     expect(BOSS_BALANCE.maximumPowerScaledSurvivalSeconds)
@@ -188,14 +197,19 @@ describe('데이터 테이블', () => {
     expect(BOSS_BEHAVIOR.enrageHealthRatio).toBe(0.5);
     expect(BOSS_SPECIAL_ATTACK.intervalMs).toBe(5000);
     expect(BOSS_SPECIAL_ATTACK.windupMs).toBeGreaterThan(0);
-    expect(BOSS_SPECIAL_ATTACK.animationDurationMs).toBeGreaterThan(0);
-    expect(BOSS_SPECIAL_ATTACK.slamScaleX).toBeGreaterThan(1);
-    expect(BOSS_SPECIAL_ATTACK.slamScaleY).toBeLessThan(1);
+    expect(BOSS_ANIMATION.sets).toHaveLength(DIFFICULTIES.length);
+    expect(BOSS_ANIMATION.walkFrameSequence).toHaveLength(4);
+    expect(BOSS_ANIMATION.impactHoldMs).toBeGreaterThan(0);
+    expect(BOT_ANIMATION.sets).toHaveLength(BOTS.length);
+    expect(BOT_ANIMATION.runFrameSequence).toHaveLength(4);
+    expect(BOT_ANIMATION.throwWindupMs).toBeGreaterThan(0);
     expect(BOSS_SPECIAL_ATTACK.impactCrackPaths.length).toBeGreaterThan(0);
     expect(BOSS_SPECIAL_ATTACK.projectileScale).toBeGreaterThan(1);
     expect(BATTLE_FEEDBACK.enemyAttackWindupMs).toBeGreaterThan(0);
     expect(BATTLE_FEEDBACK.impactEffectDurationMs).toBeGreaterThan(0);
     expect(BATTLE_FEEDBACK.impactBursts.length).toBeGreaterThanOrEqual(4);
+    expect(BATTLE_RULES.battleSpeedMultipliers).toEqual([1, 2, 3]);
+    expect(BATTLE_RULES.defaultBattleSpeedMultiplier).toBe(1);
   });
 
   test('각 난이도는 색상 변경이 아닌 고유 전장 테마를 사용한다', () => {
@@ -437,13 +451,15 @@ describe('데이터 테이블 런타임 검증', () => {
     );
 
     const migrationAfterCurrentVersion = cloneConfig();
-    migrationAfterCurrentVersion.SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion = 10;
+    migrationAfterCurrentVersion.SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion =
+      SAVE_MIGRATIONS.currentSaveVersion + 1;
     expect(() => validateGameConfig(migrationAfterCurrentVersion)).toThrow(
       'SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion',
     );
 
     const medalMigrationAfterCurrentVersion = cloneConfig();
-    medalMigrationAfterCurrentVersion.SAVE_MIGRATIONS.battleMedalMigrationVersion = 10;
+    medalMigrationAfterCurrentVersion.SAVE_MIGRATIONS.battleMedalMigrationVersion =
+      SAVE_MIGRATIONS.currentSaveVersion + 1;
     expect(() => validateGameConfig(medalMigrationAfterCurrentVersion)).toThrow(
       'SAVE_MIGRATIONS.battleMedalMigrationVersion',
     );
@@ -490,6 +506,28 @@ describe('데이터 테이블 런타임 검증', () => {
     );
     expect(() => validateGameConfig(unorderedCookies)).toThrow(
       'COOKIES[1].requiredTotalUpgradeLevels',
+    );
+
+    const mismatchedCookieMultiplier = cloneConfig();
+    mismatchedCookieMultiplier.COOKIES[1].autoProductionMultiplier = (
+      mismatchedCookieMultiplier.COOKIES[1].clickMultiplier + 0.01
+    );
+    expect(() => validateGameConfig(mismatchedCookieMultiplier)).toThrow(
+      'COOKIES[1].autoProductionMultiplier',
+    );
+
+    const decreasingCookieMultiplier = cloneConfig();
+    decreasingCookieMultiplier.COOKIES[1].clickMultiplier = (
+      decreasingCookieMultiplier.COOKIES[0].clickMultiplier
+    );
+    decreasingCookieMultiplier.COOKIES[1].autoProductionMultiplier = (
+      decreasingCookieMultiplier.COOKIES[0].clickMultiplier
+    );
+    decreasingCookieMultiplier.COOKIES[1].healthMultiplier = (
+      decreasingCookieMultiplier.COOKIES[0].clickMultiplier
+    );
+    expect(() => validateGameConfig(decreasingCookieMultiplier)).toThrow(
+      'COOKIES[1].clickMultiplier',
     );
 
     const missingBattleFlashOpacity = cloneConfig();
@@ -632,21 +670,41 @@ describe('데이터 테이블 런타임 검증', () => {
   });
 
   test.each([
-    ['BOSS_SPECIAL_ATTACK.windupPeakProgress', (config: any) => {
-      config.BOSS_SPECIAL_ATTACK.windupPeakProgress = 0;
+    ['BOSS_ANIMATION.walkFrameSequence[0]', (config: any) => {
+      config.BOSS_ANIMATION.walkFrameSequence[0] = 3;
     }],
-    ['BOSS_SPECIAL_ATTACK.slamPeakProgress', (config: any) => {
-      config.BOSS_SPECIAL_ATTACK.slamPeakProgress = config.BOSS_SPECIAL_ATTACK.windupPeakProgress;
+    ['BOSS_ANIMATION.sets[0].walkImageKeys', (config: any) => {
+      config.BOSS_ANIMATION.sets[0].walkImageKeys[1] =
+        config.BOSS_ANIMATION.sets[0].walkImageKeys[0];
     }],
-    ['BOSS_SPECIAL_ATTACK.recoveryPeakProgress', (config: any) => {
-      config.BOSS_SPECIAL_ATTACK.recoveryPeakProgress = config.BOSS_SPECIAL_ATTACK.slamPeakProgress;
+    ['BOT_ANIMATION.runFrameSequence[0]', (config: any) => {
+      config.BOT_ANIMATION.runFrameSequence[0] = 3;
     }],
-    ['BOSS_SPECIAL_ATTACK.recoveryPeakProgress', (config: any) => {
-      config.BOSS_SPECIAL_ATTACK.recoveryPeakProgress = 1;
+    ['BOSS_ANIMATION.impactEffectDurationMs', (config: any) => {
+      config.BOSS_ANIMATION.impactEffectDurationMs = 0;
     }],
-  ])('%s의 공격 진행 순서가 잘못되면 거부한다', (path, breakOrdering) => {
+  ])('%s의 애니메이션 설정이 잘못되면 거부한다', (path, breakAnimation) => {
     const invalid = cloneConfig();
-    breakOrdering(invalid);
+    breakAnimation(invalid);
+    expect(() => validateGameConfig(invalid)).toThrow(path);
+  });
+
+  test.each([
+    ['BOSS_ANIMATION.impactHoldMs', (config: any) => {
+      config.BOSS_ANIMATION.impactHoldMs =
+        config.BATTLE_RULES.maxDeltaMs
+        * (Math.max(...config.BATTLE_RULES.battleSpeedMultipliers) - 1)
+        - 1;
+    }],
+    ['BOT_ANIMATION.throwReleaseHoldMs', (config: any) => {
+      config.BOT_ANIMATION.throwReleaseHoldMs =
+        config.BATTLE_RULES.maxDeltaMs
+        * (Math.max(...config.BATTLE_RULES.battleSpeedMultipliers) - 1)
+        - 1;
+    }],
+  ])('%s가 X3 서브스텝보다 짧으면 거부한다', (path, makeTooShort) => {
+    const invalid = cloneConfig();
+    makeTooShort(invalid);
     expect(() => validateGameConfig(invalid)).toThrow(path);
   });
 

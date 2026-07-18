@@ -34,6 +34,9 @@ export interface BattleEnemy {
   spawnAt: number;
   lastShotAt: number;
   lastMeleeAt: number;
+  /** 공격 사거리 진입 또는 직전 강공격부터 다음 강공격까지의 주기 기준점. */
+  specialAttackCycleStartedAt: number;
+  /** 실제 강공격이 실행된 마지막 시각. 애니메이션 재생 기준으로만 사용한다. */
   lastSpecialAttackAt: number;
   enraged: boolean;
 }
@@ -88,6 +91,7 @@ export interface BattleState extends BattleEventJournal {
   killedEnemies: number;
   lastCastleThrowAt: number;
   lastBotAttackAt: Record<string, number>;
+  lastBotAttackPerformedAt: Record<string, number>;
   notice: string | null;
   noticeUntil: number;
 }
@@ -108,6 +112,7 @@ export interface BattleFrame extends BattleEventJournal {
   baseHealth: number;
   killedEnemies: number;
   lastBotAttackAt: Record<string, number>;
+  lastBotAttackPerformedAt: Record<string, number>;
   notice: string | null;
   noticeUntil: number;
 }
@@ -132,6 +137,7 @@ export function createInitialBattleState(
     killedEnemies: 0,
     lastCastleThrowAt: 0,
     lastBotAttackAt: {},
+    lastBotAttackPerformedAt: {},
     notice: null,
     noticeUntil: 0,
     eventSequence,

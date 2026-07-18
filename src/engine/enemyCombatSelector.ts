@@ -16,6 +16,7 @@ interface EnemyCombatSelectorInput {
   status: BattleStatus;
   now: number;
   enemyDiscCooldownMs: number;
+  enemyDiscSpeed: number;
 }
 
 export interface EnemyCombatTiming {
@@ -27,6 +28,8 @@ export interface EnemyCombatTiming {
   timeUntilAttackMs: number;
   timeUntilMeleeMs: number;
   timeUntilSpecialAttackMs: number;
+  projectileFlightMs: number;
+  specialChannelReserved: boolean;
   projectileAttackReady: boolean;
   meleeAttackReady: boolean;
   specialAttackDue: boolean;
@@ -43,6 +46,7 @@ export function selectEnemyCombatTiming({
   status,
   now,
   enemyDiscCooldownMs,
+  enemyDiscSpeed,
 }: EnemyCombatSelectorInput): EnemyCombatTiming {
   const distanceToCastle = Math.hypot(
     enemy.x - BATTLE_RULES.playerStartX,
@@ -64,19 +68,34 @@ export function selectEnemyCombatTiming({
   const timeUntilAttackMs = attackCooldownMs - (now - enemy.lastShotAt);
   const timeUntilMeleeMs = meleeCooldownMs - (now - enemy.lastMeleeAt);
   const timeUntilSpecialAttackMs = BOSS_SPECIAL_ATTACK.intervalMs
-    - (now - enemy.lastSpecialAttackAt);
+    - (now - enemy.specialAttackCycleStartedAt);
+  const projectileTravelDistance = Math.max(
+    0,
+    BATTLE_RULES.coreProjectileHitY
+      - (enemy.y + BATTLE_RULES.enemyProjectileStartOffsetY),
+  );
+  const projectileFlightMs = projectileTravelDistance
+    * BATTLE_RULES.enemyProjectileMoveDivisor
+    / Math.max(1, enemyDiscSpeed);
+  const specialChannelReserved = timeUntilSpecialAttackMs > 0
+    && timeUntilSpecialAttackMs
+      <= BOSS_SPECIAL_ATTACK.windupMs + projectileFlightMs;
   const battleActive = status === 'active';
+  const specialAttackDue = timeUntilSpecialAttackMs <= 0;
   const projectileAttackReady = battleActive
     && inAttackRange
     && !hasProjectileInFlight
-    && timeUntilAttackMs <= 0;
+    && (
+      specialAttackDue
+      || (timeUntilAttackMs <= 0 && !specialChannelReserved)
+    );
   const meleeAttackReady = battleActive
     && enemy.y >= BATTLE_RULES.enemyMeleeTriggerY
     && timeUntilMeleeMs <= 0;
-  const specialAttackDue = timeUntilSpecialAttackMs <= 0;
   const projectileWindupVisible = battleActive
     && inAttackRange
     && !hasProjectileInFlight
+    && !specialChannelReserved
     && timeUntilAttackMs > 0
     && timeUntilAttackMs <= BATTLE_FEEDBACK.enemyAttackWindupMs;
   const meleeWindupVisible = battleActive
@@ -85,8 +104,6 @@ export function selectEnemyCombatTiming({
     && timeUntilMeleeMs <= BATTLE_FEEDBACK.enemyAttackWindupMs;
   const specialWindupVisible = battleActive
     && inAttackRange
-    && !hasProjectileInFlight
-    && timeUntilSpecialAttackMs > 0
     && timeUntilSpecialAttackMs <= BOSS_SPECIAL_ATTACK.windupMs;
   const windupVisible = projectileWindupVisible
     || meleeWindupVisible
@@ -99,7 +116,10 @@ export function selectEnemyCombatTiming({
       ? 1 - timeUntilMeleeMs / BATTLE_FEEDBACK.enemyAttackWindupMs
       : 0,
     specialWindupVisible
-      ? 1 - timeUntilSpecialAttackMs / BOSS_SPECIAL_ATTACK.windupMs
+      ? Math.max(
+        0,
+        Math.min(1, 1 - timeUntilSpecialAttackMs / BOSS_SPECIAL_ATTACK.windupMs),
+      )
       : 0,
   );
 
@@ -112,6 +132,8 @@ export function selectEnemyCombatTiming({
     timeUntilAttackMs,
     timeUntilMeleeMs,
     timeUntilSpecialAttackMs,
+    projectileFlightMs,
+    specialChannelReserved,
     projectileAttackReady,
     meleeAttackReady,
     specialAttackDue,

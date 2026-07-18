@@ -14,7 +14,9 @@ export type {
   BattleMapConfig,
   BossBalanceConfig,
   BossBehaviorConfig,
+  BossAnimationConfig,
   BossSpecialAttackConfig,
+  BotAnimationConfig,
   DifficultyConfig,
   EnemyDiscConfig,
   EnemyWaveConfig,
@@ -23,6 +25,7 @@ export type {
 export type {
   BotConfig,
   CookieConfig,
+  CookieCriticalConfig,
   CookieUpgradeRulesConfig,
   DiscConfig,
   DiscLevelConfig,
@@ -31,7 +34,12 @@ export type {
   UpgradeConfig,
   UpgradeLevelConfig,
 } from './economy';
-export type { BattleRewardResult, CookieStats, GameState } from './gameState';
+export type {
+  BattleRewardResult,
+  CookieClickResult,
+  CookieStats,
+  GameState,
+} from './gameState';
 export type { TabId } from './navigation';
 export type {
   BattleRewardsConfig,

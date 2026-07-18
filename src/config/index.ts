@@ -7,11 +7,14 @@ import battleRuleData from './battle-rules.json';
 import battleRewardData from './battle-rewards.json';
 import battleStageRuleData from './battle-stage-rules.json';
 import battleUiData from './battle-ui.json';
+import bossAnimationData from './boss-animation.json';
 import bossBalanceData from './boss-balance.json';
 import bossBehaviorData from './boss-behavior.json';
 import bossSpecialAttackData from './boss-special-attack.json';
+import botAnimationData from './bot-animation.json';
 import cookieUpgradeData from './cookie-upgrades.json';
 import cookieUpgradeRuleData from './cookie-upgrade-rules.json';
+import cookieCriticalData from './cookie-critical.json';
 import cookieData from './cookies.json';
 import difficultyData from './difficulties.json';
 import discData from './discs.json';
@@ -46,12 +49,15 @@ export const CONFIG_TABLES = validateGameConfig({
   BATTLE_REWARDS: battleRewardData,
   BATTLE_STAGE_RULES: battleStageRuleData,
   BATTLE_UI: battleUiData,
+  BOSS_ANIMATION: bossAnimationData,
   BOSS_BALANCE: bossBalanceData,
   BOSS_BEHAVIOR: bossBehaviorData,
   BOSS_SPECIAL_ATTACK: bossSpecialAttackData,
+  BOT_ANIMATION: botAnimationData,
   BOTS: botData,
   COOKIE_UPGRADE_RULES: cookieUpgradeRuleData,
   COOKIE_UPGRADES: cookieUpgradeData,
+  COOKIE_CRITICAL: cookieCriticalData,
   COOKIES: cookieData,
   DIFFICULTIES: difficultyData,
   DISC_UPGRADE_RULES: discUpgradeRuleData,
@@ -73,12 +79,15 @@ export const {
   BATTLE_REWARDS,
   BATTLE_STAGE_RULES,
   BATTLE_UI,
+  BOSS_ANIMATION,
   BOSS_BALANCE,
   BOSS_BEHAVIOR,
   BOSS_SPECIAL_ATTACK,
+  BOT_ANIMATION,
   BOTS,
   COOKIE_UPGRADE_RULES,
   COOKIE_UPGRADES,
+  COOKIE_CRITICAL,
   COOKIES,
   DIFFICULTIES,
   DISC_UPGRADE_RULES,
@@ -102,6 +111,12 @@ const upgradeById = new Map(COOKIE_UPGRADES.map((item) => [item.id, item]));
 const discById = new Map(DISCS.map((item) => [item.id, item]));
 const cookieById = new Map(COOKIES.map((item) => [item.id, item]));
 const enemyDiscByLevel = new Map(ENEMY_DISCS.map((item) => [item.level, item]));
+const bossAnimationByMonsterId = new Map(
+  BOSS_ANIMATION.sets.map((item) => [item.id, item]),
+);
+const botAnimationByBotId = new Map(
+  BOT_ANIMATION.sets.map((item) => [item.id, item]),
+);
 
 function requireConfig<T>(value: T | undefined, kind: string, key: string | number): T {
   if (value === undefined) {
@@ -153,4 +168,12 @@ export function getDisc(id: string): DiscConfig | undefined {
 
 export function getCookie(id: string): CookieConfig {
   return requireConfig(cookieById.get(id), 'COOKIES.id', id);
+}
+
+export function getBossAnimation(monsterId: string) {
+  return bossAnimationByMonsterId.get(monsterId);
+}
+
+export function getBotAnimation(botId: string) {
+  return botAnimationByBotId.get(botId);
 }

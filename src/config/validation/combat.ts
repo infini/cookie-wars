@@ -4,6 +4,7 @@ import {
   array,
   assertUnique,
   numberField,
+  numberValue,
   record,
   stringValue,
   validateIdTable,
@@ -44,6 +45,33 @@ export function validateBattleRules(value: unknown): void {
     'playerHitToleranceX', 'playerProjectileEndY', 'castleDiscDamageMultiplier',
     'maxRenderedPlayerDiscSize', 'resultNoticeMs',
   ]);
+  const speedMultipliers = array(
+    config.battleSpeedMultipliers,
+    `${path}.battleSpeedMultipliers`,
+  ).map((item, index) => numberValue(
+    item,
+    `${path}.battleSpeedMultipliers[${index}]`,
+    { integer: true, min: 1 },
+  ));
+  assertUnique(speedMultipliers, `${path}.battleSpeedMultipliers`);
+  speedMultipliers.slice(1).forEach((speed, index) => {
+    if (speed <= speedMultipliers[index]) {
+      throw new ConfigValidationError(
+        `${path}.battleSpeedMultipliers[${index + 1}]`,
+        '이전 배율보다 커야 합니다.',
+      );
+    }
+  });
+  const defaultSpeed = numberField(config, 'defaultBattleSpeedMultiplier', path, {
+    integer: true,
+    min: 1,
+  });
+  if (!speedMultipliers.includes(defaultSpeed)) {
+    throw new ConfigValidationError(
+      `${path}.defaultBattleSpeedMultiplier`,
+      'battleSpeedMultipliers에 정의된 배율이어야 합니다.',
+    );
+  }
   validatePositiveNumberFields(config, path, [
     'tickMs', 'maxDeltaMs', 'enemyMoveDivisor', 'enemyProjectileMoveDivisor',
     'enemyMeleeIntervalMs', 'playerHomingMs', 'playerProjectileMoveDivisor',

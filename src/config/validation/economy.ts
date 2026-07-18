@@ -81,10 +81,75 @@ export function validateCookieUpgradeRules(value: unknown): UnknownRecord {
   return rules;
 }
 
+export function validateCookieCritical(value: unknown): UnknownRecord {
+  const path = 'COOKIE_CRITICAL';
+  const config = record(value, path);
+  validateStringFields(config, path, [
+    'upgradeId', 'flashColor', 'coreColor', 'coreHighlightColor', 'ringColor',
+    'particleColor', 'particleHighlightColor',
+  ]);
+  validateNumberFields(config, path, [
+    'probabilityScale', 'maximumChanceUnits', 'baseRewardMultiplier',
+    'rewardMultiplierIncreasePerLevel', 'displayMaximumFractionDigits',
+    'effectDurationMs', 'effectSizePixels',
+    'flashMaximumOpacity', 'coreStartScale', 'coreEndScale', 'ringStartScale',
+    'coreSizeRatio', 'coreBorderWidth', 'ringEndScale', 'ringBorderWidth', 'particleCount',
+    'particleStartDistancePixels', 'particleEndDistancePixels',
+    'particleWidthPixels', 'particleHeightPixels',
+  ], { min: 0 });
+  validatePositiveNumberFields(config, path, [
+    'probabilityScale', 'baseRewardMultiplier', 'effectDurationMs', 'effectSizePixels',
+    'coreStartScale', 'coreEndScale', 'coreSizeRatio', 'coreBorderWidth',
+    'ringStartScale', 'ringEndScale',
+    'ringBorderWidth', 'particleCount', 'particleEndDistancePixels',
+    'particleWidthPixels', 'particleHeightPixels',
+  ]);
+  [
+    'probabilityScale', 'maximumChanceUnits', 'baseRewardMultiplier',
+    'rewardMultiplierIncreasePerLevel', 'displayMaximumFractionDigits',
+    'effectDurationMs', 'effectSizePixels',
+    'particleCount', 'particleStartDistancePixels', 'particleEndDistancePixels',
+    'particleWidthPixels', 'particleHeightPixels',
+  ].forEach((field) => numberField(config, field, path, { integer: true, min: 0 }));
+  numberField(config, 'flashMaximumOpacity', path, { min: 0, max: 1 });
+  numberField(config, 'coreSizeRatio', path, { min: 0, max: 1 });
+  numberField(config, 'displayMaximumFractionDigits', path, {
+    integer: true,
+    min: 0,
+    max: 4,
+  });
+  if ((config.maximumChanceUnits as number) > (config.probabilityScale as number)) {
+    throw new ConfigValidationError(
+      `${path}.maximumChanceUnits`,
+      'probabilityScale 이하여야 합니다.',
+    );
+  }
+  if (
+    (config.coreEndScale as number) <= (config.coreStartScale as number)
+    || (config.ringEndScale as number) <= (config.ringStartScale as number)
+  ) {
+    throw new ConfigValidationError(
+      `${path}.coreEndScale`,
+      '끝 크기는 시작 크기보다 커야 합니다.',
+    );
+  }
+  if (
+    (config.particleEndDistancePixels as number)
+    <= (config.particleStartDistancePixels as number)
+  ) {
+    throw new ConfigValidationError(
+      `${path}.particleEndDistancePixels`,
+      '시작 거리보다 커야 합니다.',
+    );
+  }
+  return config;
+}
+
 export function validateCookies(value: unknown): UnknownRecord[] {
   const path = 'COOKIES';
   const cookies = validateIdTable(value, path);
   let previousRequiredLevels = -1;
+  let previousCommonMultiplier = -1;
   cookies.forEach((cookie, index) => {
     const itemPath = `${path}[${index}]`;
     validateStringFields(cookie, itemPath, ['imageKey', 'name', 'description']);
@@ -99,9 +164,30 @@ export function validateCookies(value: unknown): UnknownRecord[] {
       );
     }
     previousRequiredLevels = requiredLevels;
-    validateNumberFields(cookie, itemPath, [
-      'clickMultiplier', 'autoProductionMultiplier', 'healthMultiplier',
-    ], { min: 0 });
+    const clickMultiplier = numberField(cookie, 'clickMultiplier', itemPath, { min: 0 });
+    const autoProductionMultiplier = numberField(
+      cookie,
+      'autoProductionMultiplier',
+      itemPath,
+      { min: 0 },
+    );
+    const healthMultiplier = numberField(cookie, 'healthMultiplier', itemPath, { min: 0 });
+    if (
+      clickMultiplier !== autoProductionMultiplier
+      || clickMultiplier !== healthMultiplier
+    ) {
+      throw new ConfigValidationError(
+        `${itemPath}.autoProductionMultiplier`,
+        '화면에 공통 배율로 표시하므로 클릭·자동 생산·성 체력 배율이 같아야 합니다.',
+      );
+    }
+    if (clickMultiplier <= previousCommonMultiplier) {
+      throw new ConfigValidationError(
+        `${itemPath}.clickMultiplier`,
+        '앞 쿠키의 공통 배율보다 커야 합니다.',
+      );
+    }
+    previousCommonMultiplier = clickMultiplier;
   });
   return cookies;
 }

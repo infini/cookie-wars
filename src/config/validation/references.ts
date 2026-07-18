@@ -11,6 +11,9 @@ export interface ReferenceTables {
   bots: UnknownRecord[];
   discs: UnknownRecord[];
   migrations: UnknownRecord;
+  bossAnimations: UnknownRecord[];
+  botAnimations: UnknownRecord[];
+  cookieCritical: UnknownRecord;
 }
 
 export function validateReferences({
@@ -24,6 +27,9 @@ export function validateReferences({
   bots,
   discs,
   migrations,
+  bossAnimations,
+  botAnimations,
+  cookieCritical,
 }: ReferenceTables): void {
   const difficultyIds = new Set(difficulties.map((item) => item.id as string));
   const enemyDiscLevels = new Set(enemyDiscs.map((item) => item.level as number));
@@ -32,6 +38,39 @@ export function validateReferences({
   const botIds = new Set(bots.map((item) => item.id as string));
   const discIds = new Set(discs.map((item) => item.id as string));
   const upgradeIds = new Set(upgrades.map((item) => item.id as string));
+  const bossAnimationIds = new Set(bossAnimations.map((item) => item.id as string));
+  const botAnimationIds = new Set(botAnimations.map((item) => item.id as string));
+  assertReference(
+    cookieCritical.upgradeId as string,
+    upgradeIds,
+    'COOKIE_CRITICAL.upgradeId',
+    '쿠키 강화 ID',
+  );
+
+  bossAnimations.forEach((animation, index) => assertReference(
+    animation.id as string,
+    monsterIds,
+    `BOSS_ANIMATION.sets[${index}].id`,
+    '몬스터 ID',
+  ));
+  monsters.filter((monster) => monster.rank === '보스').forEach((monster) => assertReference(
+    monster.id as string,
+    bossAnimationIds,
+    `MONSTERS.${monster.id}.id`,
+    '보스 애니메이션 ID',
+  ));
+  botAnimations.forEach((animation, index) => assertReference(
+    animation.id as string,
+    botIds,
+    `BOT_ANIMATION.sets[${index}].id`,
+    '쿠키봇 ID',
+  ));
+  bots.forEach((bot) => assertReference(
+    bot.id as string,
+    botAnimationIds,
+    `BOTS.${bot.id}.id`,
+    '쿠키봇 애니메이션 ID',
+  ));
 
   difficulties.forEach((difficulty, index) => {
     assertReference(

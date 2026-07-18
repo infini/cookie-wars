@@ -1,6 +1,10 @@
 import { BATTLE_RULES, BOSS_BEHAVIOR } from '../config';
 import type { ActiveBot } from '../domain/gameSelectors';
 import {
+  getBotCombatPosition,
+  getBotProjectileOrigin,
+} from '../domain/botCombatMotion';
+import {
   clampFiniteNumber,
   clampSafeInteger,
   saturatingAdd,
@@ -142,19 +146,25 @@ export function spawnBotProjectiles(
 ): BattleFrame {
   const playerProjectiles = [...frame.playerProjectiles];
   const lastBotAttackAt = { ...frame.lastBotAttackAt };
+  const lastBotAttackPerformedAt = { ...frame.lastBotAttackPerformedAt };
   let eventJournal: BattleEventJournal = frame;
 
   for (const [botIndex, activeBot] of bots.entries()) {
     const botId = activeBot.config.id;
-    const botSlot = BATTLE_RULES.botFormationSlots[
-      botIndex % BATTLE_RULES.botFormationSlots.length
-    ];
+    const movementTarget = closestEnemy(frame.enemies, now);
+    const botPosition = getBotCombatPosition(
+      botIndex,
+      now,
+      movementTarget,
+      Boolean(movementTarget),
+    );
+    const projectileOrigin = getBotProjectileOrigin(botPosition);
     const lastAttackAt = lastBotAttackAt[botId] ?? previousNow;
     const target = closestEnemyWithinRadius(
       frame.enemies,
       now,
-      botSlot.x,
-      botSlot.y,
+      projectileOrigin.x,
+      projectileOrigin.y,
       BATTLE_RULES.botAttackRadius,
     );
     if (!target || now - lastAttackAt < activeBot.config.attackIntervalMs) continue;
@@ -164,8 +174,8 @@ export function spawnBotProjectiles(
       owner: 'player',
       source: 'bot',
       sourceBotId: botId,
-      x: botSlot.x,
-      y: botSlot.y,
+      x: projectileOrigin.x,
+      y: projectileOrigin.y,
       targetId: target.id,
       level: clampSafeInteger(playerDisc.level),
       damage: saturatingCombatProductInteger([
@@ -178,9 +188,10 @@ export function spawnBotProjectiles(
       createdAt: now,
     });
     lastBotAttackAt[botId] = now;
+    lastBotAttackPerformedAt[botId] = now;
     eventJournal = appendBattleEvent(eventJournal, 'disc', now, {
-      x: botSlot.x,
-      y: botSlot.y,
+      x: projectileOrigin.x,
+      y: projectileOrigin.y,
       attackSource: 'bot',
     });
   }
@@ -190,5 +201,6 @@ export function spawnBotProjectiles(
     ...eventJournal,
     playerProjectiles,
     lastBotAttackAt,
+    lastBotAttackPerformedAt,
   };
 }

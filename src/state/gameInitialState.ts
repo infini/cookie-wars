@@ -1,4 +1,10 @@
-import { AUDIO_SETTINGS, DIFFICULTIES, DISCS, SAVE_MIGRATIONS } from '../config';
+import {
+  AUDIO_SETTINGS,
+  BATTLE_RULES,
+  DIFFICULTIES,
+  DISCS,
+  SAVE_MIGRATIONS,
+} from '../config';
 import {
   makeInitialBotCounts,
   makeInitialDiscLevels,
@@ -32,5 +38,6 @@ export const initialGameState: GameState = {
   soundEnabled: true,
   soundVolumeLevel: AUDIO_SETTINGS.defaultLevel,
   vibrationEnabled: true,
+  battleSpeedMultiplier: BATTLE_RULES.defaultBattleSpeedMultiplier,
   lastSavedAt: 0,
 };

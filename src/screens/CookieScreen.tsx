@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { BATTLE_REWARDS, COOKIES } from '../config';
 import {
   getBattleMedalBonuses,
@@ -12,6 +12,7 @@ import { fonts } from '../theme/typography';
 import { formatNumber } from '../utils/format';
 import { CookieImage } from '../components/CookieImage';
 import { Panel } from '../components/Panel';
+import { formatCriticalChancePercent } from '../domain/cookieCritical';
 
 function InfoRow({ icon, label, value }: { icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; label: string; value: string }) {
   return (
@@ -28,60 +29,69 @@ export function CookieScreen() {
   const evolution = getCookieEvolutionProgress(state);
   const medalBonuses = getBattleMedalBonuses(state);
   return (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-      <Panel style={styles.heroCard}>
-        <View style={styles.cookieHalo}><CookieImage imageKey={evolution.active.imageKey} size={116} /></View>
-        <View style={styles.heroText}>
-          <Text style={styles.eyebrow}>내 쿠키</Text>
-          <Text style={styles.name}>{evolution.active.name}</Text>
-          <Text style={styles.description}>{evolution.active.description}</Text>
-        </View>
-      </Panel>
-      <Panel>
-        <Text style={styles.sectionTitle}>쿠키 정보</Text>
-        <InfoRow icon="cookie" label="현재 쿠키" value={`${formatNumber(state.cookies)}개`} />
-        <InfoRow icon="gesture-tap" label="클릭당 획득" value={`${formatNumber(stats.clickPower)}개`} />
-        <InfoRow icon="clock-fast" label="자동 획득" value={`${formatNumber(stats.autoProduction)}개/초`} />
-        <InfoRow icon="star-circle" label="진화 레벨" value={`Lv.${stats.totalUpgradeLevels}`} />
-        <InfoRow icon="creation" label="현재 쿠키 보너스" value={`×${evolution.active.clickMultiplier.toFixed(2)}`} />
-      </Panel>
-      <Panel style={styles.medalPanel}>
-        <View style={styles.medalHeader}>
-          <MaterialCommunityIcons name="medal" size={31} color={colors.purple} />
-          <View style={styles.medalTextGroup}>
-            <Text style={styles.medalTitle}>전투 훈장 {formatNumber(medalBonuses.battleMedals)}개</Text>
-            <Text style={styles.medalDescription}>각 스테이지를 처음 이기면 훈장 {BATTLE_REWARDS.battleMedalsPerStageClear}개를 얻어요.</Text>
-          </View>
-        </View>
-        <Text style={styles.medalBonus}>
-          클릭 +{formatNumber(medalBonuses.clickPowerBonusPercent)}% · 자동 생산 +{formatNumber(medalBonuses.autoProductionBonusPercent)}% · 성 체력 +{formatNumber(medalBonuses.castleHealthBonusPercent)}%
-        </Text>
-      </Panel>
-      <Panel style={styles.evolutionPanel}>
-        <View style={styles.evolutionHeader}>
-          <MaterialCommunityIcons name={evolution.next ? 'arrow-up-bold-hexagon-outline' : 'crown'} size={31} color={colors.purple} />
-          <View style={styles.futureText}>
-            <Text style={styles.futureTitle}>{evolution.next ? `다음 쿠키 · ${evolution.next.name}` : '최고 쿠키 진화 완료!'}</Text>
-            <Text style={styles.futureDescription}>
-              {evolution.next
-                ? `현재 진화 Lv.${evolution.totalUpgradeLevels} / 필요 Lv.${evolution.next.requiredTotalUpgradeLevels} · ${evolution.remainingLevels}번 남음`
-                : `현재 진화 Lv.${evolution.totalUpgradeLevels} · 모든 쿠키 진화를 완료했어요!`}
+    <FlatList
+      data={COOKIES}
+      keyExtractor={(cookie) => cookie.id}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.content}
+      ListHeaderComponent={(
+        <View style={styles.header}>
+          <Panel style={styles.heroCard}>
+            <View style={styles.cookieHalo}><CookieImage imageKey={evolution.active.imageKey} size={116} /></View>
+            <View style={styles.heroText}>
+              <Text style={styles.eyebrow}>내 쿠키</Text>
+              <Text style={styles.name}>{evolution.active.name}</Text>
+              <Text style={styles.description}>{evolution.active.description}</Text>
+            </View>
+          </Panel>
+          <Panel>
+            <Text style={styles.sectionTitle}>쿠키 정보</Text>
+            <InfoRow icon="cookie" label="현재 쿠키" value={`${formatNumber(state.cookies)}개`} />
+            <InfoRow icon="gesture-tap" label="클릭당 획득" value={`${formatNumber(stats.clickPower)}개`} />
+            <InfoRow icon="bomb" label="쿠키 크리티컬" value={`${formatCriticalChancePercent(stats.criticalChanceUnits)}% · ×${formatNumber(stats.criticalRewardMultiplier)}`} />
+            <InfoRow icon="clock-fast" label="자동 획득" value={`${formatNumber(stats.autoProduction)}개/초`} />
+            <InfoRow icon="star-circle" label="진화 레벨" value={`Lv.${stats.totalUpgradeLevels}`} />
+            <InfoRow icon="creation" label="현재 쿠키 보너스" value={`×${evolution.active.clickMultiplier.toFixed(2)}`} />
+          </Panel>
+          <Panel style={styles.medalPanel}>
+            <View style={styles.medalHeader}>
+              <MaterialCommunityIcons name="medal" size={31} color={colors.purple} />
+              <View style={styles.medalTextGroup}>
+                <Text style={styles.medalTitle}>전투 훈장 {formatNumber(medalBonuses.battleMedals)}개</Text>
+                <Text style={styles.medalDescription}>각 스테이지를 처음 이기면 훈장 {BATTLE_REWARDS.battleMedalsPerStageClear}개를 얻어요.</Text>
+              </View>
+            </View>
+            <Text style={styles.medalBonus}>
+              클릭 +{formatNumber(medalBonuses.clickPowerBonusPercent)}% · 자동 생산 +{formatNumber(medalBonuses.autoProductionBonusPercent)}% · 성 체력 +{formatNumber(medalBonuses.castleHealthBonusPercent)}%
             </Text>
-          </View>
+          </Panel>
+          <Panel style={styles.evolutionPanel}>
+            <View style={styles.evolutionHeader}>
+              <MaterialCommunityIcons name={evolution.next ? 'arrow-up-bold-hexagon-outline' : 'crown'} size={31} color={colors.purple} />
+              <View style={styles.futureText}>
+                <Text style={styles.futureTitle}>{evolution.next ? `다음 쿠키 · ${evolution.next.name}` : '최고 쿠키 진화 완료!'}</Text>
+                <Text style={styles.futureDescription}>
+                  {evolution.next
+                    ? `현재 진화 Lv.${evolution.totalUpgradeLevels} / 필요 Lv.${evolution.next.requiredTotalUpgradeLevels} · ${evolution.remainingLevels}번 남음`
+                    : `현재 진화 Lv.${evolution.totalUpgradeLevels} · 모든 쿠키 진화를 완료했어요!`}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.levelRule}>
+              클릭 힘·쿠키 크리티컬·자동 생산·쿠키 성 체력을 강화할 때마다 진화 레벨이 올라요.
+            </Text>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${evolution.progressRatio * 100}%` }]} />
+            </View>
+          </Panel>
+          <Text style={styles.collectionTitle}>쿠키 진화 도감 · {COOKIES.length}종</Text>
         </View>
-        <Text style={styles.levelRule}>
-          클릭 힘·자동 생산·쿠키 성 체력을 강화할 때마다 진화 레벨이 올라요.
-        </Text>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${evolution.progressRatio * 100}%` }]} />
-        </View>
-      </Panel>
-      <Text style={styles.collectionTitle}>쿠키 진화 도감 · {COOKIES.length}종</Text>
-      {COOKIES.map((cookie) => {
+      )}
+      renderItem={({ item: cookie }) => {
         const unlocked = evolution.totalUpgradeLevels >= cookie.requiredTotalUpgradeLevels;
         const active = cookie.id === evolution.active.id;
         return (
-          <Panel key={cookie.id} style={[styles.cookieCard, active && styles.activeCookieCard, !unlocked && styles.lockedCookieCard]}>
+          <Panel style={[styles.cookieCard, active && styles.activeCookieCard, !unlocked && styles.lockedCookieCard]}>
             <CookieImage imageKey={cookie.imageKey} size={68} style={!unlocked ? styles.lockedImage : undefined} />
             <View style={styles.cardInfo}>
               <View style={styles.cardTitleRow}>
@@ -97,13 +107,14 @@ export function CookieScreen() {
             </View>
           </Panel>
         );
-      })}
-    </ScrollView>
+      }}
+    />
   );
 }
 
 const styles = StyleSheet.create({
   content: { paddingVertical: 6, gap: 10, paddingBottom: 16 },
+  header: { gap: 10 },
   heroCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF1CF' },
   cookieHalo: { width: 132, height: 132, borderRadius: 66, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
   heroText: { flex: 1, marginLeft: 14 },

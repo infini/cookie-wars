@@ -79,6 +79,7 @@ export function advanceBattle(
     baseHealth: clampSafeInteger(state.baseHealth),
     killedEnemies: clampSafeInteger(state.killedEnemies),
     lastBotAttackAt: { ...state.lastBotAttackAt },
+    lastBotAttackPerformedAt: { ...state.lastBotAttackPerformedAt },
     notice: now > state.noticeUntil ? null : state.notice,
     noticeUntil: state.noticeUntil,
   };

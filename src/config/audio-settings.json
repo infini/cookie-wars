@@ -1,6 +1,13 @@
 {
   "defaultLevel": 4,
   "previewDelayMs": 80,
+  "soundVolumeMultipliers": {
+    "cookie": 1.0,
+    "critical": 1.0,
+    "menu": 0.9,
+    "upgrade": 0.95,
+    "blocked": 0.85
+  },
   "levels": [
     { "level": 1, "volume": 0.2 },
     { "level": 2, "volume": 0.4 },

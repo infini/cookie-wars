@@ -2,6 +2,10 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getSortedUpgradeProgress } from '../domain/gameSelectors';
+import {
+  calculateCookieCriticalStatsForLevel,
+  formatCriticalChancePercent,
+} from '../domain/cookieCritical';
 import { useFeedback } from '../services/FeedbackContext';
 import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
@@ -9,10 +13,26 @@ import { fonts } from '../theme/typography';
 import { formatNumber } from '../utils/format';
 import { GameButton } from '../components/GameButton';
 import { Panel } from '../components/Panel';
+import { COOKIE_CRITICAL } from '../config';
+import type { UpgradeConfig, UpgradeLevelConfig } from '../types/game';
 
 const icons: Record<string, React.ComponentProps<typeof MaterialCommunityIcons>['name']> = {
-  clickPower: 'gesture-tap', autoProduction: 'clock-fast', cookieHealth: 'shield-home',
+  clickPower: 'gesture-tap',
+  cookieCritical: 'bomb',
+  autoProduction: 'clock-fast',
+  cookieHealth: 'shield-home',
 };
+
+function formatUpgradeValue(
+  upgrade: UpgradeConfig,
+  level: UpgradeLevelConfig,
+): string {
+  if (upgrade.id !== COOKIE_CRITICAL.upgradeId) {
+    return `${formatNumber(level.value)} ${upgrade.unit}`;
+  }
+  const critical = calculateCookieCriticalStatsForLevel(level.level, level.value);
+  return `${formatCriticalChancePercent(critical.chanceUnits)}% · ×${formatNumber(critical.rewardMultiplier)}`;
+}
 
 export function UpgradeScreen() {
   const { state, buyUpgrade } = useGame();
@@ -44,12 +64,12 @@ export function UpgradeScreen() {
             <View style={styles.values}>
               <View style={styles.valueBox}>
                 <Text style={styles.valueLabel}>현재 능력</Text>
-                <Text style={styles.value}>{formatNumber(current.value)} {upgrade.unit}</Text>
+                <Text style={styles.value}>{formatUpgradeValue(upgrade, current)}</Text>
               </View>
               <MaterialCommunityIcons name="arrow-right-bold" size={24} color={next ? colors.green : colors.disabled} />
               <View style={[styles.valueBox, styles.nextBox]}>
                 <Text style={styles.valueLabel}>다음 능력</Text>
-                <Text style={styles.nextValue}>{next ? `${formatNumber(next.value)} ${upgrade.unit}` : '최고 레벨'}</Text>
+                <Text style={styles.nextValue}>{next ? formatUpgradeValue(upgrade, next) : '최고 레벨'}</Text>
               </View>
             </View>
             <GameButton

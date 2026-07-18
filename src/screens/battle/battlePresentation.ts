@@ -1,9 +1,5 @@
 import { BATTLE_FEEDBACK, BOSS_SPECIAL_ATTACK } from '../../config';
-import {
-  getBossSpecialAttackImpactProgress,
-  getBossSpecialAttackPose,
-  getBossSpecialAttackProgress,
-} from '../../domain/bossSpecialAttack';
+import { getBossImpactEffectProgress } from '../../domain/bossAnimation';
 import type { BattleEnemy, BattleEvent } from '../../engine/useBattleEngine';
 
 interface BattlePresentationInput {
@@ -34,35 +30,24 @@ export function getBattleScreenPresentation({
     ) * BATTLE_FEEDBACK.castleHitShakePixels * (1 - castleHitProgress)
     : 0;
   const specialAttackingBoss = enemies.find((enemy) => (
-    getBossSpecialAttackProgress(
-      enemy.lastSpecialAttackAt,
-      enemy.spawnAt,
-      now,
-    ) !== null
+    enemy.lastSpecialAttackAt > enemy.spawnAt
+    && getBossImpactEffectProgress(enemy.lastSpecialAttackAt, now) !== null
   ));
   const bossSpecialAttackProgress = specialAttackingBoss
-    ? getBossSpecialAttackProgress(
-      specialAttackingBoss.lastSpecialAttackAt,
-      specialAttackingBoss.spawnAt,
-      now,
-    )
+    ? getBossImpactEffectProgress(specialAttackingBoss.lastSpecialAttackAt, now)
     : null;
   const bossSpecialAttackFlashOpacity = bossSpecialAttackProgress === null
     ? 0
-    : getBossSpecialAttackPose(bossSpecialAttackProgress).effectOpacity
-      * BOSS_SPECIAL_ATTACK.screenFlashMaximumOpacity;
-  const bossSpecialAttackImpactProgress = bossSpecialAttackProgress === null
-    ? null
-    : getBossSpecialAttackImpactProgress(bossSpecialAttackProgress);
-  const bossSpecialAttackScreenShake = bossSpecialAttackImpactProgress === null
+    : (1 - bossSpecialAttackProgress) * BOSS_SPECIAL_ATTACK.screenFlashMaximumOpacity;
+  const bossSpecialAttackScreenShake = bossSpecialAttackProgress === null
     ? 0
     : Math.sin(
-      bossSpecialAttackImpactProgress
+      bossSpecialAttackProgress
         * BOSS_SPECIAL_ATTACK.screenShakeCycles
         * Math.PI,
     )
       * BOSS_SPECIAL_ATTACK.screenShakePixels
-      * (1 - bossSpecialAttackImpactProgress);
+      * (1 - bossSpecialAttackProgress);
 
   return {
     presentationEvent,
