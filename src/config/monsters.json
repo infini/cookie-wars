@@ -1,26 +1,67 @@
 [
   {
-    "id": "crumb-goblin",
-    "name": "부스러기 고블린",
-    "baseHp": 36,
-    "baseAttack": 4,
-    "rewardCookie": 8,
-    "description": "달콤한 쿠키 냄새를 맡고 찾아온 장난꾸러기 몬스터예요."
+    "id": "crumb-minion",
+    "imageKey": "crumb-minion",
+    "name": "부스러기 졸개",
+    "rank": "졸개",
+    "baseHp": 12,
+    "baseAttack": 3,
+    "rewardCookie": 4,
+    "moveSpeedMultiplier": 1.25,
+    "discDamageMultiplier": 0.75,
+    "sizeMultiplier": 0.78,
+    "description": "빠르게 몰려와 나무 숟가락을 휘두르는 침공군의 졸개예요."
   },
   {
-    "id": "sugar-slime",
-    "name": "설탕 슬라임",
-    "baseHp": 80,
+    "id": "sugar-guard",
+    "imageKey": "sugar-guard",
+    "name": "설탕 수호병",
+    "rank": "정예",
+    "baseHp": 28,
     "baseAttack": 7,
-    "rewardCookie": 16,
-    "description": "아직 발견하지 못한 몬스터예요."
+    "rewardCookie": 9,
+    "moveSpeedMultiplier": 0.95,
+    "discDamageMultiplier": 1.1,
+    "sizeMultiplier": 0.95,
+    "description": "단단한 설탕 갑옷과 사탕 창으로 쿠키 성을 압박하는 정예병이에요."
   },
   {
-    "id": "choco-dragon",
-    "name": "초코 드래곤",
+    "id": "chocolate-brute",
+    "imageKey": "chocolate-brute",
+    "name": "초코 골렘",
+    "rank": "중장갑",
+    "baseHp": 65,
+    "baseAttack": 15,
+    "rewardCookie": 18,
+    "moveSpeedMultiplier": 0.62,
+    "discDamageMultiplier": 1.45,
+    "sizeMultiplier": 1.18,
+    "description": "두꺼운 초콜릿 갑옷과 웨하스 망치를 가진 느리지만 강한 중장갑 적이에요."
+  },
+  {
+    "id": "wafer-sorcerer",
+    "imageKey": "wafer-sorcerer",
+    "name": "웨하스 마도사",
+    "rank": "원거리",
+    "baseHp": 40,
+    "baseAttack": 10,
+    "rewardCookie": 14,
+    "moveSpeedMultiplier": 0.82,
+    "discDamageMultiplier": 2,
+    "sizeMultiplier": 1,
+    "description": "마법 쿠키 원반을 강하게 날리는 위험한 원거리 공격수예요."
+  },
+  {
+    "id": "cookie-tyrant",
+    "imageKey": "cookie-tyrant",
+    "name": "흑코코아 폭군",
+    "rank": "보스",
     "baseHp": 180,
-    "baseAttack": 14,
-    "rewardCookie": 34,
-    "description": "아직 발견하지 못한 몬스터예요."
+    "baseAttack": 30,
+    "rewardCookie": 50,
+    "moveSpeedMultiplier": 0.5,
+    "discDamageMultiplier": 3.2,
+    "sizeMultiplier": 1.5,
+    "description": "침공군을 지휘하는 거대한 보스예요. 체력과 공격력이 매우 높아요."
   }
 ]

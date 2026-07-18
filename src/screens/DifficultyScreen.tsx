@@ -3,7 +3,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { DIFFICULTIES, getDifficulty } from '../config';
 import { DifficultyDropdown } from '../components/DifficultyDropdown';
-import { getBattleDifficulty, getDifficultyProgress } from '../domain/gameSelectors';
+import { getBattleDifficulty, getBattleStageId, getDifficultyProgress } from '../domain/gameSelectors';
 import { Panel } from '../components/Panel';
 import { useFeedback } from '../services/FeedbackContext';
 import { useGame } from '../state/GameContext';
@@ -31,7 +31,9 @@ export function DifficultyScreen() {
   const isLastDifficulty = selectedIndex === DIFFICULTIES.length - 1;
   const progress = getDifficultyProgress(state, selected.id);
   const battleDifficulty = getBattleDifficulty(selected, progress.wins);
-  const rewardReceived = state.rewardClaimedDifficultyIds.includes(selected.id);
+  const rewardReceived = state.rewardClaimedStageIds.includes(
+    getBattleStageId(selected.id, progress.currentBattleNumber),
+  );
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
@@ -94,9 +96,9 @@ export function DifficultyScreen() {
           <MaterialCommunityIcons name={rewardReceived ? 'check-bold' : 'gift'} size={32} color={rewardReceived ? colors.greenDark : colors.yellowDark} />
         </View>
         <View style={styles.rewardText}>
-          <Text style={styles.rewardTitle}>{rewardReceived ? '최초 승리 보상 받음' : '최초 승리 보상'}</Text>
+          <Text style={styles.rewardTitle}>{rewardReceived ? `전투 ${progress.currentBattleNumber} 보상 받음` : `전투 ${progress.currentBattleNumber} 최초 보상`}</Text>
           <Text style={styles.rewardDescription}>
-            {rewardReceived ? '다시 플레이할 수 있지만 쿠키 보상은 없어요.' : `처음 이기면 쿠키 ${formatNumber(selected.reward)}개를 받아요!`}
+            {rewardReceived ? '이 전투를 다시 이겨도 쿠키 보상은 없어요.' : `처음 클리어하면 쿠키 ${formatNumber(selected.reward)}개를 받아요!`}
           </Text>
         </View>
       </Panel>

@@ -1,0 +1,18 @@
+[
+  {
+    "id": "medieval-cookie-invasion",
+    "name": "중세 쿠키 침공군",
+    "monsterPatternIds": [
+      "crumb-minion",
+      "crumb-minion",
+      "sugar-guard",
+      "crumb-minion",
+      "wafer-sorcerer",
+      "crumb-minion",
+      "sugar-guard",
+      "chocolate-brute"
+    ],
+    "bossMonsterId": "cookie-tyrant",
+    "bossEveryEnemies": 15
+  }
+]

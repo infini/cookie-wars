@@ -11,26 +11,41 @@ import {
   calculateBotPrice,
   calculateCookieStats,
   getCookieEvolutionProgress,
+  getBattleStageId,
   getDiscProgress,
+  getSortedUpgradeProgress,
   getUpgradeProgress,
 } from '../src/domain/gameSelectors';
 import { gameReducer, initialGameState, mergeSavedGame } from '../src/state/gameReducer';
 
 describe('게임 저장 상태', () => {
-  test('같은 난이도의 최초 승리 보상은 한 번만 지급한다', () => {
+  test('각 전투 스테이지는 최초 클리어마다 보상하고 완료 스테이지 재도전은 보상하지 않는다', () => {
     const funded = { ...initialGameState, cookies: 10 };
     const first = gameReducer(funded, {
       type: 'COMPLETE_BATTLE',
       difficultyId: DIFFICULTIES[0].id,
     });
-    const replay = gameReducer(first, {
+    const second = gameReducer(first, {
       type: 'COMPLETE_BATTLE',
       difficultyId: DIFFICULTIES[0].id,
     });
-
     expect(first.cookies).toBe(10 + DIFFICULTIES[0].reward);
-    expect(replay.cookies).toBe(first.cookies);
-    expect(replay.rewardClaimedDifficultyIds).toEqual([DIFFICULTIES[0].id]);
+    expect(second.cookies).toBe(first.cookies + DIFFICULTIES[0].reward);
+
+    let completed = second;
+    for (let win = 2; win < PROGRESSION.winsToUnlockNextDifficulty; win += 1) {
+      completed = gameReducer(completed, {
+        type: 'COMPLETE_BATTLE',
+        difficultyId: DIFFICULTIES[0].id,
+      });
+    }
+    const replay = gameReducer(completed, {
+      type: 'COMPLETE_BATTLE',
+      difficultyId: DIFFICULTIES[0].id,
+    });
+    expect(replay.cookies).toBe(completed.cookies);
+    expect(replay.rewardClaimedStageIds).toHaveLength(PROGRESSION.winsToUnlockNextDifficulty);
+    expect(replay.rewardClaimedStageIds).toContain(getBattleStageId(DIFFICULTIES[0].id, 20));
   });
 
   test('같은 난이도에서 20번 승리해야 다음 난이도가 열린다', () => {
@@ -106,11 +121,27 @@ describe('게임 저장 상태', () => {
       discLevel: 4,
       botCounts: { 'cookie-bot': 3 },
     });
-    expect(migrated.saveVersion).toBe(3);
+    expect(migrated.saveVersion).toBe(5);
     expect(migrated.ownedDiscIds).toEqual([DISCS[0].id]);
     expect(migrated.discLevels[DISCS[0].id]).toBe(4);
     expect(migrated.botCounts[BOTS[0].id]).toBe(3);
     expect('autoBattleEnabled' in migrated).toBe(false);
+  });
+
+  test('이전 몬스터 도감 ID를 새 다등급 몬스터 ID로 이전한다', () => {
+    const migrated = mergeSavedGame({
+      discoveredMonsterIds: ['crumb-goblin', 'sugar-slime', 'unknown-monster'],
+      newMonsterIds: ['sugar-slime'],
+    });
+    expect(migrated.discoveredMonsterIds).toEqual(['crumb-minion', 'sugar-guard']);
+    expect(migrated.newMonsterIds).toEqual(['sugar-guard']);
+  });
+
+  test('이전 난이도 단위 보상 기록은 해당 난이도 1스테이지 보상으로 이전한다', () => {
+    const migrated = mergeSavedGame({ rewardClaimedDifficultyIds: [DIFFICULTIES[0].id] });
+    expect(migrated.rewardClaimedStageIds).toEqual([
+      getBattleStageId(DIFFICULTIES[0].id, 1),
+    ]);
   });
 
   test.each(['clickPower', 'autoProduction', 'cookieHealth'])(
@@ -143,5 +174,23 @@ describe('게임 저장 상태', () => {
     expect(evolution.totalUpgradeLevels).toBe(10);
     expect(evolution.active.id).toBe('fortune-cookie');
     expect(stats.clickPower).toBeGreaterThan(34);
+  });
+
+  test('강화 가능 항목을 위에, 완료 항목을 가장 아래에 정렬한다', () => {
+    const state = {
+      ...initialGameState,
+      cookies: 110,
+      upgradeLevels: { ...initialGameState.upgradeLevels, cookieSize: 6 },
+    };
+    const sorted = getSortedUpgradeProgress(state);
+    expect(sorted.map((item) => item.config.id)).toEqual([
+      'clickPower',
+      'cookieHealth',
+      'autoProduction',
+      'cookieSize',
+    ]);
+    expect(sorted.slice(0, 2).every((item) => item.affordable)).toBe(true);
+    expect(sorted[2].affordable).toBe(false);
+    expect(sorted[3].next).toBeUndefined();
   });
 });

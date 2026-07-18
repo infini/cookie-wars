@@ -8,9 +8,11 @@
 |---|---|---|
 | `cookie.png`, `flying-disc.png`, 앱 아이콘·스플래시 | Google Noto Emoji | Apache License 2.0 |
 | `assets/images/cookies/*.png` 10종 진화 이미지 | Google Noto Emoji | Apache License 2.0 |
-| `cookie-bot.png` | Kenney Robot Pack | CC0 1.0 |
-| `monster-body.png`, `monster-eye.png`, `monster-mouth.png` | Kenney Monster Builder Pack | CC0 1.0 |
-| `cookie-castle.png` | Kenney Medieval RTS Pack | CC0 1.0 |
+| `cookie-castle.png`, `cookie-bot.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
+| `assets/images/enemies/*.png` 5종 | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
+| `assets/images/maps/battle-map-medieval.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
+
+생성 이미지는 특정 상용 게임의 캐릭터나 로고를 복제하지 않고, 독자적인 중세 쿠키 왕국 3D 아트 방향으로 제작했습니다. 성·봇·적은 녹색 단색 배경으로 생성한 뒤 로컬 크로마키 도구로 투명화하고 모바일용 PNG로 축소했습니다. 맵은 세로 9:16 구도이며 중앙 전투 영역을 비우도록 생성했습니다.
 
 ## 효과음
 
@@ -19,7 +21,7 @@
 | 쿠키 클릭 | Kenney UI Audio | CC0 1.0 |
 | 메뉴, 강화, 사용 불가 | Kenney Interface Sounds | CC0 1.0 |
 | 피격, 원반, 적 처치 | Kenney Impact Sounds / Sci-Fi Sounds | CC0 1.0 |
-| 승리, 패배 | Kenney Music Jingles | CC0 1.0 |
+| 승리, 패배 파일(현재 재생하지 않음) | Kenney Music Jingles | CC0 1.0 |
 
 ## 글꼴과 아이콘
 

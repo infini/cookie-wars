@@ -1,0 +1,21 @@
+{
+  "battleMapImageKey": "medieval-cookie-courtyard",
+  "castleRenderSize": 82,
+  "castleTouchWidth": 104,
+  "botRenderSize": 38,
+  "botLabelWidth": 66,
+  "enemyBaseRenderSize": 38,
+  "enemyMinimumRenderSize": 29,
+  "enemyMaximumRenderSize": 52,
+  "enemyLabelWidth": 64,
+  "enemyHealthWidth": 58,
+  "castleHealthWidth": 92,
+  "healthBarHeight": 7,
+  "healthBarOutlineWidth": 1.5,
+  "healthBarOutlineColor": "#3B251C",
+  "healthBarTrackColor": "#4B3028",
+  "healthBarLowHue": 0,
+  "healthBarHighHue": 120,
+  "healthBarSaturationPercent": 76,
+  "healthBarLightnessPercent": 45
+}

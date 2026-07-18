@@ -70,6 +70,10 @@ export interface CookieEvolutionProgress {
   remainingLevels: number;
 }
 
+export function getBattleStageId(difficultyId: string, stageNumber: number): string {
+  return `${difficultyId}:${stageNumber}`;
+}
+
 export function calculateUpgradeLevel(
   config: UpgradeConfig,
   level: number,
@@ -107,6 +111,27 @@ export function getUpgradeProgress(
     next,
     affordable: !!next && state.cookies >= next.cost,
   };
+}
+
+export function getSortedUpgradeProgress(state: GameState): UpgradeProgress[] {
+  return COOKIE_UPGRADES
+    .map((upgrade, tableIndex) => ({
+      progress: getUpgradeProgress(state, upgrade.id),
+      tableIndex,
+    }))
+    .filter((item): item is { progress: UpgradeProgress; tableIndex: number } => (
+      item.progress !== undefined
+    ))
+    .sort((left, right) => {
+      const priority = (progress: UpgradeProgress): number => {
+        if (progress.next && progress.affordable) return 0;
+        if (progress.next) return 1;
+        return 2;
+      };
+      return priority(left.progress) - priority(right.progress)
+        || left.tableIndex - right.tableIndex;
+    })
+    .map((item) => item.progress);
 }
 
 export function getDiscProgress(
@@ -188,8 +213,10 @@ export function getDifficultyProgress(
   difficultyId: string,
 ): DifficultyProgress {
   const validDifficulty = DIFFICULTIES.some((difficulty) => difficulty.id === difficultyId);
-  const wins = validDifficulty ? state.difficultyWinCounts[difficultyId] ?? 0 : 0;
   const requiredWins = PROGRESSION.winsToUnlockNextDifficulty;
+  const wins = validDifficulty
+    ? Math.min(requiredWins, state.difficultyWinCounts[difficultyId] ?? 0)
+    : 0;
   return {
     wins,
     requiredWins,
@@ -209,7 +236,8 @@ export function getBattleDifficulty(
   );
   const extraEnemies = Math.min(
     BATTLE_STAGE_RULES.maximumExtraEnemies,
-    Math.floor(stageWins / BATTLE_STAGE_RULES.extraEnemyEveryWins),
+    Math.floor(stageWins / BATTLE_STAGE_RULES.extraEnemyEveryWins)
+      * BATTLE_STAGE_RULES.extraEnemiesPerStep,
   );
   const enemyDiscBonus = Math.floor(
     stageWins / BATTLE_STAGE_RULES.enemyDiscLevelEveryWins,

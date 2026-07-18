@@ -1,5 +1,10 @@
 {
   "botIdAliases": {
     "cookie-bot": "choco-bot"
+  },
+  "monsterIdAliases": {
+    "crumb-goblin": "crumb-minion",
+    "sugar-slime": "sugar-guard",
+    "choco-dragon": "chocolate-brute"
   }
 }

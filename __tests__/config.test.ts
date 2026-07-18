@@ -1,6 +1,7 @@
 import {
   AUDIO_SETTINGS,
   BATTLE_STAGE_RULES,
+  BATTLE_RULES,
   BOTS,
   COOKIE_UPGRADE_RULES,
   COOKIES,
@@ -8,6 +9,7 @@ import {
   DISC_UPGRADE_RULES,
   DISCS,
   ENEMY_DISCS,
+  ENEMY_WAVES,
   MONSTERS,
   PROGRESSION,
 } from '../src/config';
@@ -45,11 +47,17 @@ describe('데이터 테이블', () => {
     expect(ENEMY_DISCS).toHaveLength(15);
   });
 
-  test('모든 난이도는 실제 몬스터 테이블을 참조한다', () => {
+  test('모든 난이도는 실제 웨이브와 몬스터 테이블을 참조한다', () => {
     const monsterIds = new Set(MONSTERS.map((monster) => monster.id));
+    const waveIds = new Set(ENEMY_WAVES.map((wave) => wave.id));
     DIFFICULTIES.forEach((difficulty) => {
-      expect(monsterIds.has(difficulty.monsterId)).toBe(true);
+      expect(waveIds.has(difficulty.enemyWaveId)).toBe(true);
     });
+    ENEMY_WAVES.forEach((wave) => {
+      wave.monsterPatternIds.forEach((monsterId) => expect(monsterIds.has(monsterId)).toBe(true));
+      expect(monsterIds.has(wave.bossMonsterId)).toBe(true);
+    });
+    expect(MONSTERS.map((monster) => monster.rank)).toEqual(['졸개', '정예', '중장갑', '원거리', '보스']);
   });
 
   test('진행·음량·상점 값은 데이터 테이블에서 제공한다', () => {
@@ -69,6 +77,8 @@ describe('데이터 테이블', () => {
       DISCS[0].levels[0].damage * 40,
     );
     expect(DISC_UPGRADE_RULES.minimumCooldownMs).toBeGreaterThan(0);
+    expect(BATTLE_RULES.botDiscSizeMultiplier).toBeGreaterThan(0);
+    expect(BATTLE_RULES.botDiscSizeMultiplier).toBeLessThan(1);
     expect(Object.keys(COOKIE_UPGRADE_RULES).sort()).toEqual([
       'autoProduction',
       'clickPower',
@@ -88,6 +98,9 @@ describe('데이터 테이블', () => {
     const second = getBattleDifficulty(DIFFICULTIES[0], 1);
     const final = getBattleDifficulty(DIFFICULTIES[0], PROGRESSION.winsToUnlockNextDifficulty - 1);
     expect(BATTLE_STAGE_RULES.hpMultiplierPerWin).toBeGreaterThan(0);
+    expect(BATTLE_STAGE_RULES.hpMultiplierPerWin).toBeGreaterThanOrEqual(0.3);
+    expect(BATTLE_STAGE_RULES.attackMultiplierPerWin).toBeGreaterThanOrEqual(0.2);
+    expect(BATTLE_STAGE_RULES.extraEnemiesPerStep).toBeGreaterThanOrEqual(3);
     expect(second.hpMultiplier).toBeGreaterThan(first.hpMultiplier);
     expect(second.attackMultiplier).toBeGreaterThan(first.attackMultiplier);
     expect(second.moveSpeed).toBeGreaterThan(first.moveSpeed);

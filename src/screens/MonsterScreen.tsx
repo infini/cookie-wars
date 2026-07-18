@@ -21,19 +21,20 @@ export function MonsterScreen() {
         <Text style={styles.heading}>몬스터 도감</Text>
         <Text style={styles.count}>{state.discoveredMonsterIds.length}/{MONSTERS.length} 발견</Text>
       </View>
-      {MONSTERS.map((monster, index) => {
+      {MONSTERS.map((monster) => {
         const unlocked = state.discoveredMonsterIds.includes(monster.id);
         const isNew = state.newMonsterIds.includes(monster.id);
         return (
           <Panel key={monster.id} style={[styles.card, !unlocked && styles.lockedCard]}>
             <View style={styles.spriteWrap}>
-              {unlocked && index === 0 ? <MonsterSprite size={92} /> : <MaterialCommunityIcons name="help" size={58} color={colors.disabled} />}
+              {unlocked ? <MonsterSprite imageKey={monster.imageKey} size={92} /> : <MaterialCommunityIcons name="help" size={58} color={colors.disabled} />}
               {isNew ? <View style={styles.newBadge}><Text style={styles.newText}>NEW</Text></View> : null}
             </View>
             <View style={styles.monsterInfo}>
               <Text style={[styles.name, !unlocked && styles.lockedText]}>{unlocked ? monster.name : '?????'}</Text>
               {unlocked ? (
                 <>
+                  <Text style={styles.rank}>{monster.rank}</Text>
                   <View style={styles.statRow}>
                     <Text style={styles.stat}>❤️ 체력 {monster.baseHp}</Text>
                     <Text style={styles.stat}>🍪 보상 {monster.rewardCookie}</Text>
@@ -61,6 +62,7 @@ const styles = StyleSheet.create({
   newText: { fontFamily: fonts.extraBold, fontSize: 11, color: colors.white },
   monsterInfo: { flex: 1, marginLeft: 13 },
   name: { fontFamily: fonts.display, fontSize: 21, color: colors.redDark },
+  rank: { alignSelf: 'flex-start', marginTop: 2, fontFamily: fonts.extraBold, fontSize: 9, color: colors.white, backgroundColor: colors.red, borderRadius: 7, paddingHorizontal: 7, paddingVertical: 2 },
   lockedText: { color: colors.muted },
   statRow: { flexDirection: 'row', gap: 10, marginVertical: 6 },
   stat: { fontFamily: fonts.extraBold, fontSize: 11, color: colors.ink },

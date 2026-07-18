@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BATTLE_RULES, getEnemyDisc } from '../config';
+import { BATTLE_RULES, getEnemyDisc, getEnemyWave, getMonster } from '../config';
 import { ActiveBot } from '../domain/gameSelectors';
 import {
   DifficultyConfig,
   DiscLevelConfig,
   EnemyDiscConfig,
-  MonsterConfig,
 } from '../types/game';
 
 export type BattleStatus = 'idle' | 'active' | 'victory' | 'defeat';
@@ -19,9 +18,16 @@ export type BattleEventKind =
 
 export interface BattleEnemy {
   id: string;
+  monsterId: string;
+  imageKey: string;
   name: string;
+  rank: string;
   hp: number;
   maxHp: number;
+  attack: number;
+  moveSpeedMultiplier: number;
+  discDamageMultiplier: number;
+  sizeMultiplier: number;
   x: number;
   y: number;
   spawnAt: number;
@@ -83,7 +89,6 @@ const initialState: BattleState = {
 
 interface EngineOptions {
   difficulty: DifficultyConfig;
-  monster: MonsterConfig;
   playerDisc: DiscLevelConfig;
   discAvailable: boolean;
   bots: ActiveBot[];
@@ -93,7 +98,6 @@ interface EngineOptions {
 
 export interface AdvanceOptions {
   difficulty: DifficultyConfig;
-  monster: MonsterConfig;
   enemyDisc: EnemyDiscConfig;
   playerDisc: DiscLevelConfig;
   bots: ActiveBot[];
@@ -113,6 +117,10 @@ export function calculateCastleDiscDamage(playerDisc: DiscLevelConfig): number {
   return Math.round(playerDisc.damage * BATTLE_RULES.castleDiscDamageMultiplier);
 }
 
+export function calculateBotDiscSize(playerDisc: DiscLevelConfig): number {
+  return Math.round(playerDisc.size * BATTLE_RULES.botDiscSizeMultiplier);
+}
+
 export function canThrowCastleDisc(
   state: BattleState,
   discAvailable: boolean,
@@ -126,21 +134,34 @@ export function canThrowCastleDisc(
 
 export function createBattleEnemies(
   difficulty: DifficultyConfig,
-  monster: MonsterConfig,
   now: number,
 ): BattleEnemy[] {
   const rules = BATTLE_RULES;
-  const maxHp = Math.max(1, Math.round(monster.baseHp * difficulty.hpMultiplier));
+  const wave = getEnemyWave(difficulty.enemyWaveId);
   const enemyDisc = getEnemyDisc(difficulty.enemyDiscLevel);
   return Array.from({ length: difficulty.enemyCount }, (_, index) => {
+    const sequenceNumber = index + 1;
+    const monsterId = wave.bossEveryEnemies > 0
+      && sequenceNumber % wave.bossEveryEnemies === 0
+      ? wave.bossMonsterId
+      : wave.monsterPatternIds[index % wave.monsterPatternIds.length];
+    const monster = getMonster(monsterId);
+    const maxHp = Math.max(1, Math.round(monster.baseHp * difficulty.hpMultiplier));
     const column = index % rules.enemyColumns;
     const spawnStep = Math.max(0, index - rules.initialEnemySpawnCount + 1);
     const spawnAt = now + spawnStep * rules.enemySpawnIntervalMs;
     return {
       id: `enemy-${now}-${index}`,
-      name: difficulty.enemyCount > 1 ? `${monster.name} ${index + 1}` : monster.name,
+      monsterId: monster.id,
+      imageKey: monster.imageKey,
+      name: monster.name,
+      rank: monster.rank,
       hp: maxHp,
       maxHp,
+      attack: monster.baseAttack,
+      moveSpeedMultiplier: monster.moveSpeedMultiplier,
+      discDamageMultiplier: monster.discDamageMultiplier,
+      sizeMultiplier: monster.sizeMultiplier,
       x: rules.enemyStartX + column * rules.enemyColumnGap,
       y: rules.enemyStartY,
       spawnAt,
@@ -163,7 +184,7 @@ function moveEnemies(
   return enemies.map((enemy) => {
     if (enemy.hp <= 0 || enemy.spawnAt > now) return enemy;
     const approach = enemy.y < rules.enemyStopY
-      ? difficulty.moveSpeed * deltaMs / rules.enemyMoveDivisor
+      ? difficulty.moveSpeed * enemy.moveSpeedMultiplier * deltaMs / rules.enemyMoveDivisor
       : 0;
     return {
       ...enemy,
@@ -175,7 +196,7 @@ function moveEnemies(
 export function advanceBattle(state: BattleState, options: AdvanceOptions): BattleState {
   if (state.status !== 'active') return { ...state, now: options.now };
   const rules = BATTLE_RULES;
-  const { difficulty, monster, enemyDisc, playerDisc, bots, now, deltaMs } = options;
+  const { difficulty, enemyDisc, playerDisc, bots, now, deltaMs } = options;
   let eventId = state.lastEvent?.id ?? 0;
   const event = (kind: BattleEventKind): BattleEvent => ({ id: ++eventId, kind });
   let enemies = moveEnemies(state.enemies, difficulty, now, deltaMs);
@@ -222,8 +243,9 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
     }
   }
 
-  for (const activeBot of bots) {
+  for (const [botIndex, activeBot] of bots.entries()) {
     const botId = activeBot.config.id;
+    const botSlot = rules.botFormationSlots[botIndex % rules.botFormationSlots.length];
     const lastAttackAt = lastBotAttackAt[botId] ?? state.now;
     const target = closestEnemy(enemies, now);
     if (
@@ -235,14 +257,14 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
       owner: 'player',
       source: 'bot',
       sourceBotId: botId,
-      x: rules.playerStartX,
-      y: rules.playerStartY,
+      x: botSlot.x,
+      y: botSlot.y,
       targetId: target.id,
       level: playerDisc.level,
       damage: Math.round(
         playerDisc.damage * activeBot.config.discDamageMultiplier * activeBot.count,
       ),
-      size: playerDisc.size,
+      size: calculateBotDiscSize(playerDisc),
       speed: playerDisc.speed,
     });
     lastBotAttackAt[botId] = now;
@@ -261,7 +283,7 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
       x: enemy.x,
       y: enemy.y + rules.enemyProjectileStartOffsetY,
       level: enemyDisc.level,
-      damage: enemyDisc.damage,
+      damage: enemyDisc.damage * enemy.discDamageMultiplier,
       size: enemyDisc.size,
       speed: enemyDisc.speed,
     });
@@ -288,7 +310,7 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
       enemy.y < rules.enemyMeleeTriggerY
       || now - enemy.lastMeleeAt < rules.enemyMeleeIntervalMs
     ) continue;
-    const damage = Math.max(1, Math.round(monster.baseAttack * difficulty.attackMultiplier));
+    const damage = Math.max(1, Math.round(enemy.attack * difficulty.attackMultiplier));
     baseHealth = Math.max(0, baseHealth - damage);
     enemies = enemies.map((item) => item.id === enemy.id
       ? { ...item, lastMeleeAt: now }
@@ -346,7 +368,6 @@ export function advanceBattle(state: BattleState, options: AdvanceOptions): Batt
 
 export function useBattleEngine({
   difficulty,
-  monster,
   playerDisc,
   discAvailable,
   bots,
@@ -368,7 +389,6 @@ export function useBattleEngine({
       previous = now;
       setState((current) => advanceBattle(current, {
         difficulty,
-        monster,
         enemyDisc,
         playerDisc,
         bots,
@@ -377,7 +397,7 @@ export function useBattleEngine({
       }));
     }, BATTLE_RULES.tickMs);
     return () => clearInterval(timer);
-  }, [state.status, difficulty, monster, enemyDisc, playerDisc, bots]);
+  }, [state.status, difficulty, enemyDisc, playerDisc, bots]);
 
   useEffect(() => {
     if (state.lastEvent) onEvent?.(state.lastEvent.kind);
@@ -389,12 +409,12 @@ export function useBattleEngine({
       ...initialState,
       status: 'active',
       now,
-      enemies: createBattleEnemies(difficulty, monster, now),
+      enemies: createBattleEnemies(difficulty, now),
       baseHealth: maxHealth,
       baseMaxHealth: maxHealth,
       lastBotAttackAt: Object.fromEntries(bots.map((bot) => [bot.config.id, now])),
     });
-  }, [difficulty, monster, bots, maxHealth]);
+  }, [difficulty, bots, maxHealth]);
 
   const throwCastleDisc = useCallback((): boolean => {
     const now = Date.now();

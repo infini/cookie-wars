@@ -11,12 +11,14 @@
 | `discs.json` | 10종 원반의 영구 구매 가격과 초기 레벨 능력·강화 가격 |
 | `disc-upgrade-rules.json` | 명시 레벨 이후 무한 강화 증가량과 쿨타임 하한 |
 | `bots.json` | 봇 종류, 최초 가격, 가격 증가율, 피해, 공격 간격 |
-| `monsters.json` | 몬스터 이름, 기본 HP·공격력, 설명 |
-| `difficulties.json` | 난이도 순서, 출전 몬스터, 적 수·배율·이동 속도·보상 |
+| `monsters.json` | 적 이미지·등급, 기본 HP·공격, 속도·원반·크기 배율 |
+| `enemy-waves.json` | 일반 적 반복 패턴과 보스 등장 주기 |
+| `difficulties.json` | 난이도 순서, 웨이브, 적 수·배율·이동 속도·보상 |
 | `battle-stage-rules.json` | 같은 난이도의 승리별 HP·공격·속도·적 수·적 원반 증가식 |
 | `enemy-discs.json` | 적 원반 레벨별 피해·크기·속도·쿨타임 |
 | `progression.json` | 다음 난이도 해금 승수, 저장·생산 주기 |
 | `battle-rules.json` | 전투 좌표, 이동·충돌·공격 시간 |
+| `battle-ui.json` | 전투 맵, 성·봇·적 표시 크기, 체력 게이지 스타일 |
 | `audio-settings.json` | 효과음 5단계별 실제 볼륨과 기본 단계 |
 | `cookies.json` | 10종 쿠키의 자동 진화 조건, 이미지, 최종 능력 배율 |
 | `save-migrations.json` | 이전 버전 데이터 ID를 현재 ID로 옮기는 호환 규칙 |
@@ -53,6 +55,8 @@
 
 쿠키 크기(`cookieSize`)는 이 규칙 테이블에 없으므로 `cookie-upgrades.json`의 마지막 단계가 최대입니다.
 
+업그레이드 화면은 현재 쿠키 잔액으로 바로 살 수 있는 항목을 첫 그룹, 다음 단계는 있지만 쿠키가 부족한 항목을 두 번째 그룹, `next`가 없는 강화 완료 항목을 마지막 그룹에 둡니다. 잔액이나 레벨이 바뀔 때 selector가 다시 정렬하며 같은 그룹 안에서는 이 JSON 배열 순서를 그대로 유지합니다.
+
 ### `discs.json`과 무한 강화
 
 - `purchaseCost`: 원반 최초 영구 구매 가격
@@ -87,14 +91,23 @@
 
 `difficulties.json`의 배열 순서가 실제 해금 순서입니다. 현재 순서는 easy부터 extreme god까지 15단계입니다.
 
-- `monsterId`: `monsters.json`의 `id` 참조
+- `enemyWaveId`: `enemy-waves.json`의 `id` 참조
 - `enemyCount`: 전투에 등장하는 적 수
 - `hpMultiplier`, `attackMultiplier`: 몬스터 기본값에 곱하는 배율
 - `moveSpeed`: 중앙 쿠키 성으로 접근하는 속도
 - `enemyDiscLevel`: `enemy-discs.json`의 단계
-- `reward`: 그 난이도의 첫 승리에서만 주는 쿠키
+- `reward`: 그 난이도의 각 전투 스테이지를 처음 클리어할 때 주는 쿠키
 
-`progression.json`의 `winsToUnlockNextDifficulty`가 다음 단계 해금에 필요한 승리 수입니다. 현재 값은 20이며 보상 횟수와는 무관합니다. 2승부터 20승까지도 승리 횟수는 오르지만 쿠키 보상은 다시 지급하지 않습니다.
+`progression.json`의 `winsToUnlockNextDifficulty`가 다음 단계 해금에 필요한 승리 수입니다. 현재 값은 20입니다. 1~20번 전투는 각각 처음 클리어할 때마다 `reward`를 지급합니다. 완료한 전투를 재도전할 때는 `rewardClaimedStageIds`에 같은 `난이도ID:전투번호` 키가 있으므로 다시 지급하지 않습니다. 20승 뒤 재도전은 20번 전투로 처리됩니다.
+
+현재 기본 적 수는 easy 28마리에서 시작해 난이도마다 10마리 이상 증가하고 extreme god은 170마리입니다. 첫 2마리가 동시에 진입한 뒤 0.3초마다 다음 적이 5개 가로 슬롯을 순환해 등장합니다.
+
+`enemy-waves.json`의 `monsterPatternIds`는 일반 적 순환 순서이고 `bossEveryEnemies`번째 적마다 `bossMonsterId`가 대신 등장합니다. 현재는 15번째마다 흑코코아 폭군이 등장합니다. `monsters.json`의 추가 필드는 다음과 같습니다.
+
+- `imageKey`, `rank`: 전투·도감의 이미지와 한국어 등급
+- `moveSpeedMultiplier`: 난이도 이동 속도에 곱하는 개별 속도
+- `discDamageMultiplier`: 적 원반 피해에 곱하는 개별 배율
+- `sizeMultiplier`: 전투 표시 크기 배율. 최종 크기는 UI 테이블의 최소·최대 범위로 제한
 
 ### 같은 난이도의 전투 단계
 
@@ -104,10 +117,11 @@
 - `attackMultiplierPerWin`: 승리 1회마다 기본 공격 배율에 추가할 비율
 - `moveSpeedMultiplierPerWin`: 승리 1회마다 기본 이동 속도에 추가할 비율
 - `extraEnemyEveryWins`: 적 한 마리를 추가하는 승리 간격
+- `extraEnemiesPerStep`: 위 간격마다 한 번에 늘어나는 적 수
 - `maximumExtraEnemies`: 한 난이도에서 추가할 수 있는 최대 적 수
 - `enemyDiscLevelEveryWins`: 적 원반 레벨을 하나 올리는 승리 간격
 
-첫 승리 전에는 난이도 원본값을 그대로 사용합니다. 승리할 때만 다음 단계로 올라가고 패배는 진행도를 바꾸지 않습니다. 20승 후에는 20번째 전투의 배율을 유지하며 적 원반 레벨은 `enemy-discs.json`의 마지막 단계를 넘지 않습니다.
+현재 값은 승리 1회마다 HP 32%, 공격 24%, 이동 속도 8%를 기본 난이도 값에 추가하고 적 3마리를 늘립니다. 적 원반 레벨은 매 승리마다 1단계 오르며 추가 적 상한은 60마리입니다. 첫 승리 전에는 난이도 원본값을 그대로 사용합니다. 승리할 때만 다음 단계로 올라가고 패배는 진행도를 바꾸지 않습니다. 20승 후에는 20번째 전투의 배율을 유지하며 적 원반 레벨은 `enemy-discs.json`의 마지막 단계를 넘지 않습니다.
 
 ## 쿠키 진화
 
@@ -132,11 +146,23 @@
 - 적 공격: `enemyFirstShotDelayMs`, `enemyShotStaggerMs`, `enemyMeleeTriggerY`, `enemyMeleeIntervalMs`
 - 적 원반: `enemyProjectileStartOffsetY`, `enemyProjectileMoveDivisor`, `coreProjectileHitY`
 - 아군 원반: `playerStartX/Y`, `playerHomingMs`, `playerProjectileMoveDivisor`, `playerHitToleranceX/Y`, `playerProjectileEndY`
-- 쿠키 성: `castleDiscDamageMultiplier`(봇 원반 대비 피해 배율)
+- 쿠키봇 편성·발사: `botFormationSlots[].x/y`. 봇 그림과 실제 발사 시작점이 같은 슬롯을 사용
+- 쿠키봇 원반 크기: `botDiscSizeMultiplier`(성 원반 크기 대비 배율)
+- 쿠키 성: `castleDiscDamageMultiplier`(장착 원반 기본 피해 대비 배율)
 - 표시 안전값: `maxRenderedPlayerDiscSize`
 - 결과 표시: `resultNoticeMs`
 
 이 파일의 값은 전투 엔진만 해석합니다. 화면 컴포넌트에 같은 전투 수치를 다시 쓰지 않습니다.
+
+### `battle-ui.json`
+
+- `battleMapImageKey`: 전투 맵 이미지 키
+- `castleRenderSize`, `castleTouchWidth`: 성 그림과 터치 영역
+- `botRenderSize`, `botLabelWidth`: 봇 그림과 이름 영역
+- `enemyBaseRenderSize`, `enemyMinimumRenderSize`, `enemyMaximumRenderSize`: 등급별 배율 적용 전후 적 크기
+- `enemyLabelWidth`, `enemyHealthWidth`, `castleHealthWidth`: 이름과 체력 게이지 폭
+- `healthBarHeight`, `healthBarOutlineWidth`, `healthBarOutlineColor`, `healthBarTrackColor`: 게이지 외곽선과 바탕
+- `healthBarLowHue`, `healthBarHighHue`, `healthBarSaturationPercent`, `healthBarLightnessPercent`: 남은 체력 비율에 따라 빨강에서 초록으로 보간하는 HSL 범위
 
 ## 진행·사운드
 
@@ -156,11 +182,11 @@
 
 1. JSON의 기존 ID는 저장 호환성을 위해 바꾸지 않습니다.
 2. 새 항목에는 중복되지 않는 ID를 사용합니다.
-3. 난이도의 `monsterId`처럼 다른 테이블을 참조하는 값이 실제로 존재하는지 확인합니다.
+3. 난이도의 `enemyWaveId`, 웨이브의 몬스터 ID처럼 다른 테이블을 참조하는 값이 실제로 존재하는지 확인합니다.
 4. 레벨은 오름차순으로 연속되게 추가합니다.
 5. `npm run verify`를 실행합니다.
 6. Android 릴리스 APK를 빌드해 실제 기기에서 구매, 저장 복구, 전투를 확인합니다.
 
 새 필드가 필요할 때는 JSON만 임의로 추가하지 말고 `src/types/game.ts`의 계약, `src/config/index.ts`, 관련 selector/engine, 테스트, 이 문서를 함께 갱신합니다.
 
-기존 ID를 꼭 바꿔야 한다면 `save-migrations.json`에 이전 ID와 새 ID의 대응을 먼저 추가합니다. 현재 이전 버전의 `cookie-bot` 보유 수량은 첫 번째 10종 봇인 `choco-bot`으로 합산 복구됩니다.
+기존 ID를 꼭 바꿔야 한다면 `save-migrations.json`에 이전 ID와 새 ID의 대응을 먼저 추가합니다. 현재 이전 버전의 `cookie-bot` 보유 수량은 첫 번째 봇인 `choco-bot`으로 합산 복구되며, 이전 3종 몬스터 ID는 새 다등급 몬스터 ID로 이전됩니다.

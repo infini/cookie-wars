@@ -68,7 +68,7 @@ export interface EnemyDiscConfig {
 export interface DifficultyConfig {
   id: string;
   name: string;
-  monsterId: string;
+  enemyWaveId: string;
   enemyCount: number;
   hpMultiplier: number;
   attackMultiplier: number;
@@ -79,11 +79,24 @@ export interface DifficultyConfig {
 
 export interface MonsterConfig {
   id: string;
+  imageKey: string;
   name: string;
+  rank: string;
   baseHp: number;
   baseAttack: number;
   rewardCookie: number;
+  moveSpeedMultiplier: number;
+  discDamageMultiplier: number;
+  sizeMultiplier: number;
   description: string;
+}
+
+export interface EnemyWaveConfig {
+  id: string;
+  name: string;
+  monsterPatternIds: string[];
+  bossMonsterId: string;
+  bossEveryEnemies: number;
 }
 
 export interface BotConfig {
@@ -127,6 +140,7 @@ export interface AudioSettingsConfig {
 
 export interface SaveMigrationsConfig {
   botIdAliases: Record<string, string>;
+  monsterIdAliases: Record<string, string>;
 }
 
 export interface BattleRulesConfig {
@@ -151,6 +165,8 @@ export interface BattleRulesConfig {
   coreProjectileHitY: number;
   playerStartX: number;
   playerStartY: number;
+  botFormationSlots: Array<{ x: number; y: number }>;
+  botDiscSizeMultiplier: number;
   playerHomingMs: number;
   playerProjectileMoveDivisor: number;
   playerHitToleranceY: number;
@@ -166,8 +182,31 @@ export interface BattleStageRulesConfig {
   attackMultiplierPerWin: number;
   moveSpeedMultiplierPerWin: number;
   extraEnemyEveryWins: number;
+  extraEnemiesPerStep: number;
   maximumExtraEnemies: number;
   enemyDiscLevelEveryWins: number;
+}
+
+export interface BattleUiConfig {
+  battleMapImageKey: string;
+  castleRenderSize: number;
+  castleTouchWidth: number;
+  botRenderSize: number;
+  botLabelWidth: number;
+  enemyBaseRenderSize: number;
+  enemyMinimumRenderSize: number;
+  enemyMaximumRenderSize: number;
+  enemyLabelWidth: number;
+  enemyHealthWidth: number;
+  castleHealthWidth: number;
+  healthBarHeight: number;
+  healthBarOutlineWidth: number;
+  healthBarOutlineColor: string;
+  healthBarTrackColor: string;
+  healthBarLowHue: number;
+  healthBarHighHue: number;
+  healthBarSaturationPercent: number;
+  healthBarLightnessPercent: number;
 }
 
 export interface GameState {
@@ -183,7 +222,7 @@ export interface GameState {
   highestUnlockedDifficultyIndex: number;
   difficultyWinCounts: Record<string, number>;
   clearedDifficultyIds: string[];
-  rewardClaimedDifficultyIds: string[];
+  rewardClaimedStageIds: string[];
   discoveredMonsterIds: string[];
   newMonsterIds: string[];
   soundEnabled: boolean;
@@ -205,6 +244,7 @@ export interface CookieStats {
 export interface BattleRewardResult {
   firstClear: boolean;
   reward: number;
+  stageNumber: number;
   difficultyWins: number;
   winsRequired: number;
   unlockedNextDifficulty: boolean;

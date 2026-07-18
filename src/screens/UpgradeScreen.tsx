@@ -1,8 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { COOKIE_UPGRADES } from '../config';
-import { getUpgradeProgress } from '../domain/gameSelectors';
+import { getSortedUpgradeProgress } from '../domain/gameSelectors';
 import { useFeedback } from '../services/FeedbackContext';
 import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
@@ -18,13 +17,12 @@ const icons: Record<string, React.ComponentProps<typeof MaterialCommunityIcons>[
 export function UpgradeScreen() {
   const { state, buyUpgrade } = useGame();
   const feedback = useFeedback();
+  const sortedUpgrades = getSortedUpgradeProgress(state);
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <Text style={styles.help}>쿠키를 사용해서 더 강해져요!</Text>
-      {COOKIE_UPGRADES.map((upgrade) => {
-        const progress = getUpgradeProgress(state, upgrade.id);
-        if (!progress) return null;
-        const { current, next, affordable } = progress;
+      {sortedUpgrades.map((progress) => {
+        const { config: upgrade, current, next, affordable } = progress;
         const handleUpgrade = () => {
           if (buyUpgrade(upgrade.id)) {
             feedback.play('upgrade'); feedback.success();

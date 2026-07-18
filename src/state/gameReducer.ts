@@ -5,11 +5,13 @@ import {
   COOKIE_UPGRADES,
   DIFFICULTIES,
   DISCS,
+  MONSTERS,
   PROGRESSION,
   SAVE_MIGRATIONS,
 } from '../config';
 import {
   getBotOffer,
+  getBattleStageId,
   getDiscProgress,
   getUpgradeProgress,
   makeInitialBotCounts,
@@ -42,7 +44,7 @@ const initialDifficultyWinCounts = Object.fromEntries(
 );
 
 export const initialGameState: GameState = {
-  saveVersion: 3,
+  saveVersion: 5,
   cookies: 0,
   lifetimeCookies: 0,
   upgradeLevels: initialUpgradeLevels,
@@ -54,7 +56,7 @@ export const initialGameState: GameState = {
   highestUnlockedDifficultyIndex: 0,
   difficultyWinCounts: initialDifficultyWinCounts,
   clearedDifficultyIds: [],
-  rewardClaimedDifficultyIds: [],
+  rewardClaimedStageIds: [],
   discoveredMonsterIds: [],
   newMonsterIds: [],
   soundEnabled: true,
@@ -67,6 +69,7 @@ interface LegacyDiscSave {
   discOwned?: boolean;
   discLevel?: number;
   autoBattleEnabled?: boolean;
+  rewardClaimedDifficultyIds?: string[];
 }
 
 function unique(values: string[]): string[] {
@@ -114,6 +117,33 @@ function normalizeBotCounts(savedCounts?: Record<string, number>): Record<string
   return counts;
 }
 
+function normalizeMonsterIds(savedIds?: string[]): string[] {
+  const knownIds = new Set(MONSTERS.map((monster) => monster.id));
+  return unique((savedIds ?? []).flatMap((id) => {
+    const currentId = SAVE_MIGRATIONS.monsterIdAliases[id] ?? id;
+    return knownIds.has(currentId) ? [currentId] : [];
+  }));
+}
+
+function normalizeRewardStageIds(
+  savedStageIds: string[] | undefined,
+  legacyDifficultyIds: string[] | undefined,
+): string[] {
+  const validDifficultyIds = new Set(DIFFICULTIES.map((difficulty) => difficulty.id));
+  const migratedLegacyIds = (legacyDifficultyIds ?? [])
+    .filter((difficultyId) => validDifficultyIds.has(difficultyId))
+    .map((difficultyId) => getBattleStageId(difficultyId, 1));
+  return unique([...(savedStageIds ?? []), ...migratedLegacyIds]).filter((stageId) => {
+    const separatorIndex = stageId.lastIndexOf(':');
+    const difficultyId = stageId.slice(0, separatorIndex);
+    const stageNumber = Number(stageId.slice(separatorIndex + 1));
+    return validDifficultyIds.has(difficultyId)
+      && Number.isInteger(stageNumber)
+      && stageNumber >= 1
+      && stageNumber <= PROGRESSION.winsToUnlockNextDifficulty;
+  });
+}
+
 function normalizeDiscLevels(
   savedLevels: Record<string, number> | undefined,
   legacyDiscLevel: number | undefined,
@@ -143,6 +173,7 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     discOwned: _legacyDiscOwned,
     discLevel: _legacyDiscLevel,
     autoBattleEnabled: _legacyAutoBattle,
+    rewardClaimedDifficultyIds: legacyRewardClaimedDifficultyIds,
     ...currentSaved
   } = saved;
   const difficultyWinCounts = normalizeDifficultyWins(saved);
@@ -163,6 +194,14 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     && ownedDiscIds.includes(saved.selectedDiscId)
     ? saved.selectedDiscId
     : ownedDiscIds[0] ?? DISCS[0].id;
+  const discoveredMonsterIds = normalizeMonsterIds(saved.discoveredMonsterIds);
+  const newMonsterIds = normalizeMonsterIds(saved.newMonsterIds).filter((id) => (
+    discoveredMonsterIds.includes(id)
+  ));
+  const rewardClaimedStageIds = normalizeRewardStageIds(
+    saved.rewardClaimedStageIds,
+    legacyRewardClaimedDifficultyIds,
+  );
 
   return {
     ...initialGameState,
@@ -178,9 +217,9 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     highestUnlockedDifficultyIndex,
     difficultyWinCounts,
     clearedDifficultyIds: unique(saved.clearedDifficultyIds ?? []),
-    rewardClaimedDifficultyIds: unique(saved.rewardClaimedDifficultyIds ?? []),
-    discoveredMonsterIds: unique(saved.discoveredMonsterIds ?? []),
-    newMonsterIds: unique(saved.newMonsterIds ?? []),
+    rewardClaimedStageIds,
+    discoveredMonsterIds,
+    newMonsterIds,
     soundVolumeLevel: normalizeSoundVolumeLevel(saved.soundVolumeLevel),
   };
 }
@@ -255,8 +294,20 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       );
       if (difficultyIndex < 0 || difficultyIndex > state.highestUnlockedDifficultyIndex) return state;
       const difficulty = DIFFICULTIES[difficultyIndex];
-      const firstReward = !state.rewardClaimedDifficultyIds.includes(difficulty.id);
-      const wins = (state.difficultyWinCounts[difficulty.id] ?? 0) + 1;
+      const previousWins = Math.min(
+        PROGRESSION.winsToUnlockNextDifficulty,
+        state.difficultyWinCounts[difficulty.id] ?? 0,
+      );
+      const stageNumber = Math.min(
+        previousWins + 1,
+        PROGRESSION.winsToUnlockNextDifficulty,
+      );
+      const stageId = getBattleStageId(difficulty.id, stageNumber);
+      const firstReward = !state.rewardClaimedStageIds.includes(stageId);
+      const wins = Math.min(
+        PROGRESSION.winsToUnlockNextDifficulty,
+        previousWins + 1,
+      );
       const unlockNext = wins >= PROGRESSION.winsToUnlockNextDifficulty;
       return {
         ...state,
@@ -264,7 +315,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         lifetimeCookies: state.lifetimeCookies + (firstReward ? difficulty.reward : 0),
         difficultyWinCounts: { ...state.difficultyWinCounts, [difficulty.id]: wins },
         clearedDifficultyIds: unique([...state.clearedDifficultyIds, difficulty.id]),
-        rewardClaimedDifficultyIds: unique([...state.rewardClaimedDifficultyIds, difficulty.id]),
+        rewardClaimedStageIds: unique([...state.rewardClaimedStageIds, stageId]),
         highestUnlockedDifficultyIndex: unlockNext
           ? Math.max(
               state.highestUnlockedDifficultyIndex,

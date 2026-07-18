@@ -13,6 +13,7 @@ import { DIFFICULTIES, PROGRESSION, getDifficulty } from '../config';
 import {
   calculateCookieStats,
   getBotOffer,
+  getBattleStageId,
   getDifficultyProgress,
   getDiscProgress,
   getUpgradeProgress,
@@ -138,8 +139,11 @@ export function GameProvider({ children }: PropsWithChildren) {
     const difficulty = getDifficulty(difficultyId);
     const difficultyIndex = DIFFICULTIES.findIndex((item) => item.id === difficultyId);
     const progress = getDifficultyProgress(current, difficultyId);
-    const firstClear = !current.rewardClaimedDifficultyIds.includes(difficultyId);
-    const difficultyWins = progress.wins + 1;
+    const stageNumber = progress.currentBattleNumber;
+    const firstClear = !current.rewardClaimedStageIds.includes(
+      getBattleStageId(difficultyId, stageNumber),
+    );
+    const difficultyWins = Math.min(progress.requiredWins, progress.wins + 1);
     const unlockedNextDifficulty = difficultyIndex < DIFFICULTIES.length - 1
       && progress.wins < progress.requiredWins
       && difficultyWins >= progress.requiredWins;
@@ -147,6 +151,7 @@ export function GameProvider({ children }: PropsWithChildren) {
     return {
       firstClear,
       reward: firstClear ? difficulty.reward : 0,
+      stageNumber,
       difficultyWins,
       winsRequired: progress.requiredWins,
       unlockedNextDifficulty,
