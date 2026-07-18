@@ -12,11 +12,12 @@
 | `disc-upgrade-rules.json` | 명시 레벨 이후 무한 강화 증가량과 쿨타임 하한 |
 | `bots.json` | 봇 종류, 최초 가격, 가격 증가율, 피해, 공격 간격 |
 | `monsters.json` | 적 이미지·등급, 기본 HP·공격, 속도·원반·크기 배율 |
-| `enemy-waves.json` | 일반 적 반복 패턴과 보스 등장 주기 |
-| `difficulties.json` | 난이도 순서, 웨이브, 적 수·배율·이동 속도·보상 |
-| `battle-stage-rules.json` | 같은 난이도의 승리별 HP·공격·속도·적 수·적 원반 증가식 |
+| `enemy-waves.json` | 거대 보스 한 종류의 전투 구성 |
+| `difficulties.json` | 난이도 순서, 보스 HP·공격 배율·이동 속도 |
+| `battle-stage-rules.json` | 같은 난이도의 승리별 보스 HP·공격·속도·원반 증가식 |
 | `enemy-discs.json` | 적 원반 레벨별 피해·크기·속도·쿨타임 |
-| `progression.json` | 다음 난이도 해금 승수, 저장·생산 주기 |
+| `giant-disc.json` | 거대 원반 피해·비행·크기·연출·버튼 표시 |
+| `progression.json` | 다음 난이도 해금 승수, 최초 클리어 거대 원반 수, 저장·생산 주기 |
 | `battle-rules.json` | 전투 좌표, 이동·충돌·공격 시간 |
 | `battle-ui.json` | 전투 맵, 성·봇·적 표시 크기, 체력 게이지 스타일 |
 | `audio-settings.json` | 효과음 5단계별 실제 볼륨과 기본 단계 |
@@ -91,13 +92,12 @@
 - `hpMultiplier`, `attackMultiplier`: 몬스터 기본값에 곱하는 배율
 - `moveSpeed`: 중앙 쿠키 성으로 접근하는 속도
 - `enemyDiscLevel`: `enemy-discs.json`의 단계
-- `reward`: 그 난이도의 각 전투 스테이지를 처음 클리어할 때 주는 쿠키
 
-`progression.json`의 `winsToUnlockNextDifficulty`가 다음 단계 해금에 필요한 승리 수입니다. 현재 값은 20입니다. 1~20번 전투는 각각 처음 클리어할 때마다 `reward`를 지급합니다. 완료한 전투를 재도전할 때는 `rewardClaimedStageIds`에 같은 `난이도ID:전투번호` 키가 있으므로 다시 지급하지 않습니다. 20승 뒤 재도전은 20번 전투로 처리됩니다.
+`progression.json`의 `winsToUnlockNextDifficulty`가 다음 단계 해금에 필요한 승리 수입니다. 현재 값은 20입니다. 1~20번 전투는 각각 처음 클리어할 때마다 `giantDiscRewardPerFirstClear` 수량만큼 거대 원반을 지급하며 현재 값은 1개입니다. 전투 승리로 쿠키는 지급하지 않습니다. 완료한 전투를 재도전할 때는 `rewardClaimedStageIds`에 같은 `난이도ID:전투번호` 키가 있으므로 거대 원반도 다시 지급하지 않습니다. 20승 뒤 재도전은 20번 전투로 처리됩니다.
 
-현재 기본 적 수는 easy 18마리에서 시작하고 extreme god도 24마리입니다. 전체 난이도 간 기본 물량 차이는 6마리뿐입니다. 첫 3마리가 좌·중앙·우 길에 동시에 진입한 뒤 0.115초마다 다음 적이 행렬로 등장합니다.
+현재 모든 난이도의 `enemyCount`는 1입니다. 스테이지 성장 테이블도 적 추가량을 0으로 유지하므로 1~20번째 전투 모두 보스 한 마리만 등장합니다.
 
-`enemy-waves.json`에는 15개 난이도별 편성이 각각 존재합니다. `monsterPatternIds` 배열에서 같은 ID를 여러 번 사용하면 해당 적의 편성 비율이 커지고, `bossEveryEnemies`가 작을수록 보스가 자주 등장합니다. easy는 빠르고 약한 졸개 중심이고 상위 난이도일수록 이동 배율 0.62의 초코 골렘 비율이 높아집니다. god 구간은 골렘 공성대에 이동 배율 0.5의 흑코코아 폭군이 점점 자주 섞입니다. `monsters.json`의 추가 필드는 다음과 같습니다.
+`enemy-waves.json`에는 `giant-boss-duel` 한 행만 있고 일반 패턴과 보스 ID가 모두 `cookie-tyrant`를 가리킵니다. `bossEveryEnemies`도 1이므로 다른 적이 생성될 수 없습니다. `monsters.json`의 추가 필드는 다음과 같습니다.
 
 - `imageKey`, `rank`: 전투·도감의 이미지와 한국어 등급
 - `moveSpeedMultiplier`: 난이도 이동 속도에 곱하는 개별 속도
@@ -116,7 +116,7 @@
 - `maximumExtraEnemies`: 한 난이도에서 추가할 수 있는 최대 적 수
 - `enemyDiscLevelEveryWins`: 적 원반 레벨을 하나 올리는 승리 간격
 
-현재 값은 승리 1회마다 HP 5%, 공격 3%, 이동 속도 1.5%를 기본 난이도 값에 추가합니다. 적 원반 레벨은 2승마다 1씩 오르지만 적 수는 5승마다 1마리만 증가하고 한 난이도의 추가 적 상한은 3마리입니다. 첫 승리 전에는 난이도 원본값을 그대로 사용합니다. 승리할 때만 다음 단계로 올라가고 패배는 진행도를 바꾸지 않습니다. 20승 후에는 20번째 전투의 배율을 유지하며 적 원반 레벨은 `enemy-discs.json`의 마지막 단계를 넘지 않습니다.
+현재 값은 승리 1회마다 보스 HP 5%, 공격 3%, 이동 속도 1.5%를 기본 난이도 값에 추가합니다. 적 원반 레벨은 2승마다 1씩 오릅니다. `extraEnemiesPerStep`과 `maximumExtraEnemies`는 모두 0이므로 보스 수는 늘지 않습니다. 승리할 때만 다음 단계로 올라가고 패배는 진행도를 바꾸지 않습니다.
 
 ## 쿠키 진화
 
@@ -135,11 +135,8 @@
 `battle-rules.json`의 좌표는 대부분 화면 비율(0~1)입니다. `*Ms`는 밀리초입니다.
 
 - 프레임: `tickMs`, `maxDeltaMs`
-- 적 경로: `enemyPaths[].id`, `enemyPaths[].waypoints[].x/y`, `enemyPathPattern`. 경로 행을 추가하면 코드 변경 없이 길을 늘릴 수 있음
-- 적 순차 출현: `initialEnemySpawnCount`, `enemySpawnIntervalMs`, `enemySpawnGroupSize`, `enemySpawnGroupPauseMs`
-- 같은 경로 행렬 간격: `enemyMinimumLaneSpacingY`
-- 적 이동 범위: 경로의 마지막 웨이포인트, `enemyStopY`, `enemyMoveDivisor`
-- 적 공격: `enemyFirstShotDelayMs`, `enemyShotStaggerMs`, `enemyMeleeTriggerY`, `enemyMeleeIntervalMs`, `enemyAttackRadius`, `maximumSimultaneousEnemyProjectiles`
+- 보스 이동: `enemyX`, `enemyStartY`, `enemyStopY`, `enemyMoveDivisor`
+- 보스 공격: `enemyFirstShotDelayMs`, `enemyMeleeTriggerY`, `enemyMeleeIntervalMs`, `enemyAttackRadius`, `maximumSimultaneousEnemyProjectiles`
 - 적 원반: `enemyProjectileStartOffsetY`, `enemyProjectileMoveDivisor`, `coreProjectileHitY`
 - 아군 원반: `playerStartX/Y`, `playerHomingMs`, `playerProjectileMoveDivisor`, `playerProjectileMinimumFlightMs`, `playerHitToleranceX/Y`, `playerProjectileEndY`
 - 공격 반경: `castleAttackRadius`, `botAttackRadius`. 현재 성 0.44, 봇 0.5이며 반경 밖의 적은 발사 대상으로 선택하지 않음
@@ -150,6 +147,19 @@
 - 결과 표시: `resultNoticeMs`
 
 이 파일의 값은 전투 엔진만 해석합니다. 화면 컴포넌트에 같은 전투 수치를 다시 쓰지 않습니다.
+
+### `giant-disc.json`
+
+- `damageMultiplier`: 장착 일반 원반 기본 피해에 곱하는 값. 현재 정확히 30배
+- `speedMultiplier`: 일반 원반 속도에 곱하는 거대 원반 비행 속도 배율
+- `attackRadius`: 거대 원반을 사용할 수 있는 보스 탐색 반경
+- `renderWidthRatio`: 휴대폰 화면 너비 대비 표시 크기. 현재 0.34로 화면 약 1/3
+- `effectPulseDurationMs`, `effectPulseScale`: 발사 중 오라가 맥동하는 주기와 크기
+- `effectRingBorderWidth`, `effect*Color`: 두 겹 원형 오라, 발광, 안내 문구 색상
+- `launchNoticeMs`: `거대 원반!` 전투 안내 표시 시간
+- `button*Color`: 보유량·30배 수치를 표시하는 전투 버튼 색상
+
+거대 원반은 전투에서만 사용할 수 있는 소모형 무기입니다. 버튼을 눌러 실제 발사에 성공하면 저장 상태의 `giantDiscCount`가 1 감소합니다. 보유량이 없거나 살아 있는 보스가 없으면 발사와 소모가 모두 일어나지 않습니다. 일반 원반 강화 레벨이 오르면 기준 피해도 함께 오르지만 30배 배율은 이 테이블에서 유지됩니다.
 
 ### `battle-ui.json`
 
@@ -169,6 +179,7 @@
 `progression.json`:
 
 - `winsToUnlockNextDifficulty`: 다음 난이도 해금 승수
+- `giantDiscRewardPerFirstClear`: 전투 번호별 최초 클리어에 지급할 거대 원반 개수
 - `saveDebounceMs`: 상태 변화 후 저장을 합쳐 처리하는 시간
 - `autoProductionIntervalMs`: 자동 쿠키 생산 적용 주기
 

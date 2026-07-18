@@ -12,6 +12,7 @@ import discData from './discs.json';
 import discUpgradeRuleData from './disc-upgrade-rules.json';
 import enemyDiscData from './enemy-discs.json';
 import enemyWaveData from './enemy-waves.json';
+import giantDiscData from './giant-disc.json';
 import monsterData from './monsters.json';
 import progressionData from './progression.json';
 import saveMigrationData from './save-migrations.json';
@@ -29,6 +30,7 @@ import {
   DiscUpgradeRulesConfig,
   EnemyDiscConfig,
   EnemyWaveConfig,
+  GiantDiscConfig,
   MonsterConfig,
   ProgressionConfig,
   SaveMigrationsConfig,
@@ -46,6 +48,7 @@ export const DISCS = discData as DiscConfig[];
 export const DISC_UPGRADE_RULES = discUpgradeRuleData as DiscUpgradeRulesConfig;
 export const ENEMY_DISCS = enemyDiscData as EnemyDiscConfig[];
 export const ENEMY_WAVES = enemyWaveData as EnemyWaveConfig[];
+export const GIANT_DISC = giantDiscData as GiantDiscConfig;
 export const DIFFICULTIES = difficultyData as DifficultyConfig[];
 export const MONSTERS = monsterData as MonsterConfig[];
 export const BOTS = botData as BotConfig[];

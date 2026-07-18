@@ -1,0 +1,20 @@
+{
+  "damageMultiplier": 30,
+  "speedMultiplier": 0.55,
+  "attackRadius": 1,
+  "renderWidthRatio": 0.34,
+  "effectPulseDurationMs": 700,
+  "launchNoticeMs": 900,
+  "effectPulseScale": 0.12,
+  "effectRingBorderWidth": 6,
+  "effectOuterColor": "#FFD84D",
+  "effectInnerColor": "#73D9FF",
+  "effectGlowColor": "#FFF3A3",
+  "effectOuterFillColor": "rgba(255,216,77,0.18)",
+  "effectInnerFillColor": "rgba(115,217,255,0.2)",
+  "effectTextShadowColor": "#B52E16",
+  "buttonBackgroundColor": "#7A45D1",
+  "buttonDisabledColor": "#776F80",
+  "buttonBorderColor": "#FFE36E",
+  "buttonCountColor": "#FFF4B0"
+}

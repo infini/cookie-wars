@@ -9,7 +9,6 @@ import { useFeedback } from '../services/FeedbackContext';
 import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
-import { formatNumber } from '../utils/format';
 
 function Detail({ icon, label, value, tint }: { icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; label: string; value: string; tint: string }) {
   return (
@@ -58,8 +57,8 @@ export function DifficultyScreen() {
           </View>
         </View>
         <View style={styles.details}>
-          <Detail icon="account-group" label="현재 적 수" value={`${battleDifficulty.enemyCount}마리`} tint={colors.red} />
-          <Detail icon="shield-sword" label="현재 적 편성" value={enemyWave.name} tint={colors.orange} />
+          <Detail icon="account-group" label="보스 수" value={`${battleDifficulty.enemyCount}마리`} tint={colors.red} />
+          <Detail icon="shield-sword" label="전투 방식" value={enemyWave.name} tint={colors.orange} />
           <Detail icon="disc" label="현재 적 원반" value={`Lv.${battleDifficulty.enemyDiscLevel}`} tint={colors.purple} />
           <Detail icon="run-fast" label="현재 이동 속도" value={battleDifficulty.moveSpeed.toFixed(1)} tint={colors.blue} />
           <Detail icon="heart-pulse" label="현재 적 체력" value={`× ${battleDifficulty.hpMultiplier.toFixed(2)}`} tint={colors.orange} />
@@ -100,13 +99,13 @@ export function DifficultyScreen() {
         <View style={styles.rewardText}>
           <Text style={styles.rewardTitle}>{rewardReceived ? `전투 ${progress.currentBattleNumber} 보상 받음` : `전투 ${progress.currentBattleNumber} 최초 보상`}</Text>
           <Text style={styles.rewardDescription}>
-            {rewardReceived ? '이 전투를 다시 이겨도 쿠키 보상은 없어요.' : `처음 클리어하면 쿠키 ${formatNumber(selected.reward)}개를 받아요!`}
+            {rewardReceived ? '이 전투를 다시 이겨도 거대 원반은 추가되지 않아요.' : '처음 클리어하면 거대 원반 1개를 받아요!'}
           </Text>
         </View>
       </Panel>
       <View style={styles.tip}>
         <MaterialCommunityIcons name="lightbulb-on" size={24} color={colors.yellowDark} />
-        <Text style={styles.tipText}>높은 난이도일수록 느리지만 강한 골렘과 보스가 더 많이 편성돼요. 같은 난이도 안에서도 전투를 이길수록 적이 강해져요.</Text>
+        <Text style={styles.tipText}>모든 전투는 거대한 보스 한 마리와 싸워요. 난이도와 전투 단계가 오르면 보스의 체력·공격력·원반 레벨이 올라가요.</Text>
       </View>
     </ScrollView>
   );

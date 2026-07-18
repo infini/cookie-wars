@@ -2,8 +2,8 @@
   "hpMultiplierPerWin": 0.05,
   "attackMultiplierPerWin": 0.03,
   "moveSpeedMultiplierPerWin": 0.015,
-  "extraEnemyEveryWins": 5,
-  "extraEnemiesPerStep": 1,
-  "maximumExtraEnemies": 3,
+  "extraEnemyEveryWins": 1,
+  "extraEnemiesPerStep": 0,
+  "maximumExtraEnemies": 0,
   "enemyDiscLevelEveryWins": 2
 }

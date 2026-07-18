@@ -9,7 +9,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { DIFFICULTIES, PROGRESSION, getDifficulty } from '../config';
+import { DIFFICULTIES, PROGRESSION } from '../config';
 import {
   calculateCookieStats,
   getBotOffer,
@@ -41,6 +41,7 @@ interface GameContextValue {
   discoverMonster: (monsterId: string) => void;
   acknowledgeMonsters: () => void;
   completeBattle: (difficultyId: string) => BattleRewardResult;
+  useGiantDisc: () => boolean;
   toggleSound: () => void;
   setSoundVolume: (level: SoundVolumeLevel) => void;
   toggleVibration: () => void;
@@ -136,7 +137,6 @@ export function GameProvider({ children }: PropsWithChildren) {
 
   const completeBattle = useCallback((difficultyId: string): BattleRewardResult => {
     const current = stateRef.current;
-    const difficulty = getDifficulty(difficultyId);
     const difficultyIndex = DIFFICULTIES.findIndex((item) => item.id === difficultyId);
     const progress = getDifficultyProgress(current, difficultyId);
     const stageNumber = progress.currentBattleNumber;
@@ -150,12 +150,18 @@ export function GameProvider({ children }: PropsWithChildren) {
     dispatch({ type: 'COMPLETE_BATTLE', difficultyId });
     return {
       firstClear,
-      reward: firstClear ? difficulty.reward : 0,
+      giantDiscReward: firstClear ? PROGRESSION.giantDiscRewardPerFirstClear : 0,
       stageNumber,
       difficultyWins,
       winsRequired: progress.requiredWins,
       unlockedNextDifficulty,
     };
+  }, []);
+
+  const useGiantDisc = useCallback(() => {
+    if (stateRef.current.giantDiscCount <= 0) return false;
+    dispatch({ type: 'USE_GIANT_DISC' });
+    return true;
   }, []);
 
   const value = useMemo<GameContextValue>(
@@ -173,6 +179,7 @@ export function GameProvider({ children }: PropsWithChildren) {
       discoverMonster,
       acknowledgeMonsters,
       completeBattle,
+      useGiantDisc,
       toggleSound: () => dispatch({ type: 'TOGGLE_SOUND' }),
       setSoundVolume: (level) => dispatch({ type: 'SET_SOUND_VOLUME', level }),
       toggleVibration: () => dispatch({ type: 'TOGGLE_VIBRATION' }),
@@ -191,6 +198,7 @@ export function GameProvider({ children }: PropsWithChildren) {
       discoverMonster,
       acknowledgeMonsters,
       completeBattle,
+      useGiantDisc,
     ],
   );
 

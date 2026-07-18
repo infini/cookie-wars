@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BATTLE_RULES, getEnemyDisc, getEnemyWave, getMonster } from '../config';
+import {
+  BATTLE_RULES,
+  GIANT_DISC,
+  getEnemyDisc,
+  getEnemyWave,
+  getMonster,
+} from '../config';
 import { ActiveBot } from '../domain/gameSelectors';
 import {
   DifficultyConfig,
@@ -28,7 +34,6 @@ export interface BattleEnemy {
   moveSpeedMultiplier: number;
   discDamageMultiplier: number;
   sizeMultiplier: number;
-  pathIndex: number;
   x: number;
   y: number;
   spawnAt: number;
@@ -44,7 +49,7 @@ export interface BattleProjectile {
   targetId?: string;
   sourceEnemyId?: string;
   sourceBotId?: string;
-  source?: 'castle' | 'bot';
+  source?: 'castle' | 'bot' | 'giant';
   level: number;
   damage: number;
   size: number;
@@ -127,26 +132,16 @@ export function closestEnemyWithinRadius(
     .sort((a, b) => b.y - a.y)[0];
 }
 
-function getPathX(pathIndex: number, y: number): number {
-  const path = BATTLE_RULES.enemyPaths[pathIndex] ?? BATTLE_RULES.enemyPaths[0];
-  const points = path.waypoints;
-  if (y <= points[0].y) return points[0].x;
-  for (let index = 1; index < points.length; index += 1) {
-    const start = points[index - 1];
-    const end = points[index];
-    if (y > end.y) continue;
-    const progress = (y - start.y) / (end.y - start.y);
-    return start.x + (end.x - start.x) * progress;
-  }
-  return points[points.length - 1].x;
-}
-
 export function calculateCastleDiscDamage(playerDisc: DiscLevelConfig): number {
   return Math.round(playerDisc.damage * BATTLE_RULES.castleDiscDamageMultiplier);
 }
 
 export function calculateBotDiscSize(playerDisc: DiscLevelConfig): number {
   return Math.round(playerDisc.size * BATTLE_RULES.botDiscSizeMultiplier);
+}
+
+export function calculateGiantDiscDamage(playerDisc: DiscLevelConfig): number {
+  return Math.round(playerDisc.damage * GIANT_DISC.damageMultiplier);
 }
 
 export function canThrowCastleDisc(
@@ -167,6 +162,22 @@ export function canThrowCastleDisc(
     ));
 }
 
+export function canThrowGiantDisc(
+  state: BattleState,
+  giantDiscAvailable: boolean,
+  now: number,
+): boolean {
+  return state.status === 'active'
+    && giantDiscAvailable
+    && Boolean(closestEnemyWithinRadius(
+      state.enemies,
+      now,
+      BATTLE_RULES.playerStartX,
+      BATTLE_RULES.playerStartY,
+      GIANT_DISC.attackRadius,
+    ));
+}
+
 export function createBattleEnemies(
   difficulty: DifficultyConfig,
   now: number,
@@ -182,16 +193,7 @@ export function createBattleEnemies(
       : wave.monsterPatternIds[index % wave.monsterPatternIds.length];
     const monster = getMonster(monsterId);
     const maxHp = Math.max(1, Math.round(monster.baseHp * difficulty.hpMultiplier));
-    const pathIndex = monster.rank === '보스'
-      ? Math.floor(rules.enemyPaths.length / 2)
-      : rules.enemyPathPattern[index % rules.enemyPathPattern.length];
-    const queuedIndex = Math.max(0, index - rules.initialEnemySpawnCount);
-    const spawnGroup = Math.floor(queuedIndex / rules.enemySpawnGroupSize);
-    const spawnAt = index < rules.initialEnemySpawnCount
-      ? now
-      : now
-        + (queuedIndex + 1) * rules.enemySpawnIntervalMs
-        + spawnGroup * rules.enemySpawnGroupPauseMs;
+    const spawnAt = now;
     return {
       id: `enemy-${now}-${index}`,
       monsterId: monster.id,
@@ -204,14 +206,12 @@ export function createBattleEnemies(
       moveSpeedMultiplier: monster.moveSpeedMultiplier,
       discDamageMultiplier: monster.discDamageMultiplier,
       sizeMultiplier: monster.sizeMultiplier,
-      pathIndex,
-      x: getPathX(pathIndex, rules.enemyStartY),
+      x: rules.enemyX,
       y: rules.enemyStartY,
       spawnAt,
       lastShotAt: spawnAt
         - enemyDisc.cooldownMs
-        + rules.enemyFirstShotDelayMs
-        + pathIndex * rules.enemyShotStaggerMs,
+        + rules.enemyFirstShotDelayMs,
       lastMeleeAt: spawnAt,
     };
   });
@@ -224,7 +224,7 @@ function moveEnemies(
   deltaMs: number,
 ): BattleEnemy[] {
   const rules = BATTLE_RULES;
-  const moved = enemies.map((enemy) => {
+  return enemies.map((enemy) => {
     if (enemy.hp <= 0 || enemy.spawnAt > now) return enemy;
     const approach = enemy.y < rules.enemyStopY
       ? difficulty.moveSpeed * enemy.moveSpeedMultiplier * deltaMs / rules.enemyMoveDivisor
@@ -234,26 +234,6 @@ function moveEnemies(
       y: Math.min(rules.enemyStopY, enemy.y + approach),
     };
   });
-  const spaced = [...moved];
-  for (const pathIndex of rules.enemyPaths.keys()) {
-    const pathEnemies = spaced
-      .filter((enemy) => (
-        enemy.pathIndex === pathIndex && enemy.hp > 0 && enemy.spawnAt <= now
-      ))
-      .sort((a, b) => b.y - a.y);
-    pathEnemies.slice(1).forEach((enemy, index) => {
-      const ahead = pathEnemies[index];
-      const maximumY = ahead.y - rules.enemyMinimumLaneSpacingY;
-      if (enemy.y <= maximumY) return;
-      const movedIndex = spaced.findIndex((item) => item.id === enemy.id);
-      spaced[movedIndex] = { ...enemy, y: maximumY };
-      pathEnemies[index + 1] = spaced[movedIndex];
-    });
-  }
-  return spaced.map((enemy) => ({
-    ...enemy,
-    x: getPathX(enemy.pathIndex, enemy.y),
-  }));
 }
 
 export function advanceBattle(state: BattleState, options: AdvanceOptions): BattleState {
@@ -548,6 +528,43 @@ export function useBattleEngine({
     return true;
   }, [discAvailable, playerDisc, state]);
 
+  const throwGiantDisc = useCallback((): boolean => {
+    const now = Date.now();
+    if (!canThrowGiantDisc(state, true, now)) return false;
+    const target = closestEnemyWithinRadius(
+      state.enemies,
+      now,
+      BATTLE_RULES.playerStartX,
+      BATTLE_RULES.playerStartY,
+      GIANT_DISC.attackRadius,
+    );
+    if (!target) return false;
+    setState((current) => ({
+      ...current,
+      now,
+      playerProjectiles: [...current.playerProjectiles, {
+        id: `giant-disc-${now}`,
+        owner: 'player',
+        source: 'giant',
+        x: BATTLE_RULES.playerStartX,
+        y: BATTLE_RULES.playerStartY,
+        targetId: target.id,
+        level: playerDisc.level,
+        damage: calculateGiantDiscDamage(playerDisc),
+        size: playerDisc.size,
+        speed: playerDisc.speed * GIANT_DISC.speedMultiplier,
+        createdAt: now,
+      }],
+      notice: '거대 원반!',
+      noticeUntil: now + GIANT_DISC.launchNoticeMs,
+      lastEvent: {
+        id: (current.lastEvent?.id ?? 0) + 1,
+        kind: 'disc',
+      },
+    }));
+    return true;
+  }, [playerDisc, state]);
+
   const reset = useCallback(() => setState({ ...initialState, now: Date.now() }), []);
   const canCastleThrow = canThrowCastleDisc(
     state,
@@ -555,6 +572,7 @@ export function useBattleEngine({
     playerDisc,
     state.now,
   );
+  const canGiantThrow = canThrowGiantDisc(state, true, state.now);
   const cooldownRemainingMs = Math.max(
     0,
     playerDisc.cooldownMs - (state.now - state.lastCastleThrowAt),
@@ -564,8 +582,10 @@ export function useBattleEngine({
     state,
     start,
     throwCastleDisc,
+    throwGiantDisc,
     reset,
     canCastleThrow,
+    canGiantThrow,
     cooldownRemainingMs,
     enemyDisc,
   };

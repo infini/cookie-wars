@@ -10,6 +10,7 @@ import {
   DISCS,
   ENEMY_DISCS,
   ENEMY_WAVES,
+  GIANT_DISC,
   MONSTERS,
   PROGRESSION,
 } from '../src/config';
@@ -36,35 +37,25 @@ describe('데이터 테이블', () => {
     ]);
   });
 
-  test('난이도가 오르면 적 수는 소폭만 늘고 원반 레벨은 감소하지 않는다', () => {
+  test('난이도가 올라도 보스는 한 마리이고 원반과 능력치만 오른다', () => {
     DIFFICULTIES.slice(1).forEach((difficulty, index) => {
-      expect(difficulty.enemyCount).toBeGreaterThanOrEqual(DIFFICULTIES[index].enemyCount);
+      expect('reward' in difficulty).toBe(false);
+      expect(difficulty.enemyCount).toBe(1);
       expect(difficulty.enemyDiscLevel).toBeGreaterThan(DIFFICULTIES[index].enemyDiscLevel);
       expect(difficulty.moveSpeed).toBeGreaterThanOrEqual(DIFFICULTIES[index].moveSpeed);
       expect(difficulty.hpMultiplier).toBeGreaterThan(DIFFICULTIES[index].hpMultiplier);
       expect(difficulty.attackMultiplier).toBeGreaterThan(DIFFICULTIES[index].attackMultiplier);
     });
-    expect(DIFFICULTIES[DIFFICULTIES.length - 1].enemyCount - DIFFICULTIES[0].enemyCount)
-      .toBeLessThanOrEqual(6);
+    expect('reward' in DIFFICULTIES[0]).toBe(false);
+    expect(DIFFICULTIES[0].enemyCount).toBe(1);
     expect(ENEMY_DISCS).toHaveLength(15);
   });
 
-  test('난이도는 단순 물량 대신 느리고 강한 적의 편성 비율로 상승한다', () => {
-    const slowStrongIds = new Set(MONSTERS
-      .filter((monster) => monster.moveSpeedMultiplier <= 0.62)
-      .map((monster) => monster.id));
-    const compositionScores = DIFFICULTIES.map((difficulty) => {
-      const wave = ENEMY_WAVES.find((item) => item.id === difficulty.enemyWaveId)!;
-      const strongPatternCount = wave.monsterPatternIds.filter(
-        (monsterId) => slowStrongIds.has(monsterId),
-      ).length;
-      return strongPatternCount / wave.monsterPatternIds.length
-        + 1 / wave.bossEveryEnemies;
-    });
-
-    compositionScores.slice(1).forEach((score, index) => {
-      expect(score).toBeGreaterThan(compositionScores[index]);
-    });
+  test('보스 웨이브는 흑코코아 폭군 한 종류만 참조한다', () => {
+    expect(ENEMY_WAVES).toHaveLength(1);
+    expect(ENEMY_WAVES[0].monsterPatternIds).toEqual(['cookie-tyrant']);
+    expect(ENEMY_WAVES[0].bossMonsterId).toBe('cookie-tyrant');
+    expect(ENEMY_WAVES[0].bossEveryEnemies).toBe(1);
   });
 
   test('모든 난이도는 실제 웨이브와 몬스터 테이블을 참조한다', () => {
@@ -82,6 +73,9 @@ describe('데이터 테이블', () => {
 
   test('진행·음량·상점 값은 데이터 테이블에서 제공한다', () => {
     expect(PROGRESSION.winsToUnlockNextDifficulty).toBe(20);
+    expect(PROGRESSION.giantDiscRewardPerFirstClear).toBe(1);
+    expect(GIANT_DISC.damageMultiplier).toBe(30);
+    expect(GIANT_DISC.renderWidthRatio).toBeGreaterThanOrEqual(1 / 3);
     expect(AUDIO_SETTINGS.levels.map((item) => item.level)).toEqual([1, 2, 3, 4, 5]);
     expect(DISCS).toHaveLength(5);
     expect(BOTS).toHaveLength(5);
@@ -113,17 +107,9 @@ describe('데이터 테이블', () => {
     });
   });
 
-  test('전투 경로와 공격 반경은 데이터 테이블에서 제공한다', () => {
-    expect(BATTLE_RULES.enemyPaths.length).toBeGreaterThanOrEqual(3);
-    BATTLE_RULES.enemyPaths.forEach((path) => {
-      expect(path.waypoints.length).toBeGreaterThanOrEqual(2);
-      const destination = path.waypoints[path.waypoints.length - 1];
-      expect(Math.abs(destination.x - BATTLE_RULES.playerStartX)).toBeLessThanOrEqual(0.1);
-      expect(destination.y).toBe(BATTLE_RULES.enemyStopY);
-    });
-    expect(BATTLE_RULES.enemyPathPattern.every(
-      (pathIndex) => pathIndex >= 0 && pathIndex < BATTLE_RULES.enemyPaths.length,
-    )).toBe(true);
+  test('길 없는 보스 전장의 위치와 공격 반경은 데이터 테이블에서 제공한다', () => {
+    expect(BATTLE_RULES.enemyX).toBe(BATTLE_RULES.playerStartX);
+    expect(BATTLE_RULES.enemyStartY).toBeLessThan(BATTLE_RULES.enemyStopY);
     expect(BATTLE_RULES.castleAttackRadius).toBeGreaterThan(0);
     expect(BATTLE_RULES.castleAttackRadius).toBeLessThan(1);
     expect(BATTLE_RULES.botAttackRadius).toBeGreaterThan(0);
@@ -141,11 +127,11 @@ describe('데이터 테이블', () => {
     expect(BATTLE_STAGE_RULES.hpMultiplierPerWin).toBeCloseTo(0.05);
     expect(BATTLE_STAGE_RULES.attackMultiplierPerWin).toBeCloseTo(0.03);
     expect(BATTLE_STAGE_RULES.moveSpeedMultiplierPerWin).toBeCloseTo(0.015);
-    expect(BATTLE_STAGE_RULES.extraEnemiesPerStep).toBe(1);
+    expect(BATTLE_STAGE_RULES.extraEnemiesPerStep).toBe(0);
     expect(second.hpMultiplier).toBeGreaterThan(first.hpMultiplier);
     expect(second.attackMultiplier).toBeGreaterThan(first.attackMultiplier);
     expect(second.moveSpeed).toBeGreaterThan(first.moveSpeed);
-    expect(final.enemyCount).toBeGreaterThan(first.enemyCount);
+    expect(final.enemyCount).toBe(1);
     expect(final.enemyDiscLevel).toBeGreaterThan(first.enemyDiscLevel);
   });
 });

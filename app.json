@@ -2,7 +2,7 @@
   "expo": {
     "name": "쿠키전쟁",
     "slug": "cookie-wars",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "platforms": [
       "android"
@@ -13,7 +13,7 @@
     "backgroundColor": "#FFF3D6",
     "android": {
       "package": "com.cookiewars.game",
-      "versionCode": 5,
+      "versionCode": 6,
       "adaptiveIcon": {
         "backgroundColor": "#FFF3D6",
         "foregroundImage": "./assets/android-icon-foreground.png",

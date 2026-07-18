@@ -1,5 +1,6 @@
 {
   "winsToUnlockNextDifficulty": 20,
+  "giantDiscRewardPerFirstClear": 1,
   "saveDebounceMs": 250,
   "autoProductionIntervalMs": 1000
 }

@@ -37,7 +37,7 @@ export function MonsterScreen() {
                   <Text style={styles.rank}>{monster.rank}</Text>
                   <View style={styles.statRow}>
                     <Text style={styles.stat}>❤️ 체력 {monster.baseHp}</Text>
-                    <Text style={styles.stat}>🍪 보상 {monster.rewardCookie}</Text>
+                    <Text style={styles.stat}>⚔️ 공격 {monster.baseAttack}</Text>
                   </View>
                   <Text style={styles.description}>{monster.description}</Text>
                 </>

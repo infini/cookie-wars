@@ -74,7 +74,27 @@ export interface DifficultyConfig {
   attackMultiplier: number;
   moveSpeed: number;
   enemyDiscLevel: number;
-  reward: number;
+}
+
+export interface GiantDiscConfig {
+  damageMultiplier: number;
+  speedMultiplier: number;
+  attackRadius: number;
+  renderWidthRatio: number;
+  effectPulseDurationMs: number;
+  launchNoticeMs: number;
+  effectPulseScale: number;
+  effectRingBorderWidth: number;
+  effectOuterColor: string;
+  effectInnerColor: string;
+  effectGlowColor: string;
+  effectOuterFillColor: string;
+  effectInnerFillColor: string;
+  effectTextShadowColor: string;
+  buttonBackgroundColor: string;
+  buttonDisabledColor: string;
+  buttonBorderColor: string;
+  buttonCountColor: string;
 }
 
 export interface MonsterConfig {
@@ -84,7 +104,6 @@ export interface MonsterConfig {
   rank: string;
   baseHp: number;
   baseAttack: number;
-  rewardCookie: number;
   moveSpeedMultiplier: number;
   discDamageMultiplier: number;
   sizeMultiplier: number;
@@ -123,6 +142,7 @@ export interface CookieConfig {
 
 export interface ProgressionConfig {
   winsToUnlockNextDifficulty: number;
+  giantDiscRewardPerFirstClear: number;
   saveDebounceMs: number;
   autoProductionIntervalMs: number;
 }
@@ -155,21 +175,11 @@ export interface SaveMigrationsConfig {
 export interface BattleRulesConfig {
   tickMs: number;
   maxDeltaMs: number;
-  enemyPaths: Array<{
-    id: string;
-    waypoints: Array<{ x: number; y: number }>;
-  }>;
-  enemyPathPattern: number[];
+  enemyX: number;
   enemyStartY: number;
-  initialEnemySpawnCount: number;
-  enemySpawnIntervalMs: number;
-  enemySpawnGroupSize: number;
-  enemySpawnGroupPauseMs: number;
-  enemyMinimumLaneSpacingY: number;
   enemyStopY: number;
   enemyMoveDivisor: number;
   enemyFirstShotDelayMs: number;
-  enemyShotStaggerMs: number;
   enemyProjectileStartOffsetY: number;
   enemyProjectileMoveDivisor: number;
   enemyMeleeTriggerY: number;
@@ -250,6 +260,7 @@ export interface GameState {
   difficultyWinCounts: Record<string, number>;
   clearedDifficultyIds: string[];
   rewardClaimedStageIds: string[];
+  giantDiscCount: number;
   discoveredMonsterIds: string[];
   newMonsterIds: string[];
   soundEnabled: boolean;
@@ -270,7 +281,7 @@ export interface CookieStats {
 
 export interface BattleRewardResult {
   firstClear: boolean;
-  reward: number;
+  giantDiscReward: number;
   stageNumber: number;
   difficultyWins: number;
   winsRequired: number;

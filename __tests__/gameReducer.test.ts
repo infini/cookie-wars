@@ -19,7 +19,7 @@ import {
 import { gameReducer, initialGameState, mergeSavedGame } from '../src/state/gameReducer';
 
 describe('게임 저장 상태', () => {
-  test('각 전투 스테이지는 최초 클리어마다 보상하고 완료 스테이지 재도전은 보상하지 않는다', () => {
+  test('각 전투 스테이지는 최초 클리어마다 거대 원반을 주고 쿠키는 주지 않는다', () => {
     const funded = { ...initialGameState, cookies: 10 };
     const first = gameReducer(funded, {
       type: 'COMPLETE_BATTLE',
@@ -29,8 +29,12 @@ describe('게임 저장 상태', () => {
       type: 'COMPLETE_BATTLE',
       difficultyId: DIFFICULTIES[0].id,
     });
-    expect(first.cookies).toBe(10 + DIFFICULTIES[0].reward);
-    expect(second.cookies).toBe(first.cookies + DIFFICULTIES[0].reward);
+    expect(first.cookies).toBe(10);
+    expect(second.cookies).toBe(10);
+    expect(first.lifetimeCookies).toBe(funded.lifetimeCookies);
+    expect(second.lifetimeCookies).toBe(funded.lifetimeCookies);
+    expect(first.giantDiscCount).toBe(1);
+    expect(second.giantDiscCount).toBe(2);
 
     let completed = second;
     for (let win = 2; win < PROGRESSION.winsToUnlockNextDifficulty; win += 1) {
@@ -44,8 +48,21 @@ describe('게임 저장 상태', () => {
       difficultyId: DIFFICULTIES[0].id,
     });
     expect(replay.cookies).toBe(completed.cookies);
+    expect(replay.giantDiscCount).toBe(completed.giantDiscCount);
+    expect(completed.giantDiscCount).toBe(PROGRESSION.winsToUnlockNextDifficulty);
     expect(replay.rewardClaimedStageIds).toHaveLength(PROGRESSION.winsToUnlockNextDifficulty);
     expect(replay.rewardClaimedStageIds).toContain(getBattleStageId(DIFFICULTIES[0].id, 20));
+  });
+
+  test('거대 원반은 사용할 때마다 저장 수량이 한 개 줄어든다', () => {
+    const stocked = { ...initialGameState, giantDiscCount: 2 };
+    const usedOnce = gameReducer(stocked, { type: 'USE_GIANT_DISC' });
+    const usedTwice = gameReducer(usedOnce, { type: 'USE_GIANT_DISC' });
+    const emptyUse = gameReducer(usedTwice, { type: 'USE_GIANT_DISC' });
+
+    expect(usedOnce.giantDiscCount).toBe(1);
+    expect(usedTwice.giantDiscCount).toBe(0);
+    expect(emptyUse).toEqual(usedTwice);
   });
 
   test('같은 난이도에서 20번 승리해야 다음 난이도가 열린다', () => {
@@ -121,7 +138,7 @@ describe('게임 저장 상태', () => {
       discLevel: 4,
       botCounts: { 'cookie-bot': 3 },
     });
-    expect(migrated.saveVersion).toBe(6);
+    expect(migrated.saveVersion).toBe(7);
     expect(migrated.ownedDiscIds).toEqual([DISCS[0].id]);
     expect(migrated.discLevels[DISCS[0].id]).toBe(4);
     expect(migrated.botCounts[BOTS[0].id]).toBe(3);

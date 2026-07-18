@@ -32,6 +32,7 @@ export type GameAction =
   | { type: 'DISCOVER_MONSTER'; monsterId: string }
   | { type: 'ACKNOWLEDGE_MONSTERS' }
   | { type: 'COMPLETE_BATTLE'; difficultyId: string }
+  | { type: 'USE_GIANT_DISC' }
   | { type: 'TOGGLE_SOUND' }
   | { type: 'SET_SOUND_VOLUME'; level: SoundVolumeLevel }
   | { type: 'TOGGLE_VIBRATION' };
@@ -44,7 +45,7 @@ const initialDifficultyWinCounts = Object.fromEntries(
 );
 
 export const initialGameState: GameState = {
-  saveVersion: 6,
+  saveVersion: 7,
   cookies: 0,
   lifetimeCookies: 0,
   upgradeLevels: initialUpgradeLevels,
@@ -57,6 +58,7 @@ export const initialGameState: GameState = {
   difficultyWinCounts: initialDifficultyWinCounts,
   clearedDifficultyIds: [],
   rewardClaimedStageIds: [],
+  giantDiscCount: 0,
   discoveredMonsterIds: [],
   newMonsterIds: [],
   soundEnabled: true,
@@ -226,6 +228,7 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     difficultyWinCounts,
     clearedDifficultyIds: unique(saved.clearedDifficultyIds ?? []),
     rewardClaimedStageIds,
+    giantDiscCount: Math.max(0, Math.floor(saved.giantDiscCount ?? 0)),
     discoveredMonsterIds,
     newMonsterIds,
     soundVolumeLevel: normalizeSoundVolumeLevel(saved.soundVolumeLevel),
@@ -319,8 +322,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const unlockNext = wins >= PROGRESSION.winsToUnlockNextDifficulty;
       return {
         ...state,
-        cookies: state.cookies + (firstReward ? difficulty.reward : 0),
-        lifetimeCookies: state.lifetimeCookies + (firstReward ? difficulty.reward : 0),
+        giantDiscCount: state.giantDiscCount
+          + (firstReward ? PROGRESSION.giantDiscRewardPerFirstClear : 0),
         difficultyWinCounts: { ...state.difficultyWinCounts, [difficulty.id]: wins },
         clearedDifficultyIds: unique([...state.clearedDifficultyIds, difficulty.id]),
         rewardClaimedStageIds: unique([...state.rewardClaimedStageIds, stageId]),
@@ -332,6 +335,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           : state.highestUnlockedDifficultyIndex,
       };
     }
+    case 'USE_GIANT_DISC':
+      if (state.giantDiscCount <= 0) return state;
+      return { ...state, giantDiscCount: state.giantDiscCount - 1 };
     case 'TOGGLE_SOUND':
       return { ...state, soundEnabled: !state.soundEnabled };
     case 'SET_SOUND_VOLUME':

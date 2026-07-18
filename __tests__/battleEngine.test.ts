@@ -11,6 +11,7 @@ import {
   advanceBattle,
   calculateBotDiscSize,
   calculateCastleDiscDamage,
+  calculateGiantDiscDamage,
   canThrowCastleDisc,
   createBattleEnemies,
 } from '../src/engine/useBattleEngine';
@@ -31,7 +32,6 @@ function activeBattle(): BattleState {
       moveSpeedMultiplier: 1,
       discDamageMultiplier: 1,
       sizeMultiplier: 1,
-      pathIndex: 1,
       x: 0.5,
       y: 0.6,
       spawnAt: 0,
@@ -64,57 +64,26 @@ function activeBattle(): BattleState {
 }
 
 describe('전투 엔진', () => {
-  test('적은 중앙 진입로의 행군 줄을 따라 촘촘한 무리로 등장한다', () => {
-    const difficulty = { ...DIFFICULTIES[0], enemyCount: BATTLE_RULES.enemyPaths.length + 2 };
+  test('모든 전투에는 중앙의 거대 보스 한 마리만 등장한다', () => {
+    const difficulty = DIFFICULTIES[0];
     const startedAt = 1000;
     const enemies = createBattleEnemies(difficulty, startedAt);
 
+    expect(enemies).toHaveLength(1);
     expect(enemies[0].spawnAt).toBe(startedAt);
-    expect(enemies[1].spawnAt).toBe(startedAt);
-    expect(enemies[2].spawnAt).toBe(startedAt);
-    expect(enemies[3].spawnAt).toBe(startedAt + BATTLE_RULES.enemySpawnIntervalMs);
-    expect(new Set(enemies.map((enemy) => enemy.pathIndex)).size).toBe(BATTLE_RULES.enemyPaths.length);
-    enemies.forEach((enemy) => {
-      expect(enemy.x).toBe(BATTLE_RULES.enemyPaths[enemy.pathIndex].waypoints[0].x);
-    });
+    expect(enemies[0].rank).toBe('보스');
+    expect(enemies[0].x).toBe(BATTLE_RULES.enemyX);
+    expect(enemies[0].y).toBe(BATTLE_RULES.enemyStartY);
   });
 
-  test('같은 행군 줄의 적은 앞 적과 최소 간격을 유지한다', () => {
-    const difficulty = { ...DIFFICULTIES[0], enemyCount: 12, moveSpeed: 30 };
-    const startedAt = 1000;
-    const enemies = createBattleEnemies(difficulty, startedAt).map((enemy) => ({
-      ...enemy,
-      spawnAt: startedAt,
-    }));
-    const battle = activeBattle();
-    battle.enemies = enemies;
-    battle.playerProjectiles = [];
-    const next = advanceBattle(battle, {
-      difficulty,
-      enemyDisc: getEnemyDisc(difficulty.enemyDiscLevel),
-      playerDisc: DISCS[0].levels[0],
-      bots: [],
-      now: startedAt + 500,
-      deltaMs: 100,
+  test('모든 난이도는 같은 보스 한 마리의 능력치만 강화한다', () => {
+    DIFFICULTIES.forEach((difficulty) => {
+      const enemies = createBattleEnemies(difficulty, 1000);
+      const wave = getEnemyWave(difficulty.enemyWaveId);
+      expect(enemies).toHaveLength(1);
+      expect(enemies[0].monsterId).toBe(wave.bossMonsterId);
+      expect(enemies[0].sizeMultiplier).toBeGreaterThan(1);
     });
-    BATTLE_RULES.enemyPaths.forEach((_, pathIndex) => {
-      const lane = next.enemies
-        .filter((enemy) => enemy.pathIndex === pathIndex)
-        .sort((a, b) => b.y - a.y);
-      lane.slice(1).forEach((enemy, index) => {
-        expect(lane[index].y - enemy.y).toBeGreaterThanOrEqual(
-          BATTLE_RULES.enemyMinimumLaneSpacingY - 0.000001,
-        );
-      });
-    });
-  });
-
-  test('일반 적 사이에 서로 다른 등급과 보스가 테이블 순서대로 등장한다', () => {
-    const enemies = createBattleEnemies(DIFFICULTIES[0], 1000);
-    const wave = getEnemyWave(DIFFICULTIES[0].enemyWaveId);
-    expect(new Set(enemies.map((enemy) => enemy.monsterId)).size).toBeGreaterThanOrEqual(4);
-    expect(enemies[wave.bossEveryEnemies - 1].rank).toBe('보스');
-    expect(enemies[wave.bossEveryEnemies - 1].sizeMultiplier).toBeGreaterThan(1);
   });
 
   test('성 앞에서 멈춘 적도 빠른 상위 원반에 정상적으로 피해를 받는다', () => {
@@ -191,6 +160,11 @@ describe('전투 엔진', () => {
     const disc = DISCS[0].levels[0];
     expect(calculateCastleDiscDamage(disc)).toBe(disc.damage * 2);
     expect(disc.size).toBe(DISCS[0].levels[0].size);
+  });
+
+  test('거대 원반은 장착 원반의 정확히 30배 피해다', () => {
+    const disc = DISCS[0].levels[0];
+    expect(calculateGiantDiscDamage(disc)).toBe(disc.damage * 30);
   });
 
   test('쿠키봇은 공격 간격이 지나면 장착 원반을 자동 발사한다', () => {

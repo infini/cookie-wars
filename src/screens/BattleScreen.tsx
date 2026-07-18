@@ -1,10 +1,19 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ImageBackground, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ImageBackground,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import {
   BATTLE_RULES,
   BATTLE_UI,
   DIFFICULTIES,
+  GIANT_DISC,
   getCookie,
   getDifficulty,
   getEnemyWaveMonsterIds,
@@ -17,7 +26,6 @@ import {
 } from '../domain/gameSelectors';
 import { BattleEventKind, useBattleEngine } from '../engine/useBattleEngine';
 import { BotImage } from '../components/BotImage';
-import { CookieImage } from '../components/CookieImage';
 import { CookieCastle } from '../components/CookieCastle';
 import { DiscImage } from '../components/DiscImage';
 import { GameButton } from '../components/GameButton';
@@ -27,7 +35,6 @@ import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import { BattleRewardResult } from '../types/game';
-import { formatNumber } from '../utils/format';
 
 export function getHealthColor(value: number, max: number): string {
   const ratio = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
@@ -76,7 +83,8 @@ interface BattleScreenProps {
 }
 
 export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
-  const { state: game, stats, discoverMonster, completeBattle } = useGame();
+  const { state: game, stats, discoverMonster, completeBattle, useGiantDisc } = useGame();
+  const { width: screenWidth } = useWindowDimensions();
   const feedback = useFeedback();
   const baseDifficulty = getDifficulty(game.selectedDifficultyId);
   const difficultyProgress = getDifficultyProgress(game, baseDifficulty.id);
@@ -90,6 +98,7 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
   const activeBots = useMemo(() => getActiveBots(game), [game.botCounts]);
   const [rewardResult, setRewardResult] = useState<BattleRewardResult | null>(null);
   const handledResult = useRef(false);
+  const giantDiscRenderSize = Math.round(screenWidth * GIANT_DISC.renderWidthRatio);
 
   const onEvent = useCallback((kind: BattleEventKind) => {
     if (kind === 'disc') feedback.play('disc');
@@ -161,7 +170,7 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
       >
         <View style={styles.compactHud} pointerEvents="none">
           <Text style={styles.stageHud}>{difficulty.name} · 전투 {difficultyProgress.currentBattleNumber}/{difficultyProgress.requiredWins}</Text>
-          <Text style={styles.enemyHud}>남은 적 {remainingEnemyCount}</Text>
+          <Text style={styles.enemyHud}>남은 보스 {remainingEnemyCount}</Text>
         </View>
 
         {engine.state.enemies.map((enemy) => {
@@ -219,30 +228,94 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
         ))}
 
         {engine.state.playerProjectiles.map((projectile) => {
+          const isGiant = projectile.source === 'giant';
           const renderedMaximum = projectile.source === 'bot'
             ? BATTLE_RULES.maxRenderedPlayerDiscSize * BATTLE_RULES.botDiscSizeMultiplier
             : BATTLE_RULES.maxRenderedPlayerDiscSize;
-          const renderedSize = Math.min(projectile.size, renderedMaximum);
+          const renderedSize = isGiant
+            ? giantDiscRenderSize
+            : Math.min(projectile.size, renderedMaximum);
+          const pulseProgress = (
+            (engine.state.now - projectile.createdAt) % GIANT_DISC.effectPulseDurationMs
+          ) / GIANT_DISC.effectPulseDurationMs;
+          const pulseScale = isGiant
+            ? 1 + Math.sin(pulseProgress * Math.PI * 2) * GIANT_DISC.effectPulseScale
+            : 1;
           return (
             <View
               key={projectile.id}
               style={[
                 styles.projectile,
                 projectile.source === 'castle' && styles.castleProjectile,
+                isGiant && styles.giantProjectile,
+                isGiant && { shadowColor: GIANT_DISC.effectGlowColor },
                 {
                   left: `${projectile.x * 100}%`,
                   top: `${projectile.y * 100}%`,
                   marginLeft: -renderedSize / 2,
                   marginTop: -renderedSize / 2,
-                  transform: [{ rotate: `${((engine.state.now - projectile.createdAt) / BATTLE_UI.projectileSpinDurationMs) * 360}deg` }],
+                  width: renderedSize,
+                  height: renderedSize,
+                  transform: [
+                    { rotate: `${((engine.state.now - projectile.createdAt) / BATTLE_UI.projectileSpinDurationMs) * 360}deg` },
+                    { scale: pulseScale },
+                  ],
                 },
               ]}
             >
               {projectile.source === 'castle' ? <Text style={styles.doubleDamage}>2배</Text> : null}
+              {isGiant ? (
+                <>
+                  <View style={[styles.giantAuraOuter, {
+                    borderColor: GIANT_DISC.effectOuterColor,
+                    borderWidth: GIANT_DISC.effectRingBorderWidth,
+                    backgroundColor: GIANT_DISC.effectOuterFillColor,
+                  }]} />
+                  <View style={[styles.giantAuraInner, {
+                    borderColor: GIANT_DISC.effectInnerColor,
+                    borderWidth: GIANT_DISC.effectRingBorderWidth / 2,
+                    backgroundColor: GIANT_DISC.effectInnerFillColor,
+                  }]} />
+                  <Text style={[styles.giantDamage, {
+                    color: GIANT_DISC.effectGlowColor,
+                    textShadowColor: GIANT_DISC.effectTextShadowColor,
+                  }]}>{GIANT_DISC.damageMultiplier}배</Text>
+                </>
+              ) : null}
               <DiscImage size={renderedSize} />
             </View>
           );
         })}
+
+        {engine.state.status === 'active' ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`거대 원반 사용, ${game.giantDiscCount}개 보유`}
+            disabled={game.giantDiscCount <= 0 || !engine.canGiantThrow}
+            onPress={() => {
+              if (game.giantDiscCount <= 0 || !engine.canGiantThrow) return;
+              if (useGiantDisc() && engine.throwGiantDisc()) feedback.tap();
+            }}
+            style={({ pressed }) => [
+              styles.giantDiscButton,
+              {
+                backgroundColor: game.giantDiscCount <= 0 || !engine.canGiantThrow
+                  ? GIANT_DISC.buttonDisabledColor
+                  : GIANT_DISC.buttonBackgroundColor,
+                borderColor: GIANT_DISC.buttonBorderColor,
+                shadowColor: GIANT_DISC.buttonBorderColor,
+              },
+              (game.giantDiscCount <= 0 || !engine.canGiantThrow) && styles.giantDiscButtonDisabled,
+              pressed && styles.giantDiscButtonPressed,
+            ]}
+          >
+            <MaterialCommunityIcons name="disc" size={28} color={colors.white} />
+            <View>
+              <Text style={styles.giantDiscButtonTitle}>거대 원반</Text>
+              <Text style={[styles.giantDiscButtonCount, { color: GIANT_DISC.buttonCountColor }]}>보유 {game.giantDiscCount}개 · {GIANT_DISC.damageMultiplier}배</Text>
+            </View>
+          </Pressable>
+        ) : null}
 
         {engine.state.notice ? <Text style={styles.notice}>{engine.state.notice}</Text> : null}
 
@@ -302,7 +375,7 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
           <View style={styles.startOverlay}>
             <MaterialCommunityIcons name="castle" size={52} color={colors.red} />
             <Text style={styles.readyTitle}>쿠키 성 방어전</Text>
-            <Text style={styles.readyText}>적 {difficulty.enemyCount}마리가 끊임없이 침공해요!</Text>
+            <Text style={styles.readyText}>거대한 보스 한 마리가 쿠키 성을 노려요!</Text>
             <Text style={styles.autoReadyText}>쿠키봇은 자동 공격 · 쿠키 성은 누를 때만 2배 공격</Text>
             <Text style={styles.battleProgressText}>
               {difficulty.name} 전투 {difficultyProgress.currentBattleNumber}/{difficultyProgress.requiredWins} · 승리 {difficultyProgress.wins}회
@@ -328,10 +401,10 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
             </Text>
             {engine.state.status === 'victory' ? (
               <View style={[styles.rewardBox, rewardResult && !rewardResult.firstClear && styles.replayBox]}>
-                <CookieImage size={44} />
+                <DiscImage size={44} />
                 <View>
                   <Text style={styles.rewardLabel}>{rewardResult?.firstClear ? `전투 ${rewardResult.stageNumber} 최초 보상` : `전투 ${rewardResult?.stageNumber ?? ''} 이미 받은 보상`}</Text>
-                  <Text style={styles.rewardValue}>{rewardResult?.firstClear ? `+${formatNumber(rewardResult.reward)} 쿠키` : '추가 쿠키 없음'}</Text>
+                  <Text style={styles.rewardValue}>{rewardResult?.firstClear ? `거대 원반 +${rewardResult.giantDiscReward}` : '추가 거대 원반 없음'}</Text>
                 </View>
               </View>
             ) : <Text style={styles.defeatText}>쿠키를 더 모아 강화하고 다시 도전해 보세요.</Text>}
@@ -381,8 +454,17 @@ const styles = StyleSheet.create({
   botName: { maxWidth: '100%', fontSize: 6, paddingHorizontal: 2 },
   projectile: { position: 'absolute', zIndex: 1800 },
   castleProjectile: { borderRadius: 50, backgroundColor: 'rgba(74,154,255,0.22)' },
+  giantProjectile: { alignItems: 'center', justifyContent: 'center', borderRadius: 999, shadowOpacity: 1, shadowRadius: 24, elevation: 18 },
+  giantAuraOuter: { position: 'absolute', width: '116%', height: '116%', borderRadius: 999, opacity: 0.82 },
+  giantAuraInner: { position: 'absolute', width: '92%', height: '92%', borderRadius: 999, opacity: 0.9 },
+  giantDamage: { position: 'absolute', top: -18, fontFamily: fonts.display, fontSize: 18, textShadowRadius: 8, zIndex: 3 },
   doubleDamage: { position: 'absolute', top: -9, alignSelf: 'center', zIndex: 2, fontFamily: fonts.extraBold, fontSize: 8, color: colors.blueDark, backgroundColor: colors.white, borderRadius: 5, paddingHorizontal: 3 },
   enemyProjectile: { borderWidth: 2, borderColor: colors.red, borderRadius: 30, backgroundColor: 'rgba(255,224,227,0.62)', alignItems: 'center', justifyContent: 'center' },
+  giantDiscButton: { position: 'absolute', top: 38, right: 8, zIndex: 2200, minWidth: 128, flexDirection: 'row', alignItems: 'center', gap: 7, borderWidth: 2, borderRadius: 17, paddingHorizontal: 10, paddingVertical: 7, shadowOpacity: 0.8, shadowRadius: 8, elevation: 9 },
+  giantDiscButtonDisabled: { opacity: 0.42 },
+  giantDiscButtonPressed: { transform: [{ scale: 0.94 }] },
+  giantDiscButtonTitle: { fontFamily: fonts.extraBold, fontSize: 12, color: colors.white },
+  giantDiscButtonCount: { fontFamily: fonts.bold, fontSize: 8 },
   notice: { position: 'absolute', alignSelf: 'center', top: '42%', fontFamily: fonts.display, fontSize: 31, color: colors.purple, textShadowColor: colors.white, textShadowRadius: 7, zIndex: 2100 },
   startOverlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(255,248,231,0.88)', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: 20 },
   readyTitle: { fontFamily: fonts.display, fontSize: 31, color: colors.ink, marginTop: 5 },
