@@ -5,6 +5,7 @@ export interface GameState {
   cookies: number;
   lifetimeCookies: number;
   upgradeLevels: Record<string, number>;
+  legacyCookieEvolutionBonusLevels: number;
   ownedDiscIds: string[];
   discLevels: Record<string, number>;
   selectedDiscId: string;

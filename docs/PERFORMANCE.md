@@ -17,7 +17,7 @@
 
 이 평가는 현재 단일 보스 범위에 한정됩니다. 다수 적, 상태 효과, 동시 원반을 추가하면 50ms마다 수행되는 배열 `map`·`filter`·`find`와 새 객체 생성이 개체 수에 따라 증가합니다. 현재 `advanceBattle`은 이동·충돌·봇 발사·보스 공격·결과 판정의 순수 단계로 분리되어 있으므로, 다수 개체 기능을 시작하기 전에 적·발사체 상한을 정하고 아래 동일 기기 측정으로 필요한 단계만 최적화합니다.
 
-1.0.9 APK의 설치와 강제 종료 후 시작 확인도 성능 측정으로 해석하지 않습니다. 아래 1.0.6 수치가 현재 비교 가능한 실기기 전투 기준선이며, 1.0.9의 장시간 프레임·메모리 결과는 같은 조건으로 별도 측정하기 전까지 추정하지 않습니다.
+1.0.10 APK의 설치·실행 확인은 성능 측정으로 해석하지 않습니다. 아래 1.0.6 수치가 현재 비교 가능한 실기기 전투 기준선이며, 1.0.10의 장시간 프레임·메모리 결과는 같은 조건으로 별도 측정하기 전까지 추정하지 않습니다.
 
 ## 회귀 점검
 
@@ -26,7 +26,7 @@
 ```bash
 npm run verify
 npm run android:release
-adb -s <기기ID> install -r artifacts/cookie-wars-v1.0.9.apk
+adb -s <기기ID> install -r artifacts/cookie-wars-v1.0.10.apk
 adb -s <기기ID> shell dumpsys gfxinfo com.cookiewars.game reset
 # 실제 전투를 진행한 뒤
 adb -s <기기ID> shell dumpsys gfxinfo com.cookiewars.game
@@ -42,6 +42,12 @@ adb -s <기기ID> shell dumpsys meminfo com.cookiewars.game
 - 화면: 세로 고정
 
 최종 APK 설치 뒤 전투 진입, 보스 원거리 원반, 자동 봇 공격, 성 수동 원반, 다중 피격 이펙트, 결과 화면에서 음악 정지를 순서대로 확인합니다. 기기가 잠겨 있으면 설치·프로세스·로그까지만 확인하고 화면이나 전투 성능을 확인한 것으로 기록하지 않습니다.
+
+### 1.0.10 설치·실행 확인
+
+2026-07-18 `versionCode 11`, `versionName 1.0.10` 릴리스 APK를 생성 디렉터리를 비운 뒤 클린 빌드했습니다. 결과는 90,685,132바이트이고 SHA-256은 `14d6a6d3532c346843969c9ac88789102225dcfcd76c67eac354f9462cc9f0eb`입니다. 빌드 도구로 패키지 `com.cookiewars.game`, 최소 API 24, 대상 API 36, 세로 고정을 확인했습니다.
+
+Xiaomi `24069PC21G`에 `adb install -r`로 덮어 설치해 기존 앱 데이터와 최초 설치 시각을 유지했습니다. 기기 내부 `base.apk`의 SHA-256도 배포본과 같은 `14d6a6d3532c346843969c9ac88789102225dcfcd76c67eac354f9462cc9f0eb`였습니다. 강제 종료 후 시작은 `Status: ok`, `WaitTime: 3021ms`였고 `MainActivity`가 resumed 상태였습니다. 실행 직후 AndroidRuntime·React Native JS·ActivityManager 오류 필터에는 항목이 없었습니다. 기기가 화면 꺼짐·보안 잠금 상태여서 화면과 전투 성능은 확인한 것으로 기록하지 않습니다.
 
 ### 1.0.9 설치·실행 확인
 

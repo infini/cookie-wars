@@ -18,6 +18,8 @@ import {
 } from '../domain/safeNumbers';
 import { GameState, SoundVolumeLevel } from '../types/game';
 import { initialGameState } from './gameInitialState';
+import { resolveCookieEvolutionBonusLevels } from './saveMigrations/cookieEvolutionMigration';
+import { isFutureSaveVersion } from './saveMigrations/saveVersion';
 
 interface LegacyDiscSave {
   discOwned?: boolean;
@@ -208,6 +210,12 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     saved.rewardClaimedStageIds,
     legacyRewardClaimedDifficultyIds,
   );
+  const upgradeLevels = normalizeUpgradeLevels(saved.upgradeLevels);
+  const legacyCookieEvolutionBonusLevels = resolveCookieEvolutionBonusLevels({
+    savedVersion: saved.saveVersion,
+    savedBonusLevels: saved.legacyCookieEvolutionBonusLevels,
+    savedUpgradeLevels: saved.upgradeLevels,
+  });
   const cookies = normalizeStoredInteger(saved.cookies, {
     fallback: initialGameState.cookies,
   });
@@ -227,7 +235,8 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     saveVersion: initialGameState.saveVersion,
     cookies,
     lifetimeCookies,
-    upgradeLevels: normalizeUpgradeLevels(saved.upgradeLevels),
+    upgradeLevels,
+    legacyCookieEvolutionBonusLevels,
     botCounts: normalizeBotCounts(saved.botCounts),
     ownedDiscIds,
     discLevels,
@@ -269,9 +278,10 @@ export function prepareSavedGame(
   saved: Partial<GameState>,
   now: number,
 ): PreparedSavedGame {
-  const futureSaveVersion = typeof saved.saveVersion === 'number'
-    && Number.isFinite(saved.saveVersion)
-    && saved.saveVersion > initialGameState.saveVersion;
+  const futureSaveVersion = isFutureSaveVersion(
+    saved.saveVersion,
+    initialGameState.saveVersion,
+  );
   return futureSaveVersion
     ? { state: mergeSavedGame(saved), persistenceWritable: false }
     : { state: restoreSavedGame(saved, now), persistenceWritable: true };

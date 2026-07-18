@@ -4,6 +4,7 @@
     "name": "클릭 힘",
     "description": "쿠키를 누를 때 받는 쿠키가 늘어나요.",
     "unit": "개",
+    "countsTowardCookieEvolution": true,
     "levels": [
       { "level": 1, "value": 1, "cost": 0 },
       { "level": 2, "value": 2, "cost": 25 },
@@ -20,6 +21,7 @@
     "name": "쿠키 크기",
     "description": "누르기 좋은 커다란 쿠키로 자라나요.",
     "unit": "%",
+    "countsTowardCookieEvolution": false,
     "enabled": false,
     "visible": false,
     "renderBaseSizePixels": 190,
@@ -38,6 +40,7 @@
     "name": "자동 생산",
     "description": "가만히 있어도 쿠키를 구워요.",
     "unit": "개/초",
+    "countsTowardCookieEvolution": true,
     "levels": [
       { "level": 1, "value": 0, "cost": 0 },
       { "level": 2, "value": 1, "cost": 120 },
@@ -52,6 +55,7 @@
     "name": "쿠키 성 체력",
     "description": "전투에서 지켜야 할 쿠키 성이 튼튼해져요.",
     "unit": "HP",
+    "countsTowardCookieEvolution": true,
     "levels": [
       { "level": 1, "value": 100, "cost": 0 },
       { "level": 2, "value": 130, "cost": 100 },

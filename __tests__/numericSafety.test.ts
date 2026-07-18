@@ -4,6 +4,7 @@ import {
   DIFFICULTIES,
   DISCS,
   MONSTERS,
+  SAVE_MIGRATIONS,
 } from '../src/config';
 import {
   calculateBotPrice,
@@ -48,6 +49,7 @@ function expectSafeStoredIntegers(state: typeof initialGameState): void {
     state.saveVersion,
     state.cookies,
     state.lifetimeCookies,
+    state.legacyCookieEvolutionBonusLevels,
     state.highestUnlockedDifficultyIndex,
     state.giantDiscCount,
     state.soundVolumeLevel,
@@ -215,8 +217,10 @@ describe('게임 숫자 안전 경계', () => {
 
   test('모든 reducer 액션 뒤 저장 정수 필드의 안전 범위가 유지된다', () => {
     const saturatedSave = mergeSavedGame({
+      saveVersion: SAVE_MIGRATIONS.currentSaveVersion,
       cookies: Number.MAX_VALUE,
       lifetimeCookies: Number.MAX_VALUE,
+      legacyCookieEvolutionBonusLevels: Number.MAX_VALUE,
       upgradeLevels: Object.fromEntries(
         COOKIE_UPGRADES.map((upgrade) => [upgrade.id, Number.MAX_VALUE]),
       ),
@@ -266,8 +270,10 @@ describe('게임 숫자 안전 경계', () => {
 
   test('MAX 저장 상태의 경제·전투 selector는 모두 유한한 안전 값을 반환한다', () => {
     const extremeState = mergeSavedGame({
+      saveVersion: SAVE_MIGRATIONS.currentSaveVersion,
       cookies: Number.MAX_VALUE,
       lifetimeCookies: Number.MAX_VALUE,
+      legacyCookieEvolutionBonusLevels: Number.MAX_VALUE,
       upgradeLevels: Object.fromEntries(
         COOKIE_UPGRADES.map((upgrade) => [upgrade.id, Number.MAX_VALUE]),
       ),

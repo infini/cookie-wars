@@ -41,7 +41,7 @@ services/storage          engine/useBattleEngine
 - `enemy-discs.json`: 난이도별 적 원반 능력치
 - `discs.json`: 능력 격차가 큰 5종 원반 구매·초기 레벨 데이터
 - `disc-upgrade-rules.json`: 초기 레벨 이후 무한 강화 성장식과 최소 쿨타임
-- `cookie-upgrades.json`: 클릭, 자동 생산, 쿠키 성 체력과 비활성 호환용 쿠키 크기 레벨
+- `cookie-upgrades.json`: 클릭, 자동 생산, 쿠키 성 체력과 비활성 호환용 쿠키 크기 레벨 및 진화 기여 여부
 - `cookie-upgrade-rules.json`: 클릭 힘·자동 생산·쿠키 성 체력의 명시 레벨 이후 무한 성장
 - `monsters.json`, `bots.json`: 추가 가능한 전투 개체 정의와 난이도별 보스 15종
 - `enemy-waves.json`: 각 난이도와 고유 보스를 연결하는 전투 구성
@@ -58,7 +58,7 @@ services/storage          engine/useBattleEngine
 - `battle-feedback.json`: 공격 예고·돌진, 피격 흔들림, 다중 충격·전장 충격파·피해 숫자
 - `battle-audio.json`: 전투 액션음 그룹별 중복 재생 제한과 상대 음량
 - `audio-settings.json`: 5단계 실제 음량, 기본 단계, 미리듣기 지연
-- `save-migrations.json`: 현재 저장 스키마 버전과 이전 콘텐츠 ID를 현재 ID로 옮기는 호환 규칙
+- `save-migrations.json`: 현재 저장 스키마 버전과 이전 콘텐츠 ID·쿠키 진화 진행도를 현재 상태로 옮기는 호환 규칙
 
 게임 결과에 영향을 주는 가격, 능력치, 진행 조건, 시간, 거리와 확률은 JSON에 둡니다. React Native의 글자 크기·여백·모서리 반경처럼 화면 표현만을 위한 값은 각 컴포넌트의 `StyleSheet`에 둡니다. `src/config/index.ts`가 JSON을 TypeScript 계약으로 노출하고 빠른 ID 조회 함수를 제공합니다.
 
@@ -66,19 +66,21 @@ services/storage          engine/useBattleEngine
 
 `types/game.ts`도 기존 import를 보존하는 36줄 타입 파사드입니다. 실제 계약은 오디오, 전투 표현, 전투 규칙, 전투 콘텐츠, 성장·상점, 저장 상태, 내비게이션, 시스템 설정 모듈로 나뉘며 가장 큰 타입 모듈은 128줄입니다. 하위 타입 모듈은 파사드를 역참조하지 않고 저장 상태가 음량 타입만 읽는 한 방향 의존을 유지합니다. 새 설정 필드를 추가할 때는 해당 영역 타입만 변경하고 파사드에서 공개 여부를 결정합니다.
 
-쿠키 진화 상태는 별도로 저장하지 않고 모든 쿠키 업그레이드의 현재 레벨 합계로 매번 계산합니다. 여기에는 화면에서 숨긴 기존 `cookieSize` 저장 레벨도 계속 포함하므로 기능 제거 뒤에도 사용자의 쿠키 종류가 퇴행하지 않습니다. `cookies.json`에서 요구 총레벨 이하인 가장 높은 쿠키가 자동 활성화되며 해당 행의 클릭·자동 생산·쿠키 성 체력 배율이 최종 능력치에 적용됩니다. 메인 화면은 같은 selector의 합계·다음 조건·남은 레벨·구간 진행률을 표시합니다. 쿠키 이미지는 `cookieSize`의 최고 비율과 JSON의 기준·상한 픽셀 값으로 계산한 기존 최대 크기에 고정합니다.
+쿠키 진화 종류는 별도로 저장하지 않고 `countsTowardCookieEvolution: true`인 업그레이드의 현재 레벨 합계에 저장된 `legacyCookieEvolutionBonusLevels`를 더해 매번 계산합니다. 현재는 클릭 힘·자동 생산·쿠키 성 체력만 기여하고 `cookieSize`는 `false`이므로 진화 selector가 더 이상 쿠키 크기 레벨을 읽지 않습니다. `cookies.json`에서 요구 총레벨 이하인 가장 높은 쿠키가 자동 활성화되며 해당 행의 클릭·자동 생산·쿠키 성 체력 배율이 최종 능력치에 적용됩니다. 메인 화면은 같은 selector가 계산한 현재 진화 레벨·다음 쿠키의 필요 레벨·남은 강화 수를 큰 숫자로 표시하고 구간 진행률도 함께 보여 줍니다. 쿠키 이미지는 `cookieSize`의 최고 비율과 JSON의 기준·상한 픽셀 값으로 계산한 기존 최대 크기에 고정합니다.
 
 ## 상태와 저장
 
-`GameContext`는 62줄의 Provider 조정자이며 영구 상태와 의미 있는 사용자 명령을 제공합니다. `useGameCommands`와 `useAutoProduction`은 하나의 projected dispatcher를 공유해 React 렌더 전 연속 입력도 최신 상태에서 직렬화합니다. 137줄 `gameReducer`는 액션 전이와 가격 검증만 담당하고, 초기 상태는 `gameInitialState`, 저장 정규화·이전·오프라인 복구는 `gameSave`로 분리했습니다. AsyncStorage 입출력은 `services/storage.ts`가 담당하며 저장 지연 시간과 생산 주기도 `progression.json`에서 읽습니다.
+`GameContext`는 62줄의 Provider 조정자이며 영구 상태와 의미 있는 사용자 명령을 제공합니다. `useGameCommands`와 `useAutoProduction`은 하나의 projected dispatcher를 공유해 React 렌더 전 연속 입력도 최신 상태에서 직렬화합니다. 137줄 `gameReducer`는 액션 전이와 가격 검증만 담당하고, 초기 상태는 `gameInitialState`, 저장 정규화·이전·오프라인 복구는 `gameSave`로 분리했습니다. 쿠키 진화 v8 이전과 저장 버전 판정은 `state/saveMigrations`의 36줄·11줄 모듈이 각각 단독으로 처리합니다. AsyncStorage 입출력은 `services/storage.ts`가 담당하며 저장 지연 시간과 생산 주기도 `progression.json`에서 읽습니다.
 
 저장할 때마다 `lastSavedAt`을 함께 기록합니다. 다음 실행에서는 저장 데이터를 먼저 이전·정규화하고, `domain/offlineProduction.ts`가 저장 당시 자동 생산 능력과 `lastSavedAt → 현재 시각`의 완료 생산 주기를 계산합니다. 현재 쿠키와 누적 쿠키에 같은 양을 더하고 소비한 체크포인트를 즉시 AsyncStorage에 기록한 다음 화면을 엽니다. 따라서 로딩 직후 앱이 다시 종료되어도 같은 시간이 중복 지급되지 않습니다. 기기 시계가 뒤로 간 경우에는 0개를 지급하고 더 최신 체크포인트를 유지합니다. 실행 중 타이머도 실제 경과 시간을 기준으로 누락된 주기를 따라잡으며 Android가 백그라운드로 갈 때 즉시 저장합니다.
 
 전투 승리 시 `rewardClaimedStageIds`의 `난이도ID:전투번호` 키를 확인합니다. 각 난이도의 1~20 전투는 처음 클리어할 때 각각 거대 원반 1개를 주고, 이미 완료한 전투를 다시 이겼을 때만 추가하지 않습니다. 전투 승리는 현재 쿠키나 누적 쿠키를 변경하지 않습니다. `difficultyWinCounts`는 난이도별 진행 단계, `clearedDifficultyIds`는 최소 한 번 승리한 기록, `highestUnlockedDifficultyIndex`는 순차 해금에 사용합니다. 재도전, 보상, 해금이 서로 독립된 상태입니다.
 
-저장 버전은 `save-migrations.json`의 `currentSaveVersion`에서 읽으며 현재 7입니다. 새 `giantDiscCount`는 이전 저장에 없으면 0으로 초기화하고 이후 획득·사용량을 영구 저장합니다. 이전 버전의 난이도 단위 보상 기록은 해당 난이도의 1번 전투 보상 키로 이전하므로 이미 보상을 받은 전투에서 거대 원반이 중복 지급되지 않습니다. 이전 단일 `discOwned`와 `discLevel`은 첫 번째 원반의 소유 여부와 레벨로 이전합니다. 10종 시절 제거된 원반의 소유·선택·레벨은 대응되는 현재 원반에 합치며 둘 다 레벨이 있으면 더 높은 값을 보존합니다. 제거된 쿠키봇 수량도 대응되는 현재 봇 수량에 더합니다. 이전 몬스터 ID도 새 다등급 몬스터 ID로 바꾸고 존재하지 않는 몬스터 ID는 제거합니다. 기존 `clearedDifficultyIds`는 해당 난이도 1승으로 이전하며, 새 20승 규칙에 맞춰 실제 해금 인덱스를 다시 계산합니다. 존재하지 않거나 잠긴 난이도가 선택되어 있으면 가장 높은 사용 가능 난이도로 안전하게 복구합니다.
+저장 버전은 `save-migrations.json`의 `currentSaveVersion`에서 읽으며 현재 8입니다. v7 이하 저장은 테이블에 고정한 레거시 ID `cookieSize`의 유효 레벨에서 기본 Lv.1을 뺀 값을 `legacyCookieEvolutionBonusLevels`로 한 번만 이전하고 v8로 저장합니다. 현재 강화 목록을 순회하지 않으므로 향후 `cookieSize` 행을 제거하거나 진화 기여 플래그를 바꿔도 v7 직행 업데이트가 달라지지 않습니다. 새 저장은 이 보너스를 0으로 시작하며 v8 이상 저장은 쿠키 크기에서 보너스를 다시 계산하지 않습니다. 기존 조건 4, 10, …, 118을 3, 9, …, 117로 같은 폭만큼 옮겼으므로 `기여 강화 3종 합계 + 이전 보너스`는 마이그레이션 전과 같은 쿠키 티어, 구간 진행률과 남은 강화 수를 만듭니다. 이후 `cookieSize`는 진화 계산에서 완전히 분리됩니다.
 
-현재 앱보다 높은 `saveVersion`은 다운그레이드 상황으로 간주합니다. 알려진 필드만 메모리에서 정규화해 실행하되 오프라인 생산을 정산하거나 AsyncStorage에 다시 저장하지 않는 읽기 전용 호환 모드로 두어, 최신 앱이 만든 원본 저장을 구버전이 덮어쓰지 않습니다.
+`giantDiscCount`는 이전 저장에 없으면 0으로 초기화하고 이후 획득·사용량을 영구 저장합니다. 이전 버전의 난이도 단위 보상 기록은 해당 난이도의 1번 전투 보상 키로 이전하므로 이미 보상을 받은 전투에서 거대 원반이 중복 지급되지 않습니다. 이전 단일 `discOwned`와 `discLevel`은 첫 번째 원반의 소유 여부와 레벨로 이전합니다. 10종 시절 제거된 원반의 소유·선택·레벨은 대응되는 현재 원반에 합치며 둘 다 레벨이 있으면 더 높은 값을 보존합니다. 제거된 쿠키봇 수량도 대응되는 현재 봇 수량에 더합니다. 이전 몬스터 ID도 새 다등급 몬스터 ID로 바꾸고 존재하지 않는 몬스터 ID는 제거합니다. 기존 `clearedDifficultyIds`는 해당 난이도 1승으로 이전하며, 새 20승 규칙에 맞춰 실제 해금 인덱스를 다시 계산합니다. 존재하지 않거나 잠긴 난이도가 선택되어 있으면 가장 높은 사용 가능 난이도로 안전하게 복구합니다.
+
+현재 앱보다 높은 양의 안전 정수 `saveVersion`만 다운그레이드 상황으로 간주합니다. 알려진 필드만 메모리에서 정규화해 실행하되 오프라인 생산을 정산하거나 AsyncStorage에 다시 저장하지 않는 읽기 전용 호환 모드로 두어, 최신 앱이 만든 원본 저장을 구버전이 덮어쓰지 않습니다. 소수나 비안전 정수처럼 손상된 버전 값은 미래 저장으로 오인하지 않고 v8 이전·저장 가능한 상태로 복구합니다.
 
 ## 전투 엔진
 

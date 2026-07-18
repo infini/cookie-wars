@@ -4,9 +4,9 @@
 
 ## 설치
 
-- APK: [`artifacts/cookie-wars-v1.0.9.apk`](artifacts/cookie-wars-v1.0.9.apk)
-- APK 크기: 90,682,728바이트 (86.48MiB)
-- SHA-256: `00e81de2fb77cf66775f2b2bb676ad6f83bfeeedb4b1dd90062d19d0b5ec861e`
+- APK: [`artifacts/cookie-wars-v1.0.10.apk`](artifacts/cookie-wars-v1.0.10.apk)
+- APK 크기: 90,685,132바이트 (86.48MiB)
+- SHA-256: `14d6a6d3532c346843969c9ac88789102225dcfcd76c67eac354f9462cc9f0eb`
 - 패키지명: `com.cookiewars.game`
 - 지원 범위: Android 7.0(API 24) 이상
 - 화면 방향: 세로 고정
@@ -18,8 +18,9 @@ APK를 Android 스마트폰으로 옮긴 뒤 파일을 열어 설치합니다. P
 ## 현재 구현
 
 - 가운데 전체 쿠키 클릭 영역, 클릭 애니메이션, 획득 텍스트, 효과음·진동
-- 화면에 표시되는 데이터 기반 강화 3종과 기존 크기 레벨 저장 호환
-- 별도 경험치 없이 강화 레벨 합계로 자동 진화하는 20종 쿠키와 단계별 능력 보너스
+- 화면에 표시되는 데이터 기반 강화 3종, 진화 기여 플래그와 기존 크기 레벨의 1회 저장 이전
+- 별도 경험치 없이 진화 기여 강화 레벨과 기존 저장 보너스의 합계로 자동 진화하는 20종 쿠키
+- 메인 화면에서 크게 확인하는 현재 진화 레벨·다음 쿠키 필요 레벨·남은 강화 수
 - 길 없이 넓은 중앙 공간을 유지하는 15개 난이도별 고유 전장
 - 넓어진 공격 반경 안의 적만 노리는 쿠키봇·쿠키 성 원반
 - 성 앞에서 멈춘 적도 원반 속도와 관계없이 반드시 명중하는 추적 충돌
@@ -91,7 +92,7 @@ src/
 
 - [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md): 화면, 플레이 흐름, 전투·보상·해금 규칙
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): 코드 계층, 상태 변경, 저장과 확장 구조
-- [`docs/CODE_REVIEW.md`](docs/CODE_REVIEW.md): 1.0.9 코드 리뷰 결과, 해결 사항과 남은 위험
+- [`docs/CODE_REVIEW.md`](docs/CODE_REVIEW.md): 1.0.10 코드 리뷰 결과, 해결 사항과 남은 위험
 - [`docs/DATA_TABLES.md`](docs/DATA_TABLES.md): 모든 JSON 테이블의 필드와 수정 방법
 - [`docs/ASSET_LICENSES.md`](docs/ASSET_LICENSES.md): 외부 리소스 출처와 라이선스
 - [`docs/GENERATED_ASSETS.md`](docs/GENERATED_ASSETS.md): 15개 전장·보스의 생성 프롬프트, 파일과 검수 기준

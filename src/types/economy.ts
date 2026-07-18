@@ -9,6 +9,7 @@ export interface UpgradeConfig {
   name: string;
   description: string;
   unit: string;
+  countsTowardCookieEvolution: boolean;
   enabled?: boolean;
   visible?: boolean;
   renderBaseSizePixels?: number;

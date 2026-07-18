@@ -10,6 +10,7 @@ import {
 } from '../../types/game';
 import {
   clampFiniteNumber,
+  clampSafeInteger,
   saturatingAdd,
   saturatingProductInteger,
   saturatingSubtract,
@@ -17,6 +18,8 @@ import {
 import { getUpgradeProgress, UpgradeProgress } from './upgradeSelectors';
 
 export interface CookieEvolutionProgress {
+  visibleUpgradeLevels: number;
+  legacyBonusLevels: number;
   totalUpgradeLevels: number;
   active: CookieConfig;
   next?: CookieConfig;
@@ -53,12 +56,16 @@ export function calculateCookieStats(state: GameState): CookieStats {
 }
 
 export function getCookieEvolutionProgress(state: GameState): CookieEvolutionProgress {
-  const totalUpgradeLevels = COOKIE_UPGRADES.reduce((sum, upgrade) => (
-    saturatingAdd(
-      sum,
-      getUpgradeProgress(state, upgrade.id)?.current.level ?? upgrade.levels[0].level,
-    )
-  ), 0);
+  const visibleUpgradeLevels = COOKIE_UPGRADES
+    .filter((upgrade) => upgrade.countsTowardCookieEvolution)
+    .reduce((sum, upgrade) => (
+      saturatingAdd(
+        sum,
+        getUpgradeProgress(state, upgrade.id)?.current.level ?? upgrade.levels[0].level,
+      )
+    ), 0);
+  const legacyBonusLevels = clampSafeInteger(state.legacyCookieEvolutionBonusLevels);
+  const totalUpgradeLevels = saturatingAdd(visibleUpgradeLevels, legacyBonusLevels);
   const active = [...COOKIES]
     .reverse()
     .find((cookie) => totalUpgradeLevels >= cookie.requiredTotalUpgradeLevels)
@@ -69,6 +76,8 @@ export function getCookieEvolutionProgress(state: GameState): CookieEvolutionPro
     ? next.requiredTotalUpgradeLevels - active.requiredTotalUpgradeLevels
     : 0;
   return {
+    visibleUpgradeLevels,
+    legacyBonusLevels,
     totalUpgradeLevels,
     active,
     next,

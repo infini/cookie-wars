@@ -15,6 +15,7 @@ export const initialGameState: GameState = {
   cookies: 0,
   lifetimeCookies: 0,
   upgradeLevels: makeInitialUpgradeLevels(),
+  legacyCookieEvolutionBonusLevels: 0,
   ownedDiscIds: [],
   discLevels: makeInitialDiscLevels(),
   selectedDiscId: DISCS[0].id,

@@ -1,5 +1,11 @@
 {
-  "currentSaveVersion": 7,
+  "currentSaveVersion": 8,
+  "cookieEvolutionBonusMigrationVersion": 8,
+  "cookieEvolutionLegacyUpgrade": {
+    "id": "cookieSize",
+    "baseLevel": 1,
+    "maximumLevel": 6
+  },
   "botIdAliases": {
     "cookie-bot": "choco-bot",
     "berry-bot": "choco-bot",

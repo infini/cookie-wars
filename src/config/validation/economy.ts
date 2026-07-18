@@ -1,4 +1,5 @@
 import {
+  booleanValue,
   ConfigValidationError,
   UnknownRecord,
   numberField,
@@ -33,12 +34,31 @@ export function validateCookieUpgrades(value: unknown): UnknownRecord[] {
   upgrades.forEach((upgrade, index) => {
     const itemPath = `${path}[${index}]`;
     validateStringFields(upgrade, itemPath, ['name', 'description', 'unit']);
+    booleanValue(
+      upgrade.countsTowardCookieEvolution,
+      `${itemPath}.countsTowardCookieEvolution`,
+    );
+    if (
+      upgrade.countsTowardCookieEvolution === true
+      && (upgrade.enabled === false || upgrade.visible === false)
+    ) {
+      throw new ConfigValidationError(
+        `${itemPath}.countsTowardCookieEvolution`,
+        '숨기거나 비활성화한 강화는 쿠키 진화 레벨에 포함할 수 없습니다.',
+      );
+    }
     validateOptionalBoolean(upgrade, 'enabled', itemPath);
     validateOptionalBoolean(upgrade, 'visible', itemPath);
     validateOptionalNumber(upgrade, 'renderBaseSizePixels', itemPath, { min: 0 });
     validateOptionalNumber(upgrade, 'renderMaximumSizePixels', itemPath, { min: 0 });
     validateLevelRows(upgrade.levels, `${itemPath}.levels`, ['value', 'cost']);
   });
+  if (!upgrades.some((upgrade) => upgrade.countsTowardCookieEvolution === true)) {
+    throw new ConfigValidationError(
+      `${path}.countsTowardCookieEvolution`,
+      '쿠키 진화에 포함되는 강화가 하나 이상 필요합니다.',
+    );
+  }
   return upgrades;
 }
 
@@ -64,10 +84,21 @@ export function validateCookieUpgradeRules(value: unknown): UnknownRecord {
 export function validateCookies(value: unknown): UnknownRecord[] {
   const path = 'COOKIES';
   const cookies = validateIdTable(value, path);
+  let previousRequiredLevels = -1;
   cookies.forEach((cookie, index) => {
     const itemPath = `${path}[${index}]`;
     validateStringFields(cookie, itemPath, ['imageKey', 'name', 'description']);
-    numberField(cookie, 'requiredTotalUpgradeLevels', itemPath, { integer: true, min: 0 });
+    const requiredLevels = numberField(cookie, 'requiredTotalUpgradeLevels', itemPath, {
+      integer: true,
+      min: 0,
+    });
+    if (requiredLevels <= previousRequiredLevels) {
+      throw new ConfigValidationError(
+        `${itemPath}.requiredTotalUpgradeLevels`,
+        '앞 쿠키보다 커야 합니다.',
+      );
+    }
+    previousRequiredLevels = requiredLevels;
     validateNumberFields(cookie, itemPath, [
       'clickMultiplier', 'autoProductionMultiplier', 'healthMultiplier',
     ], { min: 0 });

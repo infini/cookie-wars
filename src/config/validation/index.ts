@@ -20,6 +20,7 @@ import {
 } from './economy';
 import { ConfigValidationError } from './primitives';
 import { validateReferences } from './references';
+import { validateSaveMigrations } from './saveMigrations';
 import {
   validateAudioSettings,
   validateBattleAudio,
@@ -27,7 +28,6 @@ import {
   validateBattleUi,
   validateBossSpecialAttack,
   validateGiantDisc,
-  validateSaveMigrations,
 } from './system';
 import { GameConfigInput, ValidatedGameConfig } from './types';
 

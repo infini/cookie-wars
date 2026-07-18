@@ -67,27 +67,30 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
     <View style={styles.root}>
       <View style={styles.statsRow}>
         <StatChip icon="cookie" label="현재 쿠키" value={formatNumber(state.cookies)} />
-        <StatChip icon="arrow-up-bold" label="강화 합계" value={`Lv.${stats.cookieLevel}`} tint={colors.purple} />
+        <StatChip icon="arrow-up-bold" label="진화 레벨" value={`Lv.${stats.cookieLevel}`} tint={colors.purple} />
         <StatChip icon="gesture-tap" label="한 번에" value={`+${formatNumber(stats.clickPower)}`} tint={colors.blue} />
       </View>
 
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={evolution.next
-          ? `가운데 쿠키 획득 영역, 누르면 쿠키 ${stats.clickPower}개 획득, 강화 레벨 합계 ${evolution.totalUpgradeLevels}, 다음 진화 ${evolution.next.name}, ${evolution.remainingLevels}레벨 남음`
-          : `가운데 쿠키 획득 영역, 누르면 쿠키 ${stats.clickPower}개 획득, 강화 레벨 합계 ${evolution.totalUpgradeLevels}, 최고 쿠키 진화 완료`}
+          ? `쿠키 얻기, 한 번에 ${formatNumber(stats.clickPower)}개, 다음 쿠키 ${evolution.next.name}, 현재 진화 ${evolution.totalUpgradeLevels}레벨, 필요 ${evolution.next.requiredTotalUpgradeLevels}레벨, ${evolution.remainingLevels}번 더 강화하면 진화합니다`
+          : `쿠키 얻기, 한 번에 ${formatNumber(stats.clickPower)}개, 현재 진화 ${evolution.totalUpgradeLevels}레벨, 최고 쿠키 진화를 완료했습니다`}
+        accessibilityHint="화면 가운데 아무 곳이나 두 번 탭하면 쿠키를 얻어요. 진화 레벨은 쿠키 강화에서 클릭 힘, 자동 생산, 쿠키 성 체력을 강화하면 올라요."
         onPress={handleCookiePress}
         style={styles.hero}
       >
         <Text style={styles.guide}>가운데 어디든 눌러요!</Text>
         <View style={styles.evolutionSummary}>
           <Text style={styles.evolutionTitle}>
-            강화 레벨 합계 Lv.{evolution.totalUpgradeLevels}
+            {evolution.next
+              ? `다음 쿠키 · ${evolution.next.name}`
+              : '최고 쿠키 진화 완료!'}
           </Text>
           <Text style={styles.evolutionCondition}>
             {evolution.next
-              ? `다음 진화: ${evolution.next.name} · 조건 Lv.${evolution.next.requiredTotalUpgradeLevels}`
-              : '최고 쿠키 진화를 완료했어요!'}
+              ? `현재 진화 Lv.${evolution.totalUpgradeLevels} / 필요 Lv.${evolution.next.requiredTotalUpgradeLevels}`
+              : `현재 진화 Lv.${evolution.totalUpgradeLevels}`}
           </Text>
           <View style={styles.evolutionProgressTrack}>
             <View
@@ -99,8 +102,8 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
           </View>
           <Text style={styles.evolutionProgressText}>
             {evolution.next
-              ? `별도 경험치 없음 · 강화 ${evolution.remainingLevels}레벨 남음 · 진행률 ${Math.round(evolution.progressRatio * 100)}%`
-              : '별도 경험치 없음 · 남은 레벨 0 · 진행률 100%'}
+              ? `쿠키 강화에서 ${evolution.remainingLevels}번만 더 강화하면 진화!`
+              : '모든 쿠키 진화를 완료했어요!'}
           </Text>
         </View>
         <View style={styles.cookieStage}>
@@ -137,12 +140,12 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', gap: 6 },
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 0 },
   guide: { fontFamily: fonts.display, fontSize: 25, color: colors.cookieDark, marginBottom: 4 },
-  evolutionSummary: { width: '92%', maxWidth: 360, alignItems: 'center', marginBottom: 2 },
-  evolutionTitle: { fontFamily: fonts.extraBold, fontSize: 11, color: colors.purple, textAlign: 'center' },
-  evolutionCondition: { fontFamily: fonts.bold, fontSize: 10, color: colors.ink, textAlign: 'center', marginTop: 1 },
-  evolutionProgressTrack: { width: '100%', height: 8, borderRadius: 4, backgroundColor: colors.white, overflow: 'hidden', marginTop: 4 },
+  evolutionSummary: { width: '92%', maxWidth: 360, alignItems: 'center', marginBottom: 2, paddingHorizontal: 2 },
+  evolutionTitle: { fontFamily: fonts.extraBold, fontSize: 14, color: colors.purple, textAlign: 'center' },
+  evolutionCondition: { fontFamily: fonts.bold, fontSize: 13, color: colors.ink, textAlign: 'center', marginTop: 2 },
+  evolutionProgressTrack: { width: '100%', height: 10, borderRadius: 5, backgroundColor: colors.white, overflow: 'hidden', marginTop: 5 },
   evolutionProgressFill: { height: '100%', borderRadius: 4, backgroundColor: colors.purple },
-  evolutionProgressText: { fontFamily: fonts.bold, fontSize: 9, color: colors.muted, marginTop: 2 },
+  evolutionProgressText: { fontFamily: fonts.extraBold, fontSize: 12, color: colors.cookieDark, marginTop: 3, textAlign: 'center' },
   cookieStage: { width: 286, height: 286, alignItems: 'center', justifyContent: 'center' },
   ringOuter: {
     position: 'absolute', width: 278, height: 278, borderRadius: 139,

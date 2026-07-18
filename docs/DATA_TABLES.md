@@ -51,6 +51,7 @@
 - `name`, `description`, `unit`: 한국어 UI 문구와 단위
 - `enabled`: `false`이면 현재 저장 레벨은 읽되 다음 단계 구매를 만들지 않음
 - `visible`: `false`이면 강화 화면 목록에서 숨김
+- `countsTowardCookieEvolution`: `true`인 행의 현재 레벨만 쿠키 진화 레벨 합계에 포함
 - `renderBaseSizePixels`, `renderMaximumSizePixels`: 비율 값을 실제 메인 화면 크기로 바꾸는 기준·상한
 - `levels[].level`: 단계 번호
 - `levels[].value`: 해당 단계의 실제 능력치
@@ -61,7 +62,7 @@
 - `valueIncreasePerLevel`: 이후 한 레벨마다 증가하는 능력치
 - `costGrowthMultiplier`: 이후 강화 비용 증가 배율
 
-쿠키 크기(`cookieSize`)는 `enabled: false`, `visible: false`인 호환용 행입니다. 강화 화면에서 숨기고 새로 구매할 수 없지만 이전 저장의 현재 레벨은 그대로 복원해 강화 레벨 합계와 쿠키 진화를 보존합니다. 메인 화면 쿠키 이미지는 저장 레벨과 무관하게 이 행의 `levels[].value` 최고 비율을 `renderBaseSizePixels`에 적용하고 `renderMaximumSizePixels`로 제한한 크기로 고정합니다.
+클릭 힘(`clickPower`), 자동 생산(`autoProduction`), 쿠키 성 체력(`cookieHealth`)은 `countsTowardCookieEvolution: true`이고 쿠키 크기(`cookieSize`)는 `false`입니다. 쿠키 크기 행은 `enabled: false`, `visible: false`인 호환·렌더 기준용 데이터로만 남으며 강화 화면에서 숨기고 새로 구매할 수 없습니다. v7 이하 저장의 쿠키 크기 진행분은 저장 이전 단계에서 `Lv - 1`만큼 `legacyCookieEvolutionBonusLevels`로 한 번 옮긴 뒤, 진화 selector는 `cookieSize`를 읽지 않습니다. 메인 화면 쿠키 이미지는 저장 레벨과 무관하게 이 행의 `levels[].value` 최고 비율을 `renderBaseSizePixels`에 적용하고 `renderMaximumSizePixels`로 제한한 크기로 고정합니다.
 
 업그레이드 화면은 `visible`인 항목만 대상으로 현재 쿠키 잔액으로 바로 살 수 있는 항목을 첫 그룹, 다음 단계는 있지만 쿠키가 부족한 항목을 두 번째 그룹, `next`가 없는 강화 완료 항목을 마지막 그룹에 둡니다. 잔액이나 레벨이 바뀔 때 selector가 다시 정렬하며 같은 그룹 안에서는 이 JSON 배열 순서를 그대로 유지합니다.
 
@@ -151,12 +152,12 @@
 `cookies.json` 배열 순서가 진화 순서입니다. 현재 20종은 클래식 초코칩 → 행운 → 도넛 → 와플 → 컵케이크 → 딸기 케이크 → 달빛 → 파티 → 별빛 쌀쿠키 → 로열 초콜릿 → 별사탕 → 무지개 롤리팝 → 황금 푸딩 → 별빛 쇼트케이크 → 삼색 경단 → 은하수 빙수 → 황금 꿀단지 → 마법 파이 → 다이아몬드 → 천상 왕관입니다.
 
 - `imageKey`: `CookieImage`가 정적으로 포함한 Noto 이미지 키
-- `requiredTotalUpgradeLevels`: 네 가지 쿠키 업그레이드 현재 레벨 합계의 진화 조건
+- `requiredTotalUpgradeLevels`: 진화 기여 강화의 현재 레벨 합계와 `legacyCookieEvolutionBonusLevels`를 더한 값의 진화 조건
 - `clickMultiplier`: 클릭당 획득량 배율
 - `autoProductionMultiplier`: 자동 생산량 배율
 - `healthMultiplier`: 전투의 쿠키 성 최대 HP 배율
 
-조건을 만족한 가장 높은 쿠키가 자동 활성화됩니다. 별도 구매나 수동 장착은 없고 능력 배율은 누적하지 않으며 현재 쿠키 행 하나만 적용합니다. 새 쿠키를 추가할 때 요구 총레벨과 배율은 앞 단계보다 크게 설정하고 `CookieImage`의 이미지 키 매핑도 함께 추가합니다.
+현재 20종의 요구 조건은 3, 9, 15, …, 117로 6레벨 간격입니다. 조건을 만족한 가장 높은 쿠키가 자동 활성화됩니다. 별도 구매나 수동 장착은 없고 능력 배율은 누적하지 않으며 현재 쿠키 행 하나만 적용합니다. 새 쿠키를 추가할 때 요구 총레벨과 배율은 앞 단계보다 크게 설정하고 `CookieImage`의 이미지 키 매핑도 함께 추가합니다.
 
 ## 전투 규칙
 
@@ -277,20 +278,25 @@
 `save-migrations.json`:
 
 - `currentSaveVersion`: 새 저장에 기록하고 이전 저장을 정규화할 현재 스키마 버전
+- `cookieEvolutionBonusMigrationVersion`: 이전 쿠키 크기 진행도를 영구 진화 보너스로 한 번 옮기는 스키마 경계
+- `cookieEvolutionLegacyUpgrade.id`, `baseLevel`, `maximumLevel`: v7 저장에서 읽을 고정 레거시 강화 ID와 유효 레벨 범위
 - `botIdAliases`, `discIdAliases`, `monsterIdAliases`: 제거·변경된 ID를 현재 테이블 ID로 옮기는 대응표
+
+현재 `currentSaveVersion`은 8입니다. v7 이하 저장은 고정 레거시 ID `cookieSize`의 정규화된 현재 레벨에서 기본 레벨 1을 뺀 값을 `legacyCookieEvolutionBonusLevels`에 한 번 기록합니다. 1~6 범위의 소수 레벨은 기존 저장 정책대로 내림하고, 범위 밖이거나 유한하지 않은 값은 기본 레벨로 복구해 보너스를 만들지 않습니다. 이 규칙은 현재 강화 테이블과 분리되어 향후 숨김 행을 제거하거나 다른 강화의 진화 기여도를 바꿔도 v7 직행 업데이트 결과가 변하지 않습니다. 새 저장과 해당 필드가 없던 v8 이상 저장은 0을 사용하고, v8 이상에서는 쿠키 크기를 다시 읽어 보너스를 만들지 않습니다.
 
 `currentSaveVersion`은 양의 정수여야 하며 별칭 대상은 실제 현재 데이터에 존재해야 합니다.
 
-앱이 `currentSaveVersion`보다 높은 저장을 발견하면 구버전 다운그레이드로 판단해 원본 저장을 덮어쓰지 않습니다. 새 스키마를 배포할 때는 버전 숫자만 올리지 말고 이전 버전에서 새 버전으로 올리는 정규화 규칙과 회귀 테스트를 함께 추가합니다.
+앱은 양의 안전 정수인 `saveVersion`만 스키마 ID로 인정합니다. 그 값이 `currentSaveVersion`보다 높을 때만 구버전 다운그레이드로 판단해 원본 저장을 덮어쓰지 않습니다. 소수·비안전 정수·`NaN`·`Infinity`는 손상 저장으로 정규화해 현재 버전으로 복구하고 다시 저장할 수 있습니다. 새 스키마를 배포할 때는 버전 숫자만 올리지 말고 이전 버전에서 새 버전으로 올리는 정규화 규칙과 회귀 테스트를 함께 추가합니다.
 
 ## 안전하게 테이블을 변경하는 절차
 
 1. JSON의 기존 ID는 저장 호환성을 위해 바꾸지 않습니다.
 2. 새 항목에는 중복되지 않는 ID를 사용합니다.
-3. 난이도의 `enemyWaveId`, 웨이브의 몬스터 ID처럼 다른 테이블을 참조하는 값이 실제로 존재하는지 확인합니다.
-4. 레벨은 오름차순으로 연속되게 추가합니다.
-5. `npm run verify`를 실행합니다.
-6. Android 릴리스 APK를 빌드해 실제 기기에서 구매, 저장 복구, 전투를 확인합니다.
+3. 새 쿠키 강화에는 `countsTowardCookieEvolution`을 명시하고 진화에 포함할지 의도적으로 결정합니다.
+4. 난이도의 `enemyWaveId`, 웨이브의 몬스터 ID처럼 다른 테이블을 참조하는 값이 실제로 존재하는지 확인합니다.
+5. 레벨은 오름차순으로 연속되게 추가합니다.
+6. `npm run verify`를 실행합니다.
+7. Android 릴리스 APK를 빌드해 실제 기기에서 구매, 저장 복구, 전투를 확인합니다.
 
 새 필드가 필요할 때는 JSON만 임의로 추가하지 말고 `src/types`의 해당 영역 계약, 공개 재수출이 필요하면 `src/types/game.ts` 파사드, `src/config/index.ts`, 관련 selector/engine, 테스트, 이 문서를 함께 갱신합니다.
 

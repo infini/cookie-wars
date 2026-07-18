@@ -107,7 +107,13 @@ describe('데이터 테이블', () => {
   test('진행·음량·상점 값은 데이터 테이블에서 제공한다', () => {
     expect(PROGRESSION.winsToUnlockNextDifficulty).toBe(20);
     expect(PROGRESSION.giantDiscRewardPerFirstClear).toBe(1);
-    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(7);
+    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(8);
+    expect(SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion).toBe(8);
+    expect(SAVE_MIGRATIONS.cookieEvolutionLegacyUpgrade).toEqual({
+      id: 'cookieSize',
+      baseLevel: 1,
+      maximumLevel: 6,
+    });
     expect(GIANT_DISC.damageMultiplier).toBe(30);
     expect(GIANT_DISC.renderWidthRatio).toBeGreaterThanOrEqual(1 / 3);
     expect(AUDIO_SETTINGS.levels.map((item) => item.level)).toEqual([1, 2, 3, 4, 5]);
@@ -136,11 +142,23 @@ describe('데이터 테이블', () => {
     expect(cookieSize).toMatchObject({
       enabled: false,
       visible: false,
+      countsTowardCookieEvolution: false,
       renderBaseSizePixels: 190,
       renderMaximumSizePixels: 224,
     });
+    expect(
+      COOKIE_UPGRADES
+        .filter((upgrade) => upgrade.countsTowardCookieEvolution)
+        .map((upgrade) => upgrade.id),
+    ).toEqual(['clickPower', 'autoProduction', 'cookieHealth']);
+    expect(COOKIE_UPGRADES.every(
+      (upgrade) => typeof upgrade.countsTowardCookieEvolution === 'boolean',
+    )).toBe(true);
     expect(Math.max(...cookieSize!.levels.map((level) => level.value))).toBeGreaterThan(0);
     expect(COOKIES).toHaveLength(20);
+    expect(COOKIES.map((cookie) => cookie.requiredTotalUpgradeLevels)).toEqual(
+      Array.from({ length: 20 }, (_, index) => 3 + index * 6),
+    );
     COOKIES.slice(1).forEach((cookie, index) => {
       expect(cookie.requiredTotalUpgradeLevels).toBeGreaterThan(
         COOKIES[index].requiredTotalUpgradeLevels,
@@ -284,6 +302,9 @@ describe('데이터 테이블 런타임 검증', () => {
     ['SAVE_MIGRATIONS.currentSaveVersion', (config) => {
       config.SAVE_MIGRATIONS.currentSaveVersion = 0;
     }],
+    ['SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion', (config) => {
+      config.SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion = 0;
+    }],
   ];
 
   const discreteIntegerFields: Array<[string, (config: any) => void]> = [
@@ -357,6 +378,9 @@ describe('데이터 테이블 런타임 검증', () => {
     ['SAVE_MIGRATIONS.currentSaveVersion', (config) => {
       config.SAVE_MIGRATIONS.currentSaveVersion = 7.5;
     }],
+    ['SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion', (config) => {
+      config.SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion = 7.5;
+    }],
     ['BOTS[0].baseCost', (config) => {
       config.BOTS[0].baseCost = Number.MAX_SAFE_INTEGER + 1;
     }],
@@ -375,6 +399,58 @@ describe('데이터 테이블 런타임 검증', () => {
     wrongType.COOKIE_UPGRADES[0].levels[0].cost = '무료';
     expect(() => validateGameConfig(wrongType)).toThrow(
       'COOKIE_UPGRADES[0].levels[0].cost',
+    );
+
+    const missingEvolutionFlag = cloneConfig();
+    delete missingEvolutionFlag.COOKIE_UPGRADES[0].countsTowardCookieEvolution;
+    expect(() => validateGameConfig(missingEvolutionFlag)).toThrow(
+      'COOKIE_UPGRADES[0].countsTowardCookieEvolution',
+    );
+
+    const invalidEvolutionFlag = cloneConfig();
+    invalidEvolutionFlag.COOKIE_UPGRADES[0].countsTowardCookieEvolution = '예';
+    expect(() => validateGameConfig(invalidEvolutionFlag)).toThrow(
+      'COOKIE_UPGRADES[0].countsTowardCookieEvolution',
+    );
+
+    const hiddenEvolutionUpgrade = cloneConfig();
+    hiddenEvolutionUpgrade.COOKIE_UPGRADES[0].visible = false;
+    expect(() => validateGameConfig(hiddenEvolutionUpgrade)).toThrow(
+      'COOKIE_UPGRADES[0].countsTowardCookieEvolution',
+    );
+
+    const noEvolutionUpgrades = cloneConfig();
+    noEvolutionUpgrades.COOKIE_UPGRADES.forEach((upgrade: any) => {
+      upgrade.countsTowardCookieEvolution = false;
+    });
+    expect(() => validateGameConfig(noEvolutionUpgrades)).toThrow(
+      'COOKIE_UPGRADES.countsTowardCookieEvolution',
+    );
+
+    const migrationAfterCurrentVersion = cloneConfig();
+    migrationAfterCurrentVersion.SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion = 9;
+    expect(() => validateGameConfig(migrationAfterCurrentVersion)).toThrow(
+      'SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion',
+    );
+
+    const missingLegacyUpgrade = cloneConfig();
+    delete missingLegacyUpgrade.SAVE_MIGRATIONS.cookieEvolutionLegacyUpgrade;
+    expect(() => validateGameConfig(missingLegacyUpgrade)).toThrow(
+      'SAVE_MIGRATIONS.cookieEvolutionLegacyUpgrade',
+    );
+
+    const reversedLegacyRange = cloneConfig();
+    reversedLegacyRange.SAVE_MIGRATIONS.cookieEvolutionLegacyUpgrade.maximumLevel = 0;
+    expect(() => validateGameConfig(reversedLegacyRange)).toThrow(
+      'SAVE_MIGRATIONS.cookieEvolutionLegacyUpgrade.maximumLevel',
+    );
+
+    const unorderedCookies = cloneConfig();
+    unorderedCookies.COOKIES[1].requiredTotalUpgradeLevels = (
+      unorderedCookies.COOKIES[0].requiredTotalUpgradeLevels
+    );
+    expect(() => validateGameConfig(unorderedCookies)).toThrow(
+      'COOKIES[1].requiredTotalUpgradeLevels',
     );
 
     const missingBattleFlashOpacity = cloneConfig();
