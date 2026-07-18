@@ -1,10 +1,17 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { DIFFICULTIES, getDifficulty, getEnemyWave } from '../config';
+import {
+  DIFFICULTIES,
+  getBattleMapForDifficulty,
+  getDifficulty,
+  getEnemyWave,
+  getMonster,
+} from '../config';
 import { DifficultyDropdown } from '../components/DifficultyDropdown';
 import { getBattleDifficulty, getBattleStageId, getDifficultyProgress } from '../domain/gameSelectors';
 import { Panel } from '../components/Panel';
+import { MonsterSprite } from '../components/MonsterSprite';
 import { useFeedback } from '../services/FeedbackContext';
 import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
@@ -31,6 +38,8 @@ export function DifficultyScreen() {
   const progress = getDifficultyProgress(state, selected.id);
   const battleDifficulty = getBattleDifficulty(selected, progress.wins);
   const enemyWave = getEnemyWave(selected.enemyWaveId);
+  const boss = getMonster(enemyWave.bossMonsterId);
+  const battleMap = getBattleMapForDifficulty(selected.id);
   const rewardReceived = state.rewardClaimedStageIds.includes(
     getBattleStageId(selected.id, progress.currentBattleNumber),
   );
@@ -54,6 +63,16 @@ export function DifficultyScreen() {
           <View style={styles.stageBadge}>
             <MaterialCommunityIcons name="flag-checkered" size={20} color={colors.white} />
             <Text style={styles.stageText}>전투 {progress.currentBattleNumber}/{progress.requiredWins}</Text>
+          </View>
+        </View>
+        <View style={styles.bossPreview}>
+          <View style={styles.bossSprite}>
+            <MonsterSprite imageKey={boss.imageKey} size={94} grounded />
+          </View>
+          <View style={styles.bossPreviewText}>
+            <Text style={styles.bossPreviewLabel}>이번 난이도 보스</Text>
+            <Text style={styles.bossPreviewName}>{boss.name}</Text>
+            <Text style={styles.bossPreviewMap}>전장 · {battleMap.name}</Text>
           </View>
         </View>
         <View style={styles.details}>
@@ -120,6 +139,12 @@ const styles = StyleSheet.create({
   stageBadge: { flexDirection: 'row', gap: 5, alignItems: 'center', backgroundColor: colors.purple, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 7 },
   stageText: { fontFamily: fonts.extraBold, fontSize: 11, color: colors.white },
   details: { gap: 4 },
+  bossPreview: { flexDirection: 'row', alignItems: 'center', borderRadius: 18, backgroundColor: colors.redSoft, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 8 },
+  bossSprite: { width: 102, height: 96, alignItems: 'center', justifyContent: 'center' },
+  bossPreviewText: { flex: 1, marginLeft: 8 },
+  bossPreviewLabel: { fontFamily: fonts.bold, fontSize: 10, color: colors.redDark },
+  bossPreviewName: { fontFamily: fonts.display, fontSize: 22, color: colors.ink, marginTop: 2 },
+  bossPreviewMap: { fontFamily: fonts.medium, fontSize: 10, color: colors.muted, marginTop: 3 },
   detail: { minHeight: 50, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: colors.line, gap: 10 },
   detailIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   detailLabel: { flex: 1, fontFamily: fonts.bold, fontSize: 13, color: colors.muted },

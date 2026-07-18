@@ -68,6 +68,7 @@ export interface CookieEvolutionProgress {
   active: CookieConfig;
   next?: CookieConfig;
   remainingLevels: number;
+  progressRatio: number;
 }
 
 export function getBattleStageId(difficultyId: string, stageNumber: number): string {
@@ -101,10 +102,12 @@ export function getUpgradeProgress(
   const savedLevel = Math.max(firstLevel, Math.floor(state.upgradeLevels[config.id] ?? firstLevel));
   const current = calculateUpgradeLevel(config, savedLevel);
   const explicitNext = config.levels.find((level) => level.level === current.level + 1);
-  const next = explicitNext
-    ?? (COOKIE_UPGRADE_RULES[config.id]
-      ? calculateUpgradeLevel(config, current.level + 1)
-      : undefined);
+  const next = config.enabled === false
+    ? undefined
+    : explicitNext
+      ?? (COOKIE_UPGRADE_RULES[config.id]
+        ? calculateUpgradeLevel(config, current.level + 1)
+        : undefined);
   return {
     config,
     current,
@@ -116,7 +119,9 @@ export function getUpgradeProgress(
 export function getSortedUpgradeProgress(state: GameState): UpgradeProgress[] {
   return COOKIE_UPGRADES
     .map((upgrade, tableIndex) => ({
-      progress: getUpgradeProgress(state, upgrade.id),
+      progress: upgrade.visible === false
+        ? undefined
+        : getUpgradeProgress(state, upgrade.id),
       tableIndex,
     }))
     .filter((item): item is { progress: UpgradeProgress; tableIndex: number } => (
@@ -273,7 +278,7 @@ export function calculateCookieStats(state: GameState): CookieStats {
   const evolution = getCookieEvolutionProgress(state);
   return {
     clickPower: Math.round(value('clickPower') * evolution.active.clickMultiplier),
-    sizePercent: value('cookieSize'),
+    cookieRenderSize: getMaximumCookieRenderSize(),
     autoProduction: Math.round(
       value('autoProduction') * evolution.active.autoProductionMultiplier,
     ),
@@ -294,6 +299,9 @@ export function getCookieEvolutionProgress(state: GameState): CookieEvolutionPro
     ?? COOKIES[0];
   const activeIndex = COOKIES.findIndex((cookie) => cookie.id === active.id);
   const next = COOKIES[activeIndex + 1];
+  const requiredStepLevels = next
+    ? next.requiredTotalUpgradeLevels - active.requiredTotalUpgradeLevels
+    : 0;
   return {
     totalUpgradeLevels,
     active,
@@ -301,7 +309,32 @@ export function getCookieEvolutionProgress(state: GameState): CookieEvolutionPro
     remainingLevels: next
       ? Math.max(0, next.requiredTotalUpgradeLevels - totalUpgradeLevels)
       : 0,
+    progressRatio: next && requiredStepLevels > 0
+      ? Math.max(
+        0,
+        Math.min(
+          1,
+          (totalUpgradeLevels - active.requiredTotalUpgradeLevels) / requiredStepLevels,
+        ),
+      )
+      : 1,
   };
+}
+
+export function getMaximumCookieRenderSize(): number {
+  const config = getUpgrade('cookieSize');
+  const baseValue = config?.levels[0]?.value ?? 0;
+  if (
+    !config
+    || baseValue <= 0
+    || config.renderBaseSizePixels === undefined
+    || config.renderMaximumSizePixels === undefined
+  ) return 0;
+  const maximumValue = Math.max(...config.levels.map((level) => level.value));
+  return Math.min(
+    config.renderMaximumSizePixels,
+    config.renderBaseSizePixels * maximumValue / baseValue,
+  );
 }
 
 export function makeInitialUpgradeLevels(): Record<string, number> {

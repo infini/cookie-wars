@@ -20,8 +20,17 @@ import {
   calculateCastleDiscDamage,
   calculateGiantDiscDamage,
   canThrowCastleDisc,
+  clampBattleDeltaMs,
+  commitAuthorizedBattleState,
+  createManualProjectileId,
   createBattleEnemies,
+  tryThrowCastleDisc,
+  tryThrowGiantDisc,
 } from '../src/engine/useBattleEngine';
+import {
+  consumeGiantDiscInventory,
+  initialGameState,
+} from '../src/state/gameReducer';
 
 function activeBattle(): BattleState {
   return {
@@ -85,14 +94,17 @@ describe('전투 엔진', () => {
     expect(enemies[0].y).toBe(BATTLE_RULES.enemyStartY);
   });
 
-  test('모든 난이도는 같은 보스 한 마리의 능력치만 강화한다', () => {
+  test('모든 난이도는 고유한 보스 한 마리를 사용하며 전투 수치는 동일 공식으로 계산한다', () => {
+    const bossIds = new Set<string>();
     DIFFICULTIES.forEach((difficulty) => {
       const enemies = createBattleEnemies(difficulty, 1000);
       const wave = getEnemyWave(difficulty.enemyWaveId);
       expect(enemies).toHaveLength(1);
       expect(enemies[0].monsterId).toBe(wave.bossMonsterId);
       expect(enemies[0].sizeMultiplier).toBeGreaterThan(1);
+      bossIds.add(enemies[0].monsterId);
     });
+    expect(bossIds.size).toBe(DIFFICULTIES.length);
   });
 
   test('성 앞에서 멈춘 적도 빠른 상위 원반에 정상적으로 피해를 받는다', () => {
@@ -192,7 +204,8 @@ describe('전투 엔진', () => {
       count: [65, 49, 44, 60, 65][index],
     }));
     const difficulty = getBattleDifficulty(DIFFICULTIES[4], 17);
-    const boss = MONSTERS.find((monster) => monster.id === 'cookie-tyrant')!;
+    const bossId = getEnemyWave(difficulty.enemyWaveId).bossMonsterId;
+    const boss = MONSTERS.find((monster) => monster.id === bossId)!;
     const health = calculateBossHealth(boss.baseHp, difficulty, playerDisc, bots);
     const strongestHit = Math.max(...bots.map((activeBot) => (
       playerDisc.damage * activeBot.config.discDamageMultiplier * activeBot.count
@@ -453,6 +466,149 @@ describe('전투 엔진', () => {
       deltaMs: 0,
     });
     expect(next.playerProjectiles).toHaveLength(0);
+  });
+
+  test('화면 탭 성 공격도 진행 중·쿨타임 종료·사거리 조건을 모두 지켜야 한다', () => {
+    const battle = activeBattle();
+    const disc = DISCS[0].levels[0];
+    const beforeCooldown = battle.lastCastleThrowAt + disc.cooldownMs - 1;
+    const afterCooldown = battle.lastCastleThrowAt + disc.cooldownMs;
+
+    expect(canThrowCastleDisc(battle, true, disc, beforeCooldown)).toBe(false);
+    expect(canThrowCastleDisc(battle, true, disc, afterCooldown)).toBe(true);
+    expect(canThrowCastleDisc({ ...battle, status: 'idle' }, true, disc, afterCooldown))
+      .toBe(false);
+    expect(canThrowCastleDisc({ ...battle, status: 'victory' }, true, disc, afterCooldown))
+      .toBe(false);
+    expect(canThrowCastleDisc(battle, false, disc, afterCooldown)).toBe(false);
+  });
+
+  test('빠른 연속 탭은 함수형 상태의 최신 쿨타임을 재검증해 성 원반을 중복 추가하지 않는다', () => {
+    const battle = activeBattle();
+    const disc = DISCS[0].levels[0];
+    const now = battle.lastCastleThrowAt + disc.cooldownMs;
+    const first = tryThrowCastleDisc(
+      battle,
+      true,
+      disc,
+      now,
+      `castle-disc-${now}-1`,
+    );
+    const second = tryThrowCastleDisc(
+      first,
+      true,
+      disc,
+      now,
+      `castle-disc-${now}-2`,
+    );
+
+    expect(first.playerProjectiles).toHaveLength(battle.playerProjectiles.length + 1);
+    expect(second).toBe(first);
+    expect(second.playerProjectiles.filter((projectile) => (
+      projectile.id.startsWith(`castle-disc-${now}`)
+    ))).toHaveLength(1);
+  });
+
+  test('같은 밀리초에 연속 발사된 거대 원반도 증가 순번이 다르면 ID가 충돌하지 않는다', () => {
+    const battle = activeBattle();
+    battle.playerProjectiles = [];
+    const disc = DISCS[0].levels[0];
+    const now = battle.now;
+    const firstId = createManualProjectileId('giant', now, 1);
+    const secondId = createManualProjectileId('giant', now, 2);
+    const first = tryThrowGiantDisc(
+      battle,
+      true,
+      disc,
+      [],
+      now,
+      firstId,
+    );
+    const second = tryThrowGiantDisc(
+      first,
+      true,
+      disc,
+      [],
+      now,
+      secondId,
+    );
+
+    expect(firstId).not.toBe(secondId);
+    expect(second.playerProjectiles).toHaveLength(2);
+    expect(new Set(second.playerProjectiles.map((projectile) => projectile.id)).size).toBe(2);
+  });
+
+  test('재고 한 개로 빠르게 두 번 요청해도 거대 원반은 정확히 한 발만 커밋한다', () => {
+    let inventory = { ...initialGameState, giantDiscCount: 1 };
+    let battle: BattleState = { ...activeBattle(), playerProjectiles: [] };
+    const disc = DISCS[0].levels[0];
+    const consume = () => {
+      const next = consumeGiantDiscInventory(inventory);
+      if (!next) return false;
+      inventory = next;
+      return true;
+    };
+    const launch = (sequence: number) => {
+      const current = battle;
+      const candidate = tryThrowGiantDisc(
+        current,
+        true,
+        disc,
+        [],
+        current.now,
+        createManualProjectileId('giant', current.now, sequence),
+      );
+      battle = commitAuthorizedBattleState(current, candidate, consume);
+      return battle !== current;
+    };
+
+    expect(launch(1)).toBe(true);
+    expect(launch(2)).toBe(false);
+    expect(inventory.giantDiscCount).toBe(0);
+    expect(battle.playerProjectiles).toHaveLength(1);
+  });
+
+  test('발사 불가 상태에서는 재고 승인을 호출하지 않고, 재고가 없으면 무료 발사하지 않는다', () => {
+    const disc = DISCS[0].levels[0];
+    const victory = { ...activeBattle(), status: 'victory' as const, playerProjectiles: [] };
+    const authorizeVictory = jest.fn(() => true);
+    const invalidCandidate = tryThrowGiantDisc(
+      victory,
+      true,
+      disc,
+      [],
+      victory.now,
+      'giant-victory',
+    );
+    const rejectedVictory = commitAuthorizedBattleState(
+      victory,
+      invalidCandidate,
+      authorizeVictory,
+    );
+
+    expect(rejectedVictory).toBe(victory);
+    expect(authorizeVictory).not.toHaveBeenCalled();
+
+    const active = { ...activeBattle(), playerProjectiles: [] };
+    const validCandidate = tryThrowGiantDisc(
+      active,
+      true,
+      disc,
+      [],
+      active.now,
+      'giant-no-inventory',
+    );
+    const rejectedInventory = commitAuthorizedBattleState(active, validCandidate, () => false);
+
+    expect(rejectedInventory).toBe(active);
+    expect(rejectedInventory.playerProjectiles).toHaveLength(0);
+  });
+
+  test('시스템 시계가 뒤로 가도 프레임 경과 시간은 음수가 되지 않는다', () => {
+    expect(clampBattleDeltaMs(-1)).toBe(0);
+    expect(clampBattleDeltaMs(BATTLE_RULES.tickMs)).toBe(BATTLE_RULES.tickMs);
+    expect(clampBattleDeltaMs(BATTLE_RULES.maxDeltaMs + 1))
+      .toBe(BATTLE_RULES.maxDeltaMs);
   });
 
   test('쿠키봇이 없으면 전투 시간이 지나도 쿠키 성은 자동 공격하지 않는다', () => {

@@ -10,6 +10,7 @@ import { CookieImage } from '../components/CookieImage';
 import { GameButton } from '../components/GameButton';
 import { StatChip } from '../components/StatChip';
 import { getCookie } from '../config';
+import { getCookieEvolutionProgress } from '../domain/gameSelectors';
 
 interface FloatingGainProps {
   id: number;
@@ -47,6 +48,7 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
   const nextGainId = useRef(0);
   const [gains, setGains] = useState<{ id: number; amount: number }[]>([]);
   const activeCookie = getCookie(stats.activeCookieId);
+  const evolution = getCookieEvolutionProgress(state);
 
   const handleCookiePress = () => {
     const amount = clickCookie();
@@ -65,12 +67,42 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
     <View style={styles.root}>
       <View style={styles.statsRow}>
         <StatChip icon="cookie" label="현재 쿠키" value={formatNumber(state.cookies)} />
-        <StatChip icon="arrow-up-bold" label="쿠키 레벨" value={`Lv.${stats.cookieLevel}`} tint={colors.purple} />
+        <StatChip icon="arrow-up-bold" label="강화 합계" value={`Lv.${stats.cookieLevel}`} tint={colors.purple} />
         <StatChip icon="gesture-tap" label="한 번에" value={`+${formatNumber(stats.clickPower)}`} tint={colors.blue} />
       </View>
 
-      <View style={styles.hero}>
-        <Text style={styles.guide}>{activeCookie.name}를 눌러요!</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={evolution.next
+          ? `가운데 쿠키 획득 영역, 누르면 쿠키 ${stats.clickPower}개 획득, 강화 레벨 합계 ${evolution.totalUpgradeLevels}, 다음 진화 ${evolution.next.name}, ${evolution.remainingLevels}레벨 남음`
+          : `가운데 쿠키 획득 영역, 누르면 쿠키 ${stats.clickPower}개 획득, 강화 레벨 합계 ${evolution.totalUpgradeLevels}, 최고 쿠키 진화 완료`}
+        onPress={handleCookiePress}
+        style={styles.hero}
+      >
+        <Text style={styles.guide}>가운데 어디든 눌러요!</Text>
+        <View style={styles.evolutionSummary}>
+          <Text style={styles.evolutionTitle}>
+            강화 레벨 합계 Lv.{evolution.totalUpgradeLevels}
+          </Text>
+          <Text style={styles.evolutionCondition}>
+            {evolution.next
+              ? `다음 진화: ${evolution.next.name} · 조건 Lv.${evolution.next.requiredTotalUpgradeLevels}`
+              : '최고 쿠키 진화를 완료했어요!'}
+          </Text>
+          <View style={styles.evolutionProgressTrack}>
+            <View
+              style={[
+                styles.evolutionProgressFill,
+                { width: `${evolution.progressRatio * 100}%` },
+              ]}
+            />
+          </View>
+          <Text style={styles.evolutionProgressText}>
+            {evolution.next
+              ? `별도 경험치 없음 · 강화 ${evolution.remainingLevels}레벨 남음 · 진행률 ${Math.round(evolution.progressRatio * 100)}%`
+              : '별도 경험치 없음 · 남은 레벨 0 · 진행률 100%'}
+          </Text>
+        </View>
         <View style={styles.cookieStage}>
           <View style={styles.ringOuter} />
           <View style={styles.ringInner} />
@@ -81,25 +113,19 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
               onDone={(id) => setGains((current) => current.filter((item) => item.id !== id))}
             />
           ))}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`쿠키 버튼, 누르면 쿠키 ${stats.clickPower}개 획득`}
-            onPress={handleCookiePress}
-          >
-            <Animated.View style={{ transform: [{ scale }] }}>
-              <LinearGradient colors={gradients.cookieButton} style={styles.cookieButton}>
-                <CookieImage
-                  imageKey={activeCookie.imageKey}
-                  size={Math.min(224, 190 * (stats.sizePercent / 100))}
-                />
-              </LinearGradient>
-            </Animated.View>
-          </Pressable>
+          <Animated.View style={{ transform: [{ scale }] }}>
+            <LinearGradient colors={gradients.cookieButton} style={styles.cookieButton}>
+              <CookieImage
+                imageKey={activeCookie.imageKey}
+                size={stats.cookieRenderSize}
+              />
+            </LinearGradient>
+          </Animated.View>
         </View>
         <Text style={styles.autoText}>
           자동 생산 {formatNumber(stats.autoProduction)}개/초
         </Text>
-      </View>
+      </Pressable>
 
       <GameButton title="⚔ 전투하러 가기" onPress={onGoBattle} variant="red" style={styles.battleButton} />
     </View>
@@ -111,6 +137,12 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', gap: 6 },
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 0 },
   guide: { fontFamily: fonts.display, fontSize: 25, color: colors.cookieDark, marginBottom: 4 },
+  evolutionSummary: { width: '92%', maxWidth: 360, alignItems: 'center', marginBottom: 2 },
+  evolutionTitle: { fontFamily: fonts.extraBold, fontSize: 11, color: colors.purple, textAlign: 'center' },
+  evolutionCondition: { fontFamily: fonts.bold, fontSize: 10, color: colors.ink, textAlign: 'center', marginTop: 1 },
+  evolutionProgressTrack: { width: '100%', height: 8, borderRadius: 4, backgroundColor: colors.white, overflow: 'hidden', marginTop: 4 },
+  evolutionProgressFill: { height: '100%', borderRadius: 4, backgroundColor: colors.purple },
+  evolutionProgressText: { fontFamily: fonts.bold, fontSize: 9, color: colors.muted, marginTop: 2 },
   cookieStage: { width: 286, height: 286, alignItems: 'center', justifyContent: 'center' },
   ringOuter: {
     position: 'absolute', width: 278, height: 278, borderRadius: 139,

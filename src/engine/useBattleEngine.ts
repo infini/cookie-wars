@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BATTLE_RULES,
   BOSS_BALANCE,
@@ -118,6 +118,7 @@ interface EngineOptions {
   discAvailable: boolean;
   bots: ActiveBot[];
   maxHealth: number;
+  consumeGiantDisc: () => boolean;
   onEvent?: (event: BattleEvent) => void;
 }
 
@@ -246,6 +247,119 @@ export function canThrowGiantDisc(
       BATTLE_RULES.playerStartY,
       GIANT_DISC.attackRadius,
     ));
+}
+
+export function clampBattleDeltaMs(elapsedMs: number): number {
+  return Math.max(0, Math.min(BATTLE_RULES.maxDeltaMs, elapsedMs));
+}
+
+export function createManualProjectileId(
+  source: 'castle' | 'giant',
+  now: number,
+  sequence: number,
+): string {
+  return `${source}-disc-${now}-${sequence}`;
+}
+
+export function tryThrowCastleDisc(
+  state: BattleState,
+  discAvailable: boolean,
+  playerDisc: DiscLevelConfig,
+  now: number,
+  projectileId: string,
+): BattleState {
+  if (!canThrowCastleDisc(state, discAvailable, playerDisc, now)) return state;
+  const target = closestEnemyWithinRadius(
+    state.enemies,
+    now,
+    BATTLE_RULES.playerStartX,
+    BATTLE_RULES.playerStartY,
+    BATTLE_RULES.castleAttackRadius,
+  );
+  if (!target) return state;
+
+  return {
+    ...state,
+    now,
+    lastCastleThrowAt: now,
+    playerProjectiles: [...state.playerProjectiles, {
+      id: projectileId,
+      owner: 'player',
+      source: 'castle',
+      x: BATTLE_RULES.playerStartX,
+      y: BATTLE_RULES.playerStartY,
+      targetId: target.id,
+      level: playerDisc.level,
+      damage: calculateCastleDiscDamage(playerDisc),
+      size: playerDisc.size,
+      speed: playerDisc.speed,
+      createdAt: now,
+    }],
+    lastEvent: {
+      id: (state.lastEvent?.id ?? 0) + 1,
+      kind: 'disc',
+      at: now,
+      x: BATTLE_RULES.playerStartX,
+      y: BATTLE_RULES.playerStartY,
+      attackSource: 'castle',
+    },
+  };
+}
+
+export function tryThrowGiantDisc(
+  state: BattleState,
+  giantDiscAvailable: boolean,
+  playerDisc: DiscLevelConfig,
+  bots: ActiveBot[],
+  now: number,
+  projectileId: string,
+): BattleState {
+  if (!canThrowGiantDisc(state, giantDiscAvailable, now)) return state;
+  const target = closestEnemyWithinRadius(
+    state.enemies,
+    now,
+    BATTLE_RULES.playerStartX,
+    BATTLE_RULES.playerStartY,
+    GIANT_DISC.attackRadius,
+  );
+  if (!target) return state;
+
+  return {
+    ...state,
+    now,
+    playerProjectiles: [...state.playerProjectiles, {
+      id: projectileId,
+      owner: 'player',
+      source: 'giant',
+      x: BATTLE_RULES.playerStartX,
+      y: BATTLE_RULES.playerStartY,
+      targetId: target.id,
+      level: playerDisc.level,
+      damage: calculateGiantDiscDamage(playerDisc, bots),
+      size: playerDisc.size,
+      speed: playerDisc.speed * GIANT_DISC.speedMultiplier,
+      createdAt: now,
+    }],
+    notice: '거대 원반!',
+    noticeUntil: now + GIANT_DISC.launchNoticeMs,
+    lastEvent: {
+      id: (state.lastEvent?.id ?? 0) + 1,
+      kind: 'disc',
+      at: now,
+      x: BATTLE_RULES.playerStartX,
+      y: BATTLE_RULES.playerStartY,
+      attackSource: 'giant',
+    },
+  };
+}
+
+export function commitAuthorizedBattleState(
+  current: BattleState,
+  candidate: BattleState,
+  authorize: () => boolean,
+): BattleState {
+  if (candidate === current) return current;
+  return authorize() ? candidate : current;
 }
 
 export function createBattleEnemies(
@@ -623,22 +737,41 @@ export function useBattleEngine({
   discAvailable,
   bots,
   maxHealth,
+  consumeGiantDisc,
   onEvent,
 }: EngineOptions) {
   const [state, setState] = useState<BattleState>(initialState);
+  const stateRef = useRef<BattleState>(initialState);
+  const deliveredEventRef = useRef<{ id: number; event: BattleEvent } | null>(null);
+  const manualProjectileSequenceRef = useRef(0);
   const enemyDisc = useMemo(
     () => getEnemyDisc(difficulty.enemyDiscLevel),
     [difficulty.enemyDiscLevel],
   );
+  const updateBattleState = useCallback((
+    transition: (current: BattleState) => BattleState,
+    authorize?: () => boolean,
+  ): boolean => {
+    // The ref serializes timer and tap transitions before React flushes batched updates.
+    const current = stateRef.current;
+    const candidate = transition(current);
+    const next = authorize
+      ? commitAuthorizedBattleState(current, candidate, authorize)
+      : candidate;
+    if (next === current) return false;
+    stateRef.current = next;
+    setState(next);
+    return true;
+  }, []);
 
   useEffect(() => {
     if (state.status !== 'active') return;
     let previous = Date.now();
     const timer = setInterval(() => {
       const now = Date.now();
-      const deltaMs = Math.min(BATTLE_RULES.maxDeltaMs, now - previous);
+      const deltaMs = clampBattleDeltaMs(now - previous);
       previous = now;
-      setState((current) => advanceBattle(current, {
+      updateBattleState((current) => advanceBattle(current, {
         difficulty,
         enemyDisc,
         playerDisc,
@@ -648,15 +781,23 @@ export function useBattleEngine({
       }));
     }, BATTLE_RULES.tickMs);
     return () => clearInterval(timer);
-  }, [state.status, difficulty, enemyDisc, playerDisc, bots]);
+  }, [state.status, difficulty, enemyDisc, playerDisc, bots, updateBattleState]);
 
   useEffect(() => {
-    if (state.lastEvent) onEvent?.(state.lastEvent);
+    const event = state.lastEvent;
+    const delivered = deliveredEventRef.current;
+    if (
+      !event
+      || !onEvent
+      || (delivered?.id === event.id && delivered.event === event)
+    ) return;
+    deliveredEventRef.current = { id: event.id, event };
+    onEvent(event);
   }, [state.lastEvent, onEvent]);
 
   const start = useCallback(() => {
     const now = Date.now();
-    setState({
+    const startedState: BattleState = {
       ...initialState,
       status: 'active',
       now,
@@ -664,91 +805,55 @@ export function useBattleEngine({
       baseHealth: maxHealth,
       baseMaxHealth: maxHealth,
       lastBotAttackAt: Object.fromEntries(bots.map((bot) => [bot.config.id, now])),
-    });
-  }, [difficulty, playerDisc, bots, maxHealth]);
+    };
+    updateBattleState(() => startedState);
+  }, [difficulty, playerDisc, bots, maxHealth, updateBattleState]);
 
   const throwCastleDisc = useCallback((): boolean => {
     const now = Date.now();
-    if (!canThrowCastleDisc(state, discAvailable, playerDisc, now)) return false;
-    const target = closestEnemyWithinRadius(
-      state.enemies,
+    if (!canThrowCastleDisc(stateRef.current, discAvailable, playerDisc, now)) return false;
+    manualProjectileSequenceRef.current += 1;
+    const projectileId = createManualProjectileId(
+      'castle',
       now,
-      BATTLE_RULES.playerStartX,
-      BATTLE_RULES.playerStartY,
-      BATTLE_RULES.castleAttackRadius,
+      manualProjectileSequenceRef.current,
     );
-    if (!target) return false;
-    setState((current) => ({
-      ...current,
+    return updateBattleState((current) => tryThrowCastleDisc(
+      current,
+      discAvailable,
+      playerDisc,
       now,
-      lastCastleThrowAt: now,
-      playerProjectiles: [...current.playerProjectiles, {
-        id: `castle-disc-${now}`,
-        owner: 'player',
-        source: 'castle',
-        x: BATTLE_RULES.playerStartX,
-        y: BATTLE_RULES.playerStartY,
-        targetId: target.id,
-        level: playerDisc.level,
-        damage: calculateCastleDiscDamage(playerDisc),
-        size: playerDisc.size,
-        speed: playerDisc.speed,
-        createdAt: now,
-      }],
-      lastEvent: {
-        id: (current.lastEvent?.id ?? 0) + 1,
-        kind: 'disc',
-        at: now,
-        x: BATTLE_RULES.playerStartX,
-        y: BATTLE_RULES.playerStartY,
-        attackSource: 'castle',
-      },
-    }));
-    return true;
-  }, [discAvailable, playerDisc, state]);
+      projectileId,
+    ));
+  }, [discAvailable, playerDisc, updateBattleState]);
 
   const throwGiantDisc = useCallback((): boolean => {
     const now = Date.now();
-    if (!canThrowGiantDisc(state, true, now)) return false;
-    const target = closestEnemyWithinRadius(
-      state.enemies,
+    const sequence = manualProjectileSequenceRef.current + 1;
+    const projectileId = createManualProjectileId(
+      'giant',
       now,
-      BATTLE_RULES.playerStartX,
-      BATTLE_RULES.playerStartY,
-      GIANT_DISC.attackRadius,
+      sequence,
     );
-    if (!target) return false;
-    setState((current) => ({
-      ...current,
-      now,
-      playerProjectiles: [...current.playerProjectiles, {
-        id: `giant-disc-${now}`,
-        owner: 'player',
-        source: 'giant',
-        x: BATTLE_RULES.playerStartX,
-        y: BATTLE_RULES.playerStartY,
-        targetId: target.id,
-        level: playerDisc.level,
-        damage: calculateGiantDiscDamage(playerDisc, bots),
-        size: playerDisc.size,
-        speed: playerDisc.speed * GIANT_DISC.speedMultiplier,
-        createdAt: now,
-      }],
-      notice: '거대 원반!',
-      noticeUntil: now + GIANT_DISC.launchNoticeMs,
-      lastEvent: {
-        id: (current.lastEvent?.id ?? 0) + 1,
-        kind: 'disc',
-        at: now,
-        x: BATTLE_RULES.playerStartX,
-        y: BATTLE_RULES.playerStartY,
-        attackSource: 'giant',
-      },
-    }));
-    return true;
-  }, [playerDisc, bots, state]);
+    const launched = updateBattleState(
+      (current) => tryThrowGiantDisc(
+        current,
+        true,
+        playerDisc,
+        bots,
+        now,
+        projectileId,
+      ),
+      consumeGiantDisc,
+    );
+    if (launched) manualProjectileSequenceRef.current = sequence;
+    return launched;
+  }, [playerDisc, bots, consumeGiantDisc, updateBattleState]);
 
-  const reset = useCallback(() => setState({ ...initialState, now: Date.now() }), []);
+  const reset = useCallback(() => {
+    const now = Date.now();
+    updateBattleState(() => ({ ...initialState, now }));
+  }, [updateBattleState]);
   const canCastleThrow = canThrowCastleDisc(
     state,
     discAvailable,

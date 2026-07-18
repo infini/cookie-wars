@@ -12,14 +12,13 @@
 | `disc-upgrade-rules.json` | 명시 레벨 이후 무한 강화 증가량과 쿨타임 하한 |
 | `bots.json` | 봇 종류, 최초 가격, 가격 증가율, 피해, 공격 간격 |
 | `monsters.json` | 적 이미지·등급, 기본 HP·공격, 속도·원반·크기 배율 |
-| `enemy-waves.json` | 거대 보스 한 종류의 전투 구성 |
+| `enemy-waves.json` | 난이도별 고유 보스와 전투 구성 연결 |
 | `difficulties.json` | 난이도 순서, 보스 HP·공격 배율·이동 속도 |
 | `boss-balance.json` | 성장한 쿠키봇 군단에 대한 보스 최소 생존 시간·즉사 방지 |
 | `boss-behavior.json` | 보스 전역 공격력·공격 간격·이동 배율과 HP 분노 페이즈 |
 | `boss-special-attack.json` | 보스 주기 망치 강공격의 시간·몸 동작·지면 충격·발사체·플래시 |
 | `battle-stage-rules.json` | 같은 난이도의 승리별 보스 HP·공격·속도·원반 증가식 |
-| `battle-maps.json` | 전투 배경 테마 ID·이름·정적 이미지 키 |
-| `battle-map-rules.json` | 배경 교체 전투 간격과 난이도별 시작 테마 오프셋 |
+| `battle-maps.json` | 난이도 ID별 고유 전투 배경 테마·정적 이미지 키 |
 | `enemy-discs.json` | 적 원반 레벨별 피해·크기·속도·쿨타임 |
 | `giant-disc.json` | 거대 원반 피해·비행·크기·연출·버튼 표시 |
 | `progression.json` | 다음 난이도 해금 승수, 최초 클리어 거대 원반 수, 저장·생산 주기 |
@@ -47,6 +46,9 @@
 
 - `id`: 저장 키이자 코드가 읽는 고유 ID
 - `name`, `description`, `unit`: 한국어 UI 문구와 단위
+- `enabled`: `false`이면 현재 저장 레벨은 읽되 다음 단계 구매를 만들지 않음
+- `visible`: `false`이면 강화 화면 목록에서 숨김
+- `renderBaseSizePixels`, `renderMaximumSizePixels`: 비율 값을 실제 메인 화면 크기로 바꾸는 기준·상한
 - `levels[].level`: 단계 번호
 - `levels[].value`: 해당 단계의 실제 능력치
 - `levels[].cost`: 그 단계로 올라갈 때 소모할 쿠키. 첫 단계는 기본 보유이므로 0
@@ -56,9 +58,9 @@
 - `valueIncreasePerLevel`: 이후 한 레벨마다 증가하는 능력치
 - `costGrowthMultiplier`: 이후 강화 비용 증가 배율
 
-쿠키 크기(`cookieSize`)는 이 규칙 테이블에 없으므로 `cookie-upgrades.json`의 마지막 단계가 최대입니다.
+쿠키 크기(`cookieSize`)는 `enabled: false`, `visible: false`인 호환용 행입니다. 강화 화면에서 숨기고 새로 구매할 수 없지만 이전 저장의 현재 레벨은 그대로 복원해 강화 레벨 합계와 쿠키 진화를 보존합니다. 메인 화면 쿠키 이미지는 저장 레벨과 무관하게 이 행의 `levels[].value` 최고 비율을 `renderBaseSizePixels`에 적용하고 `renderMaximumSizePixels`로 제한한 크기로 고정합니다.
 
-업그레이드 화면은 현재 쿠키 잔액으로 바로 살 수 있는 항목을 첫 그룹, 다음 단계는 있지만 쿠키가 부족한 항목을 두 번째 그룹, `next`가 없는 강화 완료 항목을 마지막 그룹에 둡니다. 잔액이나 레벨이 바뀔 때 selector가 다시 정렬하며 같은 그룹 안에서는 이 JSON 배열 순서를 그대로 유지합니다.
+업그레이드 화면은 `visible`인 항목만 대상으로 현재 쿠키 잔액으로 바로 살 수 있는 항목을 첫 그룹, 다음 단계는 있지만 쿠키가 부족한 항목을 두 번째 그룹, `next`가 없는 강화 완료 항목을 마지막 그룹에 둡니다. 잔액이나 레벨이 바뀔 때 selector가 다시 정렬하며 같은 그룹 안에서는 이 JSON 배열 순서를 그대로 유지합니다.
 
 ### `discs.json`과 무한 강화
 
@@ -116,7 +118,7 @@
 
 엔진은 먼저 `몬스터 기본 HP × 실효 난이도 HP 배율`을 계산합니다. 그다음 현재 장착 원반과 종류별 쿠키봇 수·피해 배율·발사 간격으로 자동 공격 DPS를 계산합니다. 테이블 기본 HP, `자동 DPS × 목표 생존 시간`, `가장 강한 자동 한 발 × 최소 명중 수` 가운데 가장 큰 값이 최종 보스 HP입니다. 초반처럼 전력이 낮으면 기존 HP가 우선되고, 과도하게 성장해 한 발 처치가 가능한 저장에서만 자동 하한이 크게 작동합니다. 쿠키 성 수동 공격과 소모품 거대 원반은 이 자동 DPS 보정에 포함하지 않습니다.
 
-`enemy-waves.json`에는 `giant-boss-duel` 한 행만 있고 일반 패턴과 보스 ID가 모두 `cookie-tyrant`를 가리킵니다. `bossEveryEnemies`도 1이므로 다른 적이 생성될 수 없습니다. `monsters.json`의 추가 필드는 다음과 같습니다.
+`enemy-waves.json`에는 난이도와 같은 순서의 15개 보스 결투 행이 있습니다. 각 난이도의 `enemyWaveId`가 고유 웨이브를 가리키고, 웨이브의 `monsterPatternIds`와 `bossMonsterId`는 같은 고유 보스 ID를 사용합니다. `bossEveryEnemies=1`과 `enemyCount=1`이므로 전투에는 해당 보스 한 마리만 생성됩니다. 15종 보스의 기준 HP·공격·속도·원반·크기 값은 동일하고 이름·이미지·설명만 달라, 외형 추가가 현재 난이도 밸런스를 바꾸지 않습니다. `monsters.json`의 추가 필드는 다음과 같습니다.
 
 - `imageKey`, `rank`: 전투·도감의 이미지와 한국어 등급
 - `moveSpeedMultiplier`: 난이도 이동 속도에 곱하는 개별 속도
@@ -139,9 +141,7 @@
 
 ## 전투 배경 테마
 
-`battle-maps.json`은 초원 왕국, 빙하 협곡, 태양 신전, 흑요석 균열의 네 행을 정의합니다. `imageKey`는 React Native 정적 번들 요구사항 때문에 `BattleMapImage.ts`의 `require` 매핑과 함께 추가해야 합니다. 각 이미지는 단순 색상 변형이 아니라 지형·건축·성 실루엣이 다른 독립 원본입니다.
-
-`battle-map-rules.json`의 `stagesPerTheme`은 같은 배경을 유지할 전투 수이며 현재 5입니다. `difficultyThemeOffset`은 다음 난이도의 첫 전투가 이전 난이도와 다른 테마에서 시작하도록 난이도 인덱스에 곱하는 값입니다.
+`battle-maps.json`은 easy부터 extreme god까지 15개 난이도와 일대일로 연결된 행을 정의합니다. `difficultyId`는 `difficulties.json`의 실제 ID이고 `imageKey`는 React Native 정적 번들 요구사항 때문에 `BattleMapImage.ts`의 `require` 매핑과 함께 추가해야 합니다. 초원·과수원·설원·침수 정글·폭풍 절벽·악마계·신계 전장은 색만 바꾼 변형이 아니라 지형과 상단 랜드마크가 서로 다른 독립 원본입니다. 같은 난이도의 1~20번째 전투는 진행 일관성을 위해 같은 테마를 유지합니다.
 
 ## 쿠키 진화
 
@@ -199,15 +199,16 @@
 ### `boss-special-attack.json`
 
 - `intervalMs`: 마지막 강공격 이후 다음 기존 원거리 공격을 강공격으로 표시할 최소 주기. 현재 5초
-- `windupMs`, `animationDurationMs`, `windupPeakProgress`, `slamPeakProgress`: 예고·전체 동작·망치를 들어 올리고 내려찍는 시점
-- `windupRotationDeg`, `slamRotationDeg`, `*Pixels`, `*Scale*`: 망치를 든 보스 전체의 회전·상하 이동·충돌 압축
+- `windupMs`, `animationDurationMs`, `windupPeakProgress`, `slamPeakProgress`, `recoveryPeakProgress`: 예고·전체 동작·망치를 들어 올리고 내려찍은 뒤 반동하는 시점
+- `spritePivot*Ratio`: 보스 스프라이트가 회전·기울 때 고정할 양발 사이의 축
+- `windup*`, `slam*`, `recovery*`: 망치를 든 보스 전체의 회전·기울기·좌우/상하 이동·크기. 큰 회전 호를 만들고 세로 낙하·압축은 작게 유지해 발 구르기처럼 보이지 않게 함
 - `impact*`: 내려찍는 지점의 타원 충격파, 지면 균열 SVG 경로, 크기·선·색·발광
 - `dust*`: 충돌 좌우로 퍼지는 먼지 입자의 좌표·반경·색
 - `screenFlash*`: 강공격 순간 전장 전체의 짧은 플래시
 - `screenShake*`: 내려찍은 뒤 짧게 감쇠하는 전장 흔들림
 - `projectile*`: 강공격으로 표시된 기존 적 원반의 확대·색·궤적·발광
 
-보스 기본 스프라이트는 항상 망치를 든 별도 이미지입니다. 강공격은 별도 발사나 피해 배율이 아닙니다. 엔진은 주기가 지난 기존 원거리 공격 한 발에 `special` 종류만 기록하며 피해는 `enemy-discs.json`과 `boss-behavior.json`의 일반 공식을 그대로 사용합니다.
+보스 기본 스프라이트는 항상 망치를 든 별도 이미지입니다. 그림자와 지면 충격은 고정하고 스프라이트 본체만 발을 축으로 변형하므로 망치가 준비·내려찍기·반동의 호를 그립니다. 강공격은 별도 발사나 피해 배율이 아닙니다. 엔진은 주기가 지난 기존 원거리 공격 한 발에 `special` 종류만 기록하며 피해는 `enemy-discs.json`과 `boss-behavior.json`의 일반 공식을 그대로 사용합니다.
 
 ### `giant-disc.json`
 
@@ -220,7 +221,7 @@
 - `launchNoticeMs`: `거대 원반!` 전투 안내 표시 시간
 - `button*Color`: 보유량·30배 수치를 표시하는 전투 버튼 색상
 
-거대 원반은 전투에서만 사용할 수 있는 소모형 무기입니다. 버튼을 눌러 실제 발사에 성공하면 저장 상태의 `giantDiscCount`가 1 감소합니다. 보유량이 없거나 살아 있는 보스가 없으면 발사와 소모가 모두 일어나지 않습니다. 장착 원반·봇 종류·보유 수량이 성장하면 현재 최강 쿠키봇의 일반 한 발과 거대 원반이 함께 성장합니다. 최종 피해가 실제 발사체에 저장되어 충돌 시 보스 HP에서 차감됩니다.
+거대 원반은 전투에서만 사용할 수 있는 소모형 무기입니다. 엔진이 최신 전투 상태에서 유효한 발사 후보를 만든 뒤 저장 수량 소비를 승인받은 경우에만 후보를 커밋하고 `giantDiscCount`를 1 감소시킵니다. 보유량이 없거나 살아 있는 보스가 없으면 발사와 소모가 모두 일어나지 않으며, 빠른 연속 입력도 projected 수량에서 직렬화합니다. 장착 원반·봇 종류·보유 수량이 성장하면 현재 최강 쿠키봇의 일반 한 발과 거대 원반이 함께 성장합니다. 최종 피해가 실제 발사체에 저장되어 충돌 시 보스 HP에서 차감됩니다.
 
 ### `battle-ui.json`
 

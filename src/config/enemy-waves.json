@@ -1,9 +1,17 @@
 [
-  {
-    "id": "giant-boss-duel",
-    "name": "거대 보스 결투",
-    "monsterPatternIds": ["cookie-tyrant"],
-    "bossMonsterId": "cookie-tyrant",
-    "bossEveryEnemies": 1
-  }
+  { "id": "easy-boss-duel", "name": "버터부스러기 기사 결투", "monsterPatternIds": ["boss-easy-crumb-knight"], "bossMonsterId": "boss-easy-crumb-knight", "bossEveryEnemies": 1 },
+  { "id": "normal-boss-duel", "name": "카라멜 황소 장군 결투", "monsterPatternIds": ["boss-normal-caramel-general"], "bossMonsterId": "boss-normal-caramel-general", "bossEveryEnemies": 1 },
+  { "id": "hard-boss-duel", "name": "빙결 망치 바이킹 결투", "monsterPatternIds": ["boss-hard-frost-viking"], "bossMonsterId": "boss-hard-frost-viking", "bossEveryEnemies": 1 },
+  { "id": "harder-boss-duel", "name": "정글 코코아 골렘 결투", "monsterPatternIds": ["boss-harder-jungle-golem"], "bossMonsterId": "boss-harder-jungle-golem", "bossEveryEnemies": 1 },
+  { "id": "insane-boss-duel", "name": "폭풍 절벽 수호자 결투", "monsterPatternIds": ["boss-insane-storm-warden"], "bossMonsterId": "boss-insane-storm-warden", "bossEveryEnemies": 1 },
+  { "id": "easy-demon-boss-duel", "name": "불씨 협곡 전사 결투", "monsterPatternIds": ["boss-easy-demon-ember-brute"], "bossMonsterId": "boss-easy-demon-ember-brute", "bossEveryEnemies": 1 },
+  { "id": "medium-demon-boss-duel", "name": "독사탕 늪 마녀 결투", "monsterPatternIds": ["boss-medium-demon-marsh-witch"], "bossMonsterId": "boss-medium-demon-marsh-witch", "bossEveryEnemies": 1 },
+  { "id": "hard-demon-boss-duel", "name": "뼈설탕 왕 결투", "monsterPatternIds": ["boss-hard-demon-bone-king"], "bossMonsterId": "boss-hard-demon-bone-king", "bossEveryEnemies": 1 },
+  { "id": "insane-demon-boss-duel", "name": "핏빛달 기사 결투", "monsterPatternIds": ["boss-insane-demon-blood-knight"], "bossMonsterId": "boss-insane-demon-blood-knight", "bossEveryEnemies": 1 },
+  { "id": "extreme-demon-boss-duel", "name": "흑요석 지옥 거인 결투", "monsterPatternIds": ["boss-extreme-demon-inferno-titan"], "bossMonsterId": "boss-extreme-demon-inferno-titan", "bossEveryEnemies": 1 },
+  { "id": "easy-god-boss-duel", "name": "천공 구름 수호자 결투", "monsterPatternIds": ["boss-easy-god-cloud-guardian"], "bossMonsterId": "boss-easy-god-cloud-guardian", "bossEveryEnemies": 1 },
+  { "id": "medium-god-boss-duel", "name": "프리즘 수정 세라프 결투", "monsterPatternIds": ["boss-medium-god-crystal-seraph"], "bossMonsterId": "boss-medium-god-crystal-seraph", "bossEveryEnemies": 1 },
+  { "id": "hard-god-boss-duel", "name": "시간의 태엽 거상 결투", "monsterPatternIds": ["boss-hard-god-time-colossus"], "bossMonsterId": "boss-hard-god-time-colossus", "bossEveryEnemies": 1 },
+  { "id": "insane-god-boss-duel", "name": "천둥 타이탄 결투", "monsterPatternIds": ["boss-insane-god-thunder-titan"], "bossMonsterId": "boss-insane-god-thunder-titan", "bossEveryEnemies": 1 },
+  { "id": "extreme-god-boss-duel", "name": "신성 공허 황제 결투", "monsterPatternIds": ["boss-extreme-god-void-emperor"], "bossMonsterId": "boss-extreme-god-void-emperor", "bossEveryEnemies": 1 }
 ]

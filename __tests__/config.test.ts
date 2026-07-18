@@ -4,11 +4,11 @@ import {
   BATTLE_RULES,
   BATTLE_FEEDBACK,
   BATTLE_MAPS,
-  BATTLE_MAP_RULES,
   BOSS_BALANCE,
   BOSS_BEHAVIOR,
   BOSS_SPECIAL_ATTACK,
   BOTS,
+  COOKIE_UPGRADES,
   COOKIE_UPGRADE_RULES,
   COOKIES,
   DIFFICULTIES,
@@ -19,7 +19,7 @@ import {
   GIANT_DISC,
   MONSTERS,
   PROGRESSION,
-  getBattleMapForBattle,
+  getBattleMapForDifficulty,
 } from '../src/config';
 import { getBattleDifficulty } from '../src/domain/gameSelectors';
 
@@ -58,11 +58,25 @@ describe('데이터 테이블', () => {
     expect(ENEMY_DISCS).toHaveLength(15);
   });
 
-  test('보스 웨이브는 흑코코아 폭군 한 종류만 참조한다', () => {
-    expect(ENEMY_WAVES).toHaveLength(1);
-    expect(ENEMY_WAVES[0].monsterPatternIds).toEqual(['cookie-tyrant']);
-    expect(ENEMY_WAVES[0].bossMonsterId).toBe('cookie-tyrant');
-    expect(ENEMY_WAVES[0].bossEveryEnemies).toBe(1);
+  test('각 난이도는 고유한 보스 웨이브를 참조한다', () => {
+    expect(ENEMY_WAVES).toHaveLength(DIFFICULTIES.length);
+    expect(new Set(DIFFICULTIES.map((difficulty) => difficulty.enemyWaveId)).size)
+      .toBe(DIFFICULTIES.length);
+    expect(new Set(ENEMY_WAVES.map((wave) => wave.bossMonsterId)).size)
+      .toBe(DIFFICULTIES.length);
+    ENEMY_WAVES.forEach((wave) => {
+      expect(wave.monsterPatternIds).toEqual([wave.bossMonsterId]);
+      expect(wave.bossEveryEnemies).toBe(1);
+    });
+    const bosses = MONSTERS.filter((monster) => monster.rank === '보스');
+    const combatProfiles = new Set(bosses.map((boss) => JSON.stringify({
+      baseHp: boss.baseHp,
+      baseAttack: boss.baseAttack,
+      moveSpeedMultiplier: boss.moveSpeedMultiplier,
+      discDamageMultiplier: boss.discDamageMultiplier,
+      sizeMultiplier: boss.sizeMultiplier,
+    })));
+    expect(combatProfiles.size).toBe(1);
   });
 
   test('모든 난이도는 실제 웨이브와 몬스터 테이블을 참조한다', () => {
@@ -75,7 +89,10 @@ describe('데이터 테이블', () => {
       wave.monsterPatternIds.forEach((monsterId) => expect(monsterIds.has(monsterId)).toBe(true));
       expect(monsterIds.has(wave.bossMonsterId)).toBe(true);
     });
-    expect(MONSTERS.map((monster) => monster.rank)).toEqual(['졸개', '정예', '중장갑', '원거리', '보스']);
+    expect(MONSTERS.slice(0, 4).map((monster) => monster.rank))
+      .toEqual(['졸개', '정예', '중장갑', '원거리']);
+    expect(MONSTERS.filter((monster) => monster.rank === '보스'))
+      .toHaveLength(DIFFICULTIES.length);
   });
 
   test('진행·음량·상점 값은 데이터 테이블에서 제공한다', () => {
@@ -105,6 +122,14 @@ describe('데이터 테이블', () => {
       'clickPower',
       'cookieHealth',
     ]);
+    const cookieSize = COOKIE_UPGRADES.find((upgrade) => upgrade.id === 'cookieSize');
+    expect(cookieSize).toMatchObject({
+      enabled: false,
+      visible: false,
+      renderBaseSizePixels: 190,
+      renderMaximumSizePixels: 224,
+    });
+    expect(Math.max(...cookieSize!.levels.map((level) => level.value))).toBeGreaterThan(0);
     expect(COOKIES).toHaveLength(20);
     COOKIES.slice(1).forEach((cookie, index) => {
       expect(cookie.requiredTotalUpgradeLevels).toBeGreaterThan(
@@ -136,17 +161,15 @@ describe('데이터 테이블', () => {
     expect(BATTLE_FEEDBACK.impactBursts.length).toBeGreaterThanOrEqual(4);
   });
 
-  test('전투 배경은 색상 변경이 아닌 서로 다른 네 개의 테마로 순환한다', () => {
-    expect(BATTLE_MAPS).toHaveLength(4);
+  test('각 난이도는 색상 변경이 아닌 고유 전장 테마를 사용한다', () => {
+    expect(BATTLE_MAPS).toHaveLength(DIFFICULTIES.length);
     expect(new Set(BATTLE_MAPS.map((map) => map.imageKey)).size).toBe(BATTLE_MAPS.length);
     expect(new Set(BATTLE_MAPS.map((map) => map.name)).size).toBe(BATTLE_MAPS.length);
-    const themeIds = [1, 6, 11, 16].map((battleNumber) => (
-      getBattleMapForBattle('easy', battleNumber).id
-    ));
-    expect(new Set(themeIds).size).toBe(4);
-    expect(BATTLE_MAP_RULES.stagesPerTheme).toBe(5);
-    expect(getBattleMapForBattle('normal', 1).id)
-      .not.toBe(getBattleMapForBattle('easy', 1).id);
+    expect(new Set(BATTLE_MAPS.map((map) => map.difficultyId)).size)
+      .toBe(DIFFICULTIES.length);
+    DIFFICULTIES.forEach((difficulty) => {
+      expect(getBattleMapForDifficulty(difficulty.id).difficultyId).toBe(difficulty.id);
+    });
   });
 
   test('길 없는 보스 전장의 위치와 공격 반경은 데이터 테이블에서 제공한다', () => {

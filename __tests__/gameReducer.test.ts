@@ -13,10 +13,16 @@ import {
   getCookieEvolutionProgress,
   getBattleStageId,
   getDiscProgress,
+  getMaximumCookieRenderSize,
   getSortedUpgradeProgress,
   getUpgradeProgress,
 } from '../src/domain/gameSelectors';
-import { gameReducer, initialGameState, mergeSavedGame } from '../src/state/gameReducer';
+import {
+  consumeGiantDiscInventory,
+  gameReducer,
+  initialGameState,
+  mergeSavedGame,
+} from '../src/state/gameReducer';
 
 describe('게임 저장 상태', () => {
   test('각 전투 스테이지는 최초 클리어마다 거대 원반을 주고 쿠키는 주지 않는다', () => {
@@ -63,6 +69,20 @@ describe('게임 저장 상태', () => {
     expect(usedOnce.giantDiscCount).toBe(1);
     expect(usedTwice.giantDiscCount).toBe(0);
     expect(emptyUse).toEqual(usedTwice);
+  });
+
+  test('렌더 전 연속 소비도 projected 재고에서 두 번째 요청을 거부한다', () => {
+    let projected = { ...initialGameState, giantDiscCount: 1 };
+    const consume = () => {
+      const next = consumeGiantDiscInventory(projected);
+      if (!next) return false;
+      projected = next;
+      return true;
+    };
+
+    expect(consume()).toBe(true);
+    expect(consume()).toBe(false);
+    expect(projected.giantDiscCount).toBe(0);
   });
 
   test('같은 난이도에서 20번 승리해야 다음 난이도가 열린다', () => {
@@ -215,7 +235,47 @@ describe('게임 저장 상태', () => {
     const stats = calculateCookieStats(evolvedState);
     expect(evolution.totalUpgradeLevels).toBe(10);
     expect(evolution.active.id).toBe('fortune-cookie');
+    expect(evolution.remainingLevels).toBe(6);
+    expect(evolution.progressRatio).toBe(0);
     expect(stats.clickPower).toBeGreaterThan(34);
+  });
+
+  test('쿠키 크기는 숨겨지고 구매할 수 없지만 저장 레벨과 진화는 보존한다', () => {
+    const cookieSize = COOKIE_UPGRADES.find((upgrade) => upgrade.id === 'cookieSize')!;
+    const funded = { ...initialGameState, cookies: Number.MAX_SAFE_INTEGER };
+    const sizeProgress = getUpgradeProgress(funded, cookieSize.id)!;
+    const blocked = gameReducer(funded, { type: 'BUY_UPGRADE', upgradeId: cookieSize.id });
+    const restored = mergeSavedGame({
+      upgradeLevels: {
+        clickPower: 9,
+        cookieSize: 6,
+        autoProduction: 1,
+        cookieHealth: 1,
+      },
+    });
+    const evolution = getCookieEvolutionProgress(restored);
+
+    expect(sizeProgress.next).toBeUndefined();
+    expect(sizeProgress.affordable).toBe(false);
+    expect(blocked).toEqual(funded);
+    expect(restored.upgradeLevels.cookieSize).toBe(6);
+    expect(evolution.totalUpgradeLevels).toBe(17);
+    expect(evolution.active.id).toBe('donut-cookie');
+    expect(calculateCookieStats(restored).cookieRenderSize)
+      .toBe(getMaximumCookieRenderSize());
+    expect(getMaximumCookieRenderSize()).toBe(cookieSize.renderMaximumSizePixels);
+  });
+
+  test('다음 쿠키 진화 진행률은 현재와 다음 조건 사이의 레벨 비율이다', () => {
+    const midwayState = {
+      ...initialGameState,
+      upgradeLevels: { ...initialGameState.upgradeLevels, clickPower: 10 },
+    };
+    const evolution = getCookieEvolutionProgress(midwayState);
+
+    expect(evolution.totalUpgradeLevels).toBe(13);
+    expect(evolution.remainingLevels).toBe(3);
+    expect(evolution.progressRatio).toBe(0.5);
   });
 
   test('강화 가능 항목을 위에, 완료 항목을 가장 아래에 정렬한다', () => {
@@ -229,10 +289,9 @@ describe('게임 저장 상태', () => {
       'clickPower',
       'cookieHealth',
       'autoProduction',
-      'cookieSize',
     ]);
     expect(sorted.slice(0, 2).every((item) => item.affordable)).toBe(true);
     expect(sorted[2].affordable).toBe(false);
-    expect(sorted[3].next).toBeUndefined();
+    expect(sorted.some((item) => item.config.id === 'cookieSize')).toBe(false);
   });
 });

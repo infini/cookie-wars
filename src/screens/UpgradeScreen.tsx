@@ -11,7 +11,7 @@ import { GameButton } from '../components/GameButton';
 import { Panel } from '../components/Panel';
 
 const icons: Record<string, React.ComponentProps<typeof MaterialCommunityIcons>['name']> = {
-  clickPower: 'gesture-tap', cookieSize: 'resize', autoProduction: 'clock-fast', cookieHealth: 'shield-home',
+  clickPower: 'gesture-tap', autoProduction: 'clock-fast', cookieHealth: 'shield-home',
 };
 
 export function UpgradeScreen() {
@@ -21,6 +21,7 @@ export function UpgradeScreen() {
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <Text style={styles.help}>쿠키를 사용해서 더 강해져요!</Text>
+      <Text style={styles.levelHelp}>진화 합계에는 저장된 이전 강화 레벨도 보존돼요.</Text>
       {sortedUpgrades.map((progress) => {
         const { config: upgrade, current, next, affordable } = progress;
         const handleUpgrade = () => {
@@ -68,6 +69,7 @@ export function UpgradeScreen() {
 const styles = StyleSheet.create({
   content: { paddingVertical: 6, paddingBottom: 18, gap: 10 },
   help: { fontFamily: fonts.display, fontSize: 20, color: colors.cookieDark, textAlign: 'center', marginVertical: 2 },
+  levelHelp: { fontFamily: fonts.medium, fontSize: 9, color: colors.muted, textAlign: 'center', marginTop: -5 },
   card: { padding: 14 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 11 },
   iconWrap: { width: 50, height: 50, borderRadius: 17, backgroundColor: '#FFF0D8', alignItems: 'center', justifyContent: 'center' },

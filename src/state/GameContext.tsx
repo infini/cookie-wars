@@ -27,7 +27,12 @@ import {
   GameState,
   SoundVolumeLevel,
 } from '../types/game';
-import { gameReducer, initialGameState, restoreSavedGame } from './gameReducer';
+import {
+  consumeGiantDiscInventory,
+  gameReducer,
+  initialGameState,
+  restoreSavedGame,
+} from './gameReducer';
 
 interface GameContextValue {
   state: GameState;
@@ -43,7 +48,7 @@ interface GameContextValue {
   discoverMonster: (monsterId: string) => void;
   acknowledgeMonsters: () => void;
   completeBattle: (difficultyId: string) => BattleRewardResult;
-  useGiantDisc: () => boolean;
+  consumeGiantDisc: () => boolean;
   toggleSound: () => void;
   setSoundVolume: (level: SoundVolumeLevel) => void;
   toggleVibration: () => void;
@@ -186,8 +191,12 @@ export function GameProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
-  const useGiantDisc = useCallback(() => {
-    if (stateRef.current.giantDiscCount <= 0) return false;
+  const consumeGiantDisc = useCallback(() => {
+    const next = consumeGiantDiscInventory(stateRef.current);
+    if (!next) return false;
+    // Dispatch is batched, so advance the projected state synchronously before
+    // another tap can attempt to spend the same inventory unit.
+    stateRef.current = next;
     dispatch({ type: 'USE_GIANT_DISC' });
     return true;
   }, []);
@@ -207,7 +216,7 @@ export function GameProvider({ children }: PropsWithChildren) {
       discoverMonster,
       acknowledgeMonsters,
       completeBattle,
-      useGiantDisc,
+      consumeGiantDisc,
       toggleSound: () => dispatch({ type: 'TOGGLE_SOUND' }),
       setSoundVolume: (level) => dispatch({ type: 'SET_SOUND_VOLUME', level }),
       toggleVibration: () => dispatch({ type: 'TOGGLE_VIBRATION' }),
@@ -226,7 +235,7 @@ export function GameProvider({ children }: PropsWithChildren) {
       discoverMonster,
       acknowledgeMonsters,
       completeBattle,
-      useGiantDisc,
+      consumeGiantDisc,
     ],
   );
 

@@ -21,6 +21,10 @@ export interface UpgradeConfig {
   name: string;
   description: string;
   unit: string;
+  enabled?: boolean;
+  visible?: boolean;
+  renderBaseSizePixels?: number;
+  renderMaximumSizePixels?: number;
   levels: UpgradeLevelConfig[];
 }
 
@@ -102,13 +106,26 @@ export interface BossSpecialAttackConfig {
   animationDurationMs: number;
   windupPeakProgress: number;
   slamPeakProgress: number;
+  recoveryPeakProgress: number;
+  spritePivotXRatio: number;
+  spritePivotYRatio: number;
   windupRotationDeg: number;
   slamRotationDeg: number;
+  recoveryRotationDeg: number;
+  windupLeanDeg: number;
+  slamLeanDeg: number;
+  recoveryLeanDeg: number;
+  windupTranslateXPixels: number;
+  slamTranslateXPixels: number;
+  recoveryTranslateXPixels: number;
   windupLiftPixels: number;
   slamDropPixels: number;
+  recoveryTranslateYPixels: number;
   windupScale: number;
   slamScaleX: number;
   slamScaleY: number;
+  recoveryScaleX: number;
+  recoveryScaleY: number;
   impactWidthMultiplier: number;
   impactHeightMultiplier: number;
   impactTopRatio: number;
@@ -147,13 +164,9 @@ export interface BossSpecialAttackConfig {
 
 export interface BattleMapConfig {
   id: string;
+  difficultyId: string;
   name: string;
   imageKey: string;
-}
-
-export interface BattleMapRulesConfig {
-  stagesPerTheme: number;
-  difficultyThemeOffset: number;
 }
 
 export interface GiantDiscConfig {
@@ -438,7 +451,7 @@ export interface GameState {
 
 export interface CookieStats {
   clickPower: number;
-  sizePercent: number;
+  cookieRenderSize: number;
   autoProduction: number;
   maxHealth: number;
   cookieLevel: number;

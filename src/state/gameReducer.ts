@@ -247,6 +247,11 @@ export function restoreSavedGame(saved: Partial<GameState>, now: number): GameSt
   return settleOfflineProduction(mergeSavedGame(saved), now);
 }
 
+export function consumeGiantDiscInventory(state: GameState): GameState | null {
+  if (state.giantDiscCount <= 0) return null;
+  return { ...state, giantDiscCount: state.giantDiscCount - 1 };
+}
+
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'HYDRATE':
@@ -348,8 +353,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       };
     }
     case 'USE_GIANT_DISC':
-      if (state.giantDiscCount <= 0) return state;
-      return { ...state, giantDiscCount: state.giantDiscCount - 1 };
+      return consumeGiantDiscInventory(state) ?? state;
     case 'TOGGLE_SOUND':
       return { ...state, soundEnabled: !state.soundEnabled };
     case 'SET_SOUND_VOLUME':

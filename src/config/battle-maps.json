@@ -1,6 +1,17 @@
 [
-  { "id": "medieval-meadow", "name": "초원 왕국", "imageKey": "medieval-meadow" },
-  { "id": "arctic-glacier", "name": "빙하 협곡", "imageKey": "arctic-glacier" },
-  { "id": "desert-temple", "name": "태양 신전", "imageKey": "desert-temple" },
-  { "id": "volcanic-rift", "name": "흑요석 균열", "imageKey": "volcanic-rift" }
+  { "id": "sunny-biscuit-meadow", "difficultyId": "easy", "name": "햇살 비스킷 초원", "imageKey": "easy-sunny-meadow" },
+  { "id": "caramel-harvest-vale", "difficultyId": "normal", "name": "카라멜 수확 계곡", "imageKey": "normal-caramel-vale" },
+  { "id": "frostpine-fortress", "difficultyId": "hard", "name": "서리소나무 요새", "imageKey": "hard-frostpine" },
+  { "id": "sunken-cocoa-ruins", "difficultyId": "harder", "name": "침수된 코코아 유적", "imageKey": "harder-jungle-ruins" },
+  { "id": "stormcliff-citadel", "difficultyId": "insane", "name": "폭풍 절벽 성채", "imageKey": "insane-stormcliff" },
+  { "id": "ember-demon-gate", "difficultyId": "easy-demon", "name": "불씨 악마 관문", "imageKey": "easy-demon-ember-gate" },
+  { "id": "toxic-candy-marsh", "difficultyId": "medium-demon", "name": "독사탕 늪", "imageKey": "medium-demon-toxic-marsh" },
+  { "id": "bone-sugar-catacomb", "difficultyId": "hard-demon", "name": "뼈설탕 지하묘지", "imageKey": "hard-demon-catacomb" },
+  { "id": "blood-moon-wasteland", "difficultyId": "insane-demon", "name": "핏빛달 황무지", "imageKey": "insane-demon-blood-moon" },
+  { "id": "obsidian-inferno", "difficultyId": "extreme-demon", "name": "흑요석 지옥", "imageKey": "extreme-demon-inferno" },
+  { "id": "cloud-sanctuary", "difficultyId": "easy-god", "name": "천공 구름 성역", "imageKey": "easy-god-cloud-sanctuary" },
+  { "id": "crystal-star-temple", "difficultyId": "medium-god", "name": "별수정 신전", "imageKey": "medium-god-crystal-temple" },
+  { "id": "time-observatory", "difficultyId": "hard-god", "name": "태고의 시간 천문대", "imageKey": "hard-god-time-observatory" },
+  { "id": "thunder-titan-realm", "difficultyId": "insane-god", "name": "천둥 타이탄 영역", "imageKey": "insane-god-thunder-titan" },
+  { "id": "divine-void-throne", "difficultyId": "extreme-god", "name": "신성 공허 왕좌", "imageKey": "extreme-god-divine-void" }
 ]

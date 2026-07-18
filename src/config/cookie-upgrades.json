@@ -20,6 +20,10 @@
     "name": "쿠키 크기",
     "description": "누르기 좋은 커다란 쿠키로 자라나요.",
     "unit": "%",
+    "enabled": false,
+    "visible": false,
+    "renderBaseSizePixels": 190,
+    "renderMaximumSizePixels": 224,
     "levels": [
       { "level": 1, "value": 100, "cost": 0 },
       { "level": 2, "value": 106, "cost": 40 },

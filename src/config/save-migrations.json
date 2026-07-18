@@ -17,6 +17,7 @@
   "monsterIdAliases": {
     "crumb-goblin": "crumb-minion",
     "sugar-slime": "sugar-guard",
-    "choco-dragon": "chocolate-brute"
+    "choco-dragon": "chocolate-brute",
+    "cookie-tyrant": "boss-easy-crumb-knight"
   }
 }

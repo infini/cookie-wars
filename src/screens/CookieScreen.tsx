@@ -23,13 +23,6 @@ function InfoRow({ icon, label, value }: { icon: React.ComponentProps<typeof Mat
 export function CookieScreen() {
   const { state, stats } = useGame();
   const evolution = getCookieEvolutionProgress(state);
-  const currentStep = evolution.totalUpgradeLevels - evolution.active.requiredTotalUpgradeLevels;
-  const nextStepSize = evolution.next
-    ? evolution.next.requiredTotalUpgradeLevels - evolution.active.requiredTotalUpgradeLevels
-    : 1;
-  const progressPercent = evolution.next
-    ? Math.max(0, Math.min(100, currentStep / nextStepSize * 100))
-    : 100;
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <Panel style={styles.heroCard}>
@@ -45,7 +38,7 @@ export function CookieScreen() {
         <InfoRow icon="cookie" label="현재 쿠키" value={`${formatNumber(state.cookies)}개`} />
         <InfoRow icon="gesture-tap" label="클릭당 획득" value={`${formatNumber(stats.clickPower)}개`} />
         <InfoRow icon="clock-fast" label="자동 획득" value={`${formatNumber(stats.autoProduction)}개/초`} />
-        <InfoRow icon="star-circle" label="진화 총레벨" value={`Lv.${stats.totalUpgradeLevels}`} />
+        <InfoRow icon="star-circle" label="강화 레벨 합계" value={`Lv.${stats.totalUpgradeLevels}`} />
         <InfoRow icon="creation" label="현재 쿠키 보너스" value={`×${evolution.active.clickMultiplier.toFixed(2)}`} />
       </Panel>
       <Panel style={styles.evolutionPanel}>
@@ -55,12 +48,17 @@ export function CookieScreen() {
             <Text style={styles.futureTitle}>{evolution.next ? `다음: ${evolution.next.name}` : '최고 쿠키 달성!'}</Text>
             <Text style={styles.futureDescription}>
               {evolution.next
-                ? `모든 쿠키 업그레이드의 총레벨을 ${evolution.next.requiredTotalUpgradeLevels}까지 올려요. (${evolution.remainingLevels} 남음)`
+                ? `강화 레벨 합계를 ${evolution.next.requiredTotalUpgradeLevels}까지 올려요. (${evolution.remainingLevels}레벨 남음)`
                 : '모든 쿠키 진화를 완료했어요.'}
             </Text>
           </View>
         </View>
-        <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${progressPercent}%` }]} /></View>
+        <Text style={styles.levelRule}>
+          별도 경험치 없이 클릭 힘·자동 생산·쿠키 성 체력을 강화하면 합계가 올라요. 저장된 이전 강화 레벨도 합계에 보존돼요.
+        </Text>
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${evolution.progressRatio * 100}%` }]} />
+        </View>
       </Panel>
       <Text style={styles.collectionTitle}>쿠키 진화 도감 · {COOKIES.length}종</Text>
       {COOKIES.map((cookie) => {
@@ -105,6 +103,7 @@ const styles = StyleSheet.create({
   futureText: { flex: 1, marginLeft: 13 },
   futureTitle: { fontFamily: fonts.display, fontSize: 19, color: colors.purple },
   futureDescription: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted },
+  levelRule: { fontFamily: fonts.medium, fontSize: 9, lineHeight: 13, color: colors.muted, marginTop: 9 },
   progressTrack: { height: 12, borderRadius: 6, backgroundColor: colors.white, overflow: 'hidden', marginTop: 11 },
   progressFill: { height: '100%', borderRadius: 6, backgroundColor: colors.purple },
   collectionTitle: { fontFamily: fonts.display, fontSize: 21, color: colors.ink, marginLeft: 4, marginTop: 3 },
