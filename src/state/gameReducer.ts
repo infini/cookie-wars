@@ -36,7 +36,8 @@ export type GameAction =
   | { type: 'TOGGLE_SOUND' }
   | { type: 'SET_SOUND_VOLUME'; level: SoundVolumeLevel }
   | { type: 'TOGGLE_VIBRATION' }
-  | { type: 'CYCLE_BATTLE_SPEED' };
+  | { type: 'CYCLE_BATTLE_SPEED' }
+  | { type: 'TOGGLE_AUTO_BATTLE' };
 
 function unique(values: string[]): string[] {
   return [...new Set(values)];
@@ -144,6 +145,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ),
       };
     }
+    case 'TOGGLE_AUTO_BATTLE':
+      return { ...state, autoBattleEnabled: !state.autoBattleEnabled };
     default:
       return state;
   }

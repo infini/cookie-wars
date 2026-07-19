@@ -26,7 +26,6 @@ import { isFutureSaveVersion } from './saveMigrations/saveVersion';
 interface LegacyDiscSave {
   discOwned?: boolean;
   discLevel?: number;
-  autoBattleEnabled?: boolean;
   rewardClaimedDifficultyIds?: string[];
 }
 
@@ -178,7 +177,6 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
   const {
     discOwned: _legacyDiscOwned,
     discLevel: _legacyDiscLevel,
-    autoBattleEnabled: _legacyAutoBattle,
     rewardClaimedDifficultyIds: legacyRewardClaimedDifficultyIds,
     ...currentSaved
   } = saved;
@@ -264,6 +262,10 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
       initialGameState.vibrationEnabled,
     ),
     battleSpeedMultiplier: normalizeBattleSpeedMultiplier(saved.battleSpeedMultiplier),
+    autoBattleEnabled: normalizeStoredBoolean(
+      saved.autoBattleEnabled,
+      initialGameState.autoBattleEnabled,
+    ),
     lastSavedAt: normalizeStoredInteger(saved.lastSavedAt, { fallback: 0 }),
   };
 }

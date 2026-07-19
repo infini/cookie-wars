@@ -6,6 +6,10 @@ import {
   calculateCookieCriticalStatsForLevel,
   formatCriticalChancePercent,
 } from '../domain/cookieCritical';
+import {
+  calculateCookieSuperCriticalStatsForLevel,
+  formatSuperCriticalChancePercent,
+} from '../domain/cookieSuperCritical';
 import { useFeedback } from '../services/FeedbackContext';
 import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
@@ -13,12 +17,13 @@ import { fonts } from '../theme/typography';
 import { formatNumber } from '../utils/format';
 import { GameButton } from '../components/GameButton';
 import { Panel } from '../components/Panel';
-import { COOKIE_CRITICAL } from '../config';
+import { COOKIE_CRITICAL, COOKIE_SUPER_CRITICAL } from '../config';
 import type { UpgradeConfig, UpgradeLevelConfig } from '../types/game';
 
 const icons: Record<string, React.ComponentProps<typeof MaterialCommunityIcons>['name']> = {
   clickPower: 'gesture-tap',
   cookieCritical: 'bomb',
+  cookieSuperCritical: 'star-four-points-circle',
   autoProduction: 'clock-fast',
   cookieHealth: 'shield-home',
 };
@@ -27,8 +32,18 @@ function formatUpgradeValue(
   upgrade: UpgradeConfig,
   level: UpgradeLevelConfig,
 ): string {
-  if (upgrade.id !== COOKIE_CRITICAL.upgradeId) {
+  if (
+    upgrade.id !== COOKIE_CRITICAL.upgradeId
+    && upgrade.id !== COOKIE_SUPER_CRITICAL.upgradeId
+  ) {
     return `${formatNumber(level.value)} ${upgrade.unit}`;
+  }
+  if (upgrade.id === COOKIE_SUPER_CRITICAL.upgradeId) {
+    const superCritical = calculateCookieSuperCriticalStatsForLevel(
+      level.level,
+      level.value,
+    );
+    return `${formatSuperCriticalChancePercent(superCritical.chanceUnits)}% · ×${formatNumber(superCritical.rewardMultiplier)}`;
   }
   const critical = calculateCookieCriticalStatsForLevel(level.level, level.value);
   return `${formatCriticalChancePercent(critical.chanceUnits)}% · ×${formatNumber(critical.rewardMultiplier)}`;

@@ -23,6 +23,7 @@ export interface GameState {
   soundVolumeLevel: SoundVolumeLevel;
   vibrationEnabled: boolean;
   battleSpeedMultiplier: number;
+  autoBattleEnabled: boolean;
   lastSavedAt: number;
 }
 
@@ -30,6 +31,8 @@ export interface CookieStats {
   clickPower: number;
   criticalChanceUnits: number;
   criticalRewardMultiplier: number;
+  superCriticalChanceUnits: number;
+  superCriticalRewardMultiplier: number;
   cookieRenderSize: number;
   autoProduction: number;
   maxHealth: number;
@@ -38,9 +41,11 @@ export interface CookieStats {
   totalUpgradeLevels: number;
 }
 
+export type CookieClickKind = 'normal' | 'critical' | 'superCritical';
+
 export interface CookieClickResult {
   amount: number;
-  critical: boolean;
+  kind: CookieClickKind;
 }
 
 export interface BattleRewardResult {

@@ -4,6 +4,7 @@ import {
   numberField,
   numberValue,
   record,
+  stringValue,
   validateNumberFields,
   validateStringFields,
 } from './primitives';
@@ -16,14 +17,19 @@ export function validateCookieFeedback(value: unknown): void {
   validateNumberFields(audio, audioPath, [
     'minimumClickIntervalMs', 'minimumFullCriticalIntervalMs',
     'criticalLayerDurationMs', 'criticalSparkleDelayMs', 'criticalImpactVolumeMultiplier',
-    'criticalSparkleVolumeMultiplier',
+    'criticalSparkleVolumeMultiplier', 'minimumFullSuperCriticalIntervalMs',
+    'superCriticalImpactVolumeMultiplier', 'superCriticalShineVolumeMultiplier',
+    'superCriticalShineDelayMs', 'superCriticalLayerDurationMs',
   ], { min: 0 });
   [
     'minimumClickIntervalMs', 'minimumFullCriticalIntervalMs',
     'criticalLayerDurationMs', 'criticalSparkleDelayMs',
+    'minimumFullSuperCriticalIntervalMs', 'superCriticalShineDelayMs',
+    'superCriticalLayerDurationMs',
   ].forEach((field) => numberField(audio, field, audioPath, { integer: true, min: 0 }));
   [
     'criticalImpactVolumeMultiplier', 'criticalSparkleVolumeMultiplier',
+    'superCriticalImpactVolumeMultiplier', 'superCriticalShineVolumeMultiplier',
   ].forEach((field) => numberField(audio, field, audioPath, { min: 0, max: 1 }));
   const playbackRates = array(audio.voicePlaybackRates, `${audioPath}.voicePlaybackRates`)
     .map((item, index) => numberValue(
@@ -58,6 +64,15 @@ export function validateCookieFeedback(value: unknown): void {
     throw new ConfigValidationError(
       `${audioPath}.minimumFullCriticalIntervalMs`,
       'criticalLayerDurationMs 이상이어야 합니다.',
+    );
+  }
+  if (
+    (audio.minimumFullSuperCriticalIntervalMs as number)
+    < (audio.superCriticalLayerDurationMs as number)
+  ) {
+    throw new ConfigValidationError(
+      `${audioPath}.minimumFullSuperCriticalIntervalMs`,
+      'superCriticalLayerDurationMs 이상이어야 합니다.',
     );
   }
 
@@ -180,6 +195,64 @@ export function validateCookieFeedback(value: unknown): void {
     throw new ConfigValidationError(
       `${audioPath}.criticalSparkleDelayMs`,
       '크리티컬 효과 지속 시간보다 짧아야 합니다.',
+    );
+  }
+
+  const superPath = `${path}.superCriticalEffect`;
+  const superEffect = record(config.superCriticalEffect, superPath);
+  validateStringFields(superEffect, superPath, [
+    'flashColor', 'coreColorStart', 'coreColorEnd', 'rayColor',
+    'labelColor', 'labelShadowColor',
+  ]);
+  ['ringColors', 'sparkleColors'].forEach((field) => {
+    const colors = array(superEffect[field], `${superPath}.${field}`);
+    if (colors.length < 2) {
+      throw new ConfigValidationError(`${superPath}.${field}`, '색상이 두 개 이상 필요합니다.');
+    }
+    colors.forEach((color, index) => stringValue(
+      color,
+      `${superPath}.${field}[${index}]`,
+    ));
+  });
+  const superIntegerFields = [
+    'durationMs', 'compactDurationMs', 'sizePixels', 'maximumConcurrentFullEffects',
+    'maximumConcurrentCompactEffects', 'ringCount', 'rayCount', 'compactRayCount',
+    'rayLengthPixels', 'rayWidthPixels', 'sparkleCount', 'compactSparkleCount',
+    'sparkleStartDistancePixels', 'sparkleEndDistancePixels', 'sparkleSizePixels',
+    'labelFontSize',
+  ];
+  const superNumberFields = [
+    ...superIntegerFields, 'flashMaximumOpacity', 'flashStartScale', 'flashEndScale',
+    'coreSizeRatio', 'coreStartScale', 'corePeakScale', 'coreEndScale',
+    'corePeakProgress', 'coreFadeStartProgress', 'ringStaggerProgress',
+    'ringFadeStartProgress', 'ringStartScale', 'ringEndScale', 'ringBorderWidth',
+    'rayStartScale', 'rayEndScale', 'rayRotationTurns', 'sparkleStartProgress',
+    'sparkleStaggerProgress', 'sparkleFadeStartProgress', 'sparkleThicknessRatio',
+    'compactScale', 'labelTopRatio',
+  ];
+  validateNumberFields(superEffect, superPath, superNumberFields, { min: 0 });
+  superIntegerFields.forEach((field) => numberField(
+    superEffect,
+    field,
+    superPath,
+    { integer: true, min: 1 },
+  ));
+  [
+    'flashMaximumOpacity', 'coreSizeRatio', 'corePeakProgress',
+    'coreFadeStartProgress', 'ringStaggerProgress', 'ringFadeStartProgress',
+    'sparkleStartProgress', 'sparkleStaggerProgress', 'sparkleFadeStartProgress',
+    'labelTopRatio', 'sparkleThicknessRatio',
+  ].forEach((field) => numberField(superEffect, field, superPath, { min: 0, max: 1 }));
+  if ((superEffect.durationMs as number) > (gain.durationMs as number)) {
+    throw new ConfigValidationError(
+      `${superPath}.durationMs`,
+      'floatingGain.durationMs 이하여야 합니다.',
+    );
+  }
+  if ((audio.superCriticalShineDelayMs as number) >= (superEffect.durationMs as number)) {
+    throw new ConfigValidationError(
+      `${audioPath}.superCriticalShineDelayMs`,
+      '슈퍼 크리티컬 효과 지속 시간보다 짧아야 합니다.',
     );
   }
 }

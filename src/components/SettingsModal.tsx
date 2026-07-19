@@ -41,7 +41,7 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
     previewTimeout.current = setTimeout(
       () => {
         previewTimeout.current = null;
-        feedback.playCookieClick(false);
+        feedback.playCookieClick('normal');
       },
       AUDIO_SETTINGS.previewDelayMs,
     );

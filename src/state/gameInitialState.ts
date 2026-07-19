@@ -1,5 +1,6 @@
 import {
   AUDIO_SETTINGS,
+  BATTLE_AUTO,
   BATTLE_RULES,
   DIFFICULTIES,
   DISCS,
@@ -39,5 +40,6 @@ export const initialGameState: GameState = {
   soundVolumeLevel: AUDIO_SETTINGS.defaultLevel,
   vibrationEnabled: true,
   battleSpeedMultiplier: BATTLE_RULES.defaultBattleSpeedMultiplier,
+  autoBattleEnabled: BATTLE_AUTO.defaultEnabled,
   lastSavedAt: 0,
 };

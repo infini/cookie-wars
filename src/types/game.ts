@@ -9,6 +9,7 @@ export type {
   CookieCriticalEffectConfig,
   CookieFeedbackConfig,
   CookieFeedbackTier,
+  CookieSuperCriticalEffectConfig,
   FloatingGainFeedbackConfig,
 } from './cookieFeedback';
 export type {
@@ -33,6 +34,7 @@ export type {
   BotConfig,
   CookieConfig,
   CookieCriticalConfig,
+  CookieSuperCriticalConfig,
   CookieUpgradeRulesConfig,
   DiscConfig,
   DiscLevelConfig,
@@ -43,13 +45,16 @@ export type {
 } from './economy';
 export type {
   BattleRewardResult,
+  CookieClickKind,
   CookieClickResult,
   CookieStats,
   GameState,
 } from './gameState';
 export type { TabId } from './navigation';
 export type {
+  BattleAutoConfig,
   BattleRewardsConfig,
+  CookieInputConfig,
   ProgressionConfig,
   SaveMigrationsConfig,
 } from './system';

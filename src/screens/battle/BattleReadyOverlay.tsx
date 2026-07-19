@@ -11,6 +11,7 @@ interface BattleReadyOverlayProps {
   difficulty: DifficultyConfig;
   difficultyProgress: DifficultyProgress;
   hasWeapon: boolean;
+  autoBattleEnabled: boolean;
   onStart: () => void;
 }
 
@@ -19,6 +20,7 @@ export function BattleReadyOverlay({
   difficulty,
   difficultyProgress,
   hasWeapon,
+  autoBattleEnabled,
   onStart,
 }: BattleReadyOverlayProps) {
   if (!visible) return null;
@@ -27,12 +29,18 @@ export function BattleReadyOverlay({
       <MaterialCommunityIcons name="castle" size={52} color={colors.red} />
       <Text style={styles.readyTitle}>쿠키 성 방어전</Text>
       <Text style={styles.readyText}>거대한 보스 한 마리가 쿠키 성을 노려요!</Text>
-      <Text style={styles.autoReadyText}>쿠키봇은 자동 공격 · 전투 화면을 누르면 성이 2배 공격</Text>
+      <Text style={styles.autoReadyText}>
+        {autoBattleEnabled
+          ? '자동 전투 ON · 성과 쿠키봇이 자동 공격하고 다음 전투로 이어져요'
+          : '쿠키봇은 자동 공격 · 전투 화면을 누르면 성이 2배 공격'}
+      </Text>
       <Text style={styles.battleProgressText}>
         {difficulty.name} 전투 {difficultyProgress.currentBattleNumber}/{difficultyProgress.requiredWins} · 승리 {difficultyProgress.wins}회
       </Text>
       <GameButton
-        title={hasWeapon ? '전투 시작' : '무기가 필요해요'}
+        title={hasWeapon
+          ? autoBattleEnabled ? '곧 자동으로 시작해요' : '전투 시작'
+          : '무기가 필요해요'}
         onPress={onStart}
         disabled={!hasWeapon}
         variant="red"

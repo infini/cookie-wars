@@ -1,4 +1,5 @@
 import {
+  booleanValue,
   ConfigValidationError,
   array,
   numberField,
@@ -8,6 +9,30 @@ import {
   validatePositiveNumberFields,
   validateStringFields,
 } from './primitives';
+
+export function validateBattleAuto(value: unknown): void {
+  const path = 'BATTLE_AUTO';
+  const config = record(value, path);
+  booleanValue(config.defaultEnabled, `${path}.defaultEnabled`);
+  validateNumberFields(config, path, ['initialStartDelayMs', 'nextBattleDelayMs'], {
+    integer: true,
+    min: 0,
+  });
+}
+
+export function validateCookieInput(value: unknown): void {
+  const path = 'COOKIE_INPUT';
+  const config = record(value, path);
+  validateNumberFields(config, path, [
+    'hitSlopPixels', 'pressRetentionOffsetPixels', 'releaseDeduplicationWindowMs',
+  ], { integer: true, min: 0 });
+  if ((config.pressRetentionOffsetPixels as number) < (config.hitSlopPixels as number)) {
+    throw new ConfigValidationError(
+      `${path}.pressRetentionOffsetPixels`,
+      'hitSlopPixels 이상이어야 합니다.',
+    );
+  }
+}
 
 export function validateAudioSettings(value: unknown): void {
   const path = 'AUDIO_SETTINGS';

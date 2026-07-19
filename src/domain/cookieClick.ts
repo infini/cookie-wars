@@ -16,11 +16,16 @@ export function calculateCookieClickReward(
     maximum: 1 - Number.EPSILON,
   });
   const roll = Math.floor(boundedRandom * COOKIE_CRITICAL.probabilityScale);
-  const critical = roll < stats.criticalChanceUnits;
+  const superCritical = roll < stats.superCriticalChanceUnits;
+  const critical = !superCritical
+    && roll < stats.superCriticalChanceUnits + stats.criticalChanceUnits;
+  const kind = superCritical ? 'superCritical' : critical ? 'critical' : 'normal';
   return {
-    amount: critical
-      ? saturatingProductInteger(stats.clickPower, stats.criticalRewardMultiplier)
-      : stats.clickPower,
-    critical,
+    amount: superCritical
+      ? saturatingProductInteger(stats.clickPower, stats.superCriticalRewardMultiplier)
+      : critical
+        ? saturatingProductInteger(stats.clickPower, stats.criticalRewardMultiplier)
+        : stats.clickPower,
+    kind,
   };
 }

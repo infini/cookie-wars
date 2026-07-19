@@ -86,7 +86,7 @@ export function BotScreen() {
 
       <View style={styles.rules}>
         <MaterialCommunityIcons name="information" size={23} color={colors.blue} />
-        <Text style={styles.rulesText}>쿠키봇만 자동으로 공격해요. 쿠키 성은 자동 공격하지 않으며, 전투 중 성을 직접 눌러야 원반을 던져요.</Text>
+        <Text style={styles.rulesText}>쿠키봇은 항상 자동 공격해요. 자동 전투를 켜면 쿠키 성도 자동으로 원반을 던져요.</Text>
       </View>
     </ScrollView>
   );

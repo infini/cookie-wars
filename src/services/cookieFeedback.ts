@@ -1,12 +1,19 @@
-import { CookieFeedbackTier } from '../types/game';
+import { CookieClickKind, CookieFeedbackTier } from '../types/game';
 
 export function getCookieFeedbackTier(
-  critical: boolean,
+  kind: CookieClickKind,
   lastFullCriticalAt: number,
+  lastFullSuperCriticalAt: number,
   now: number,
   minimumFullCriticalIntervalMs: number,
+  minimumFullSuperCriticalIntervalMs: number,
 ): CookieFeedbackTier {
-  if (!critical) return 'normal';
+  if (kind === 'normal') return 'normal';
+  if (kind === 'superCritical') {
+    return now - lastFullSuperCriticalAt >= minimumFullSuperCriticalIntervalMs
+      ? 'superCriticalFull'
+      : 'superCriticalCompact';
+  }
   return now - lastFullCriticalAt >= minimumFullCriticalIntervalMs
     ? 'criticalFull'
     : 'criticalCompact';

@@ -24,6 +24,7 @@ export interface GameCommands {
   setSoundVolume: (level: SoundVolumeLevel) => void;
   toggleVibration: () => void;
   cycleBattleSpeed: () => void;
+  toggleAutoBattle: () => void;
 }
 
 export function createGameCommands(
@@ -72,6 +73,9 @@ export function createGameCommands(
     },
     cycleBattleSpeed: () => {
       dispatchProjectedAction({ type: 'CYCLE_BATTLE_SPEED' });
+    },
+    toggleAutoBattle: () => {
+      dispatchProjectedAction({ type: 'TOGGLE_AUTO_BATTLE' });
     },
   };
 }

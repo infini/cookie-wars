@@ -159,8 +159,8 @@ describe('게임 저장 상태', () => {
     const clickPower = calculateCookieStats(initialGameState).clickPower;
     const monsterId = MONSTERS[0].id;
 
-    expect(commands.clickCookie()).toEqual({ amount: clickPower, critical: false });
-    expect(commands.clickCookie()).toEqual({ amount: clickPower, critical: false });
+    expect(commands.clickCookie()).toEqual({ amount: clickPower, kind: 'normal' });
+    expect(commands.clickCookie()).toEqual({ amount: clickPower, kind: 'normal' });
     commands.toggleSound();
     commands.setSoundVolume(5);
     commands.toggleVibration();
@@ -564,6 +564,13 @@ describe('게임 저장 상태', () => {
     expect(mergeSavedGame({ battleSpeedMultiplier: 99 }).battleSpeedMultiplier).toBe(1);
   });
 
+  test('자동 전투 설정은 토글되고 앱 재실행 뒤에도 복원된다', () => {
+    const enabled = gameReducer(initialGameState, { type: 'TOGGLE_AUTO_BATTLE' });
+    expect(enabled.autoBattleEnabled).toBe(true);
+    expect(mergeSavedGame({ autoBattleEnabled: true }).autoBattleEnabled).toBe(true);
+    expect(mergeSavedGame({ autoBattleEnabled: '예' as never }).autoBattleEnabled).toBe(false);
+  });
+
   test('원반은 최고 레벨 없이 계속 강화된다', () => {
     const disc = DISCS[0];
     const highLevelState = {
@@ -594,7 +601,7 @@ describe('게임 저장 상태', () => {
     expect(migrated.ownedDiscIds).toEqual([DISCS[0].id]);
     expect(migrated.discLevels[DISCS[0].id]).toBe(4);
     expect(migrated.botCounts[BOTS[0].id]).toBe(3);
-    expect('autoBattleEnabled' in migrated).toBe(false);
+    expect(migrated.autoBattleEnabled).toBe(false);
   });
 
   test('더 최신 앱의 저장은 정규화해 읽되 현재 버전으로 덮어쓰지 않는다', () => {
@@ -690,7 +697,7 @@ describe('게임 저장 상태', () => {
     },
   );
 
-  test('신규 저장의 쿠키 진화 합계는 보이는 4종 강화의 기본 레벨만 합산한 4이다', () => {
+  test('신규 저장의 쿠키 진화 합계는 기여하는 4종 강화의 기본 레벨만 합산한 4이다', () => {
     const evolution = getCookieEvolutionProgress(initialGameState);
 
     expect(initialGameState.legacyCookieEvolutionBonusLevels).toBe(0);
@@ -858,6 +865,7 @@ describe('게임 저장 상태', () => {
       'clickPower',
       'cookieCritical',
       'cookieHealth',
+      'cookieSuperCritical',
       'autoProduction',
     ]);
     expect(sorted.slice(0, 3).every((item) => item.affordable)).toBe(true);

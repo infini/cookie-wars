@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 import { AUDIO_SETTINGS, BATTLE_AUDIO } from '../config';
 import { useGame } from '../state/GameContext';
-import { CookieFeedbackTier } from '../types/game';
+import { CookieClickKind, CookieFeedbackTier } from '../types/game';
 import {
   BATTLE_ACTION_SOUND_NAMES,
   BattleActionSoundName,
@@ -30,7 +30,7 @@ export type SoundName =
 
 interface FeedbackContextValue {
   play: (name: SoundName) => void;
-  playCookieClick: (critical: boolean) => CookieFeedbackTier;
+  playCookieClick: (kind: CookieClickKind) => CookieFeedbackTier;
   stopCookieSounds: () => void;
   startBattleMusic: () => void;
   stopBattleSounds: () => void;

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  BATTLE_AUTO,
+  DIFFICULTIES,
   getBattleMapForDifficulty,
   getCookie,
   getDifficulty,
@@ -25,6 +27,7 @@ export function useBattleScreenSession(onReturnToGame: () => void) {
     completeBattle,
     consumeGiantDisc,
     cycleBattleSpeed,
+    toggleAutoBattle,
   } = useGame();
   const feedback = useFeedback();
   const baseDifficulty = getDifficulty(game.selectedDifficultyId);
@@ -46,6 +49,7 @@ export function useBattleScreenSession(onReturnToGame: () => void) {
   const activeBots = useMemo(() => getActiveBots(game), [game.botCounts]);
   const [rewardResult, setRewardResult] = useState<BattleRewardResult | null>(null);
   const handledResult = useRef(false);
+  const completedDifficultyId = useRef<string | null>(null);
 
   const onEvent = useCallback((event: BattleEvent) => {
     const { kind } = event;
@@ -92,6 +96,7 @@ export function useBattleScreenSession(onReturnToGame: () => void) {
   useEffect(() => {
     if (engine.state.status === 'victory' && !handledResult.current) {
       handledResult.current = true;
+      completedDifficultyId.current = difficulty.id;
       setRewardResult(completeBattle(difficulty.id));
     }
   }, [completeBattle, difficulty.id, engine.state.status]);
@@ -104,16 +109,73 @@ export function useBattleScreenSession(onReturnToGame: () => void) {
     feedback.stopBattleSounds();
   }, [feedback.stopBattleSounds]);
 
-  const startBattle = () => {
+  const startBattle = useCallback((withManualFeedback = true) => {
     feedback.stopBattleSounds();
     handledResult.current = false;
+    completedDifficultyId.current = null;
     setRewardResult(null);
     getEnemyWaveMonsterIds(difficulty.enemyWaveId).forEach(discoverMonster);
     engine.start();
-    feedback.play('menu');
+    if (withManualFeedback) feedback.play('menu');
     feedback.startBattleMusic();
-    feedback.tap();
-  };
+    if (withManualFeedback) feedback.tap();
+  }, [
+    difficulty.enemyWaveId,
+    discoverMonster,
+    engine.start,
+    feedback,
+  ]);
+
+  useEffect(() => {
+    if (
+      !game.autoBattleEnabled
+      || !discAvailable
+      || activeBots.length === 0
+      || engine.state.status !== 'idle'
+    ) return undefined;
+    const timer = setTimeout(() => startBattle(false), BATTLE_AUTO.initialStartDelayMs);
+    return () => clearTimeout(timer);
+  }, [
+    activeBots.length,
+    discAvailable,
+    engine.state.status,
+    game.autoBattleEnabled,
+    startBattle,
+  ]);
+
+  useEffect(() => {
+    if (
+      game.autoBattleEnabled
+      && engine.state.status === 'active'
+      && engine.canCastleThrow
+    ) {
+      engine.throwCastleDisc();
+    }
+  }, [
+    engine.canCastleThrow,
+    engine.state.status,
+    engine.throwCastleDisc,
+    game.autoBattleEnabled,
+  ]);
+
+  useEffect(() => {
+    if (
+      !game.autoBattleEnabled
+      || engine.state.status !== 'victory'
+      || rewardResult === null
+    ) return undefined;
+    const finalDifficulty = DIFFICULTIES[DIFFICULTIES.length - 1];
+    const completedFinalBattle = completedDifficultyId.current === finalDifficulty.id
+      && rewardResult.difficultyWins >= rewardResult.winsRequired;
+    if (completedFinalBattle) return undefined;
+    const timer = setTimeout(() => startBattle(false), BATTLE_AUTO.nextBattleDelayMs);
+    return () => clearTimeout(timer);
+  }, [
+    engine.state.status,
+    game.autoBattleEnabled,
+    rewardResult,
+    startBattle,
+  ]);
 
   const leaveBattle = () => {
     feedback.stopBattleSounds();
@@ -142,6 +204,7 @@ export function useBattleScreenSession(onReturnToGame: () => void) {
     leaveBattle,
     throwCastleDiscFromBattleField,
     cycleBattleSpeed,
+    toggleAutoBattle,
     hasWeapon: discAvailable && activeBots.length > 0,
   };
 }

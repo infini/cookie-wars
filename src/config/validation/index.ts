@@ -20,6 +20,7 @@ import {
   validateCookieUpgradeRules,
   validateCookieUpgrades,
   validateCookieCritical,
+  validateCookieSuperCritical,
   validateCookies,
   validateDiscUpgradeRules,
   validateDiscs,
@@ -31,11 +32,13 @@ import { validateBattleRewards } from './rewards';
 import { validateSaveMigrations } from './saveMigrations';
 import {
   validateAudioSettings,
+  validateBattleAuto,
   validateBattleAudio,
   validateBattleFeedback,
   validateBattleUi,
   validateBossSpecialAttack,
   validateGiantDisc,
+  validateCookieInput,
 } from './system';
 import { GameConfigInput, ValidatedGameConfig } from './types';
 
@@ -44,6 +47,8 @@ export type { GameConfigInput, ValidatedGameConfig };
 
 export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig {
   validateAudioSettings(input.AUDIO_SETTINGS);
+  validateBattleAuto(input.BATTLE_AUTO);
+  validateCookieInput(input.COOKIE_INPUT);
   validateCookieFeedback(input.COOKIE_FEEDBACK);
   validateBattleAudio(input.BATTLE_AUDIO);
   validateBattleFeedback(input.BATTLE_FEEDBACK);
@@ -66,6 +71,7 @@ export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig 
   const upgradeRules = validateCookieUpgradeRules(input.COOKIE_UPGRADE_RULES);
   const upgrades = validateCookieUpgrades(input.COOKIE_UPGRADES);
   const cookieCritical = validateCookieCritical(input.COOKIE_CRITICAL);
+  const cookieSuperCritical = validateCookieSuperCritical(input.COOKIE_SUPER_CRITICAL);
   validateCookies(input.COOKIES);
   const difficulties = validateDifficulties(input.DIFFICULTIES);
   validateDiscUpgradeRules(input.DISC_UPGRADE_RULES);
@@ -90,6 +96,7 @@ export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig 
     bossAnimations,
     botAnimations,
     cookieCritical,
+    cookieSuperCritical,
   });
 
   return input as ValidatedGameConfig;

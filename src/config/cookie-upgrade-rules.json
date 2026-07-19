@@ -7,6 +7,10 @@
     "valueIncreasePerLevel": 25,
     "costGrowthMultiplier": 1.25
   },
+  "cookieSuperCritical": {
+    "valueIncreasePerLevel": 2,
+    "costGrowthMultiplier": 1.32
+  },
   "autoProduction": {
     "valueIncreasePerLevel": 25,
     "costGrowthMultiplier": 1.25

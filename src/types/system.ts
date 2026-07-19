@@ -5,6 +5,18 @@ export interface ProgressionConfig {
   autoProductionIntervalMs: number;
 }
 
+export interface BattleAutoConfig {
+  defaultEnabled: boolean;
+  initialStartDelayMs: number;
+  nextBattleDelayMs: number;
+}
+
+export interface CookieInputConfig {
+  hitSlopPixels: number;
+  pressRetentionOffsetPixels: number;
+  releaseDeduplicationWindowMs: number;
+}
+
 export interface BattleRewardsConfig {
   battleMedalsPerStageClear: number;
   clickPowerBonusPercentPerMedal: number;

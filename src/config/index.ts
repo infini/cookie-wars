@@ -1,6 +1,7 @@
 import botData from './bots.json';
 import audioSettingData from './audio-settings.json';
 import battleAudioData from './battle-audio.json';
+import battleAutoData from './battle-auto.json';
 import battleFeedbackData from './battle-feedback.json';
 import battleMapData from './battle-maps.json';
 import battleRuleData from './battle-rules.json';
@@ -16,6 +17,8 @@ import cookieUpgradeData from './cookie-upgrades.json';
 import cookieUpgradeRuleData from './cookie-upgrade-rules.json';
 import cookieCriticalData from './cookie-critical.json';
 import cookieFeedbackData from './cookie-feedback.json';
+import cookieInputData from './cookie-input.json';
+import cookieSuperCriticalData from './cookie-super-critical.json';
 import cookieData from './cookies.json';
 import difficultyData from './difficulties.json';
 import discData from './discs.json';
@@ -44,6 +47,7 @@ export { ConfigValidationError, validateGameConfig };
 export const CONFIG_TABLES = validateGameConfig({
   AUDIO_SETTINGS: audioSettingData,
   BATTLE_AUDIO: battleAudioData,
+  BATTLE_AUTO: battleAutoData,
   BATTLE_FEEDBACK: battleFeedbackData,
   BATTLE_MAPS: battleMapData,
   BATTLE_RULES: battleRuleData,
@@ -60,6 +64,8 @@ export const CONFIG_TABLES = validateGameConfig({
   COOKIE_UPGRADES: cookieUpgradeData,
   COOKIE_CRITICAL: cookieCriticalData,
   COOKIE_FEEDBACK: cookieFeedbackData,
+  COOKIE_INPUT: cookieInputData,
+  COOKIE_SUPER_CRITICAL: cookieSuperCriticalData,
   COOKIES: cookieData,
   DIFFICULTIES: difficultyData,
   DISC_UPGRADE_RULES: discUpgradeRuleData,
@@ -75,6 +81,7 @@ export const CONFIG_TABLES = validateGameConfig({
 export const {
   AUDIO_SETTINGS,
   BATTLE_AUDIO,
+  BATTLE_AUTO,
   BATTLE_FEEDBACK,
   BATTLE_MAPS,
   BATTLE_RULES,
@@ -91,6 +98,8 @@ export const {
   COOKIE_UPGRADES,
   COOKIE_CRITICAL,
   COOKIE_FEEDBACK,
+  COOKIE_INPUT,
+  COOKIE_SUPER_CRITICAL,
   COOKIES,
   DIFFICULTIES,
   DISC_UPGRADE_RULES,

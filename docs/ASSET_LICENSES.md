@@ -49,6 +49,8 @@
 | 일반 쿠키 클릭·크리티컬 기본 깨짐음 | qubodup, Freesound `Crunch` | CC0 1.0 |
 | 쿠키 크리티컬 충격 | Mixkit `Short explosion` | Mixkit Sound Effects Free License |
 | 쿠키 크리티컬 반짝임 | Mixkit `Fairy arcade sparkle` | Mixkit Sound Effects Free License |
+| 쿠키 슈퍼 크리티컬 충격 | Mixkit `Movie trailer epic impact` | Mixkit Sound Effects Free License |
+| 쿠키 슈퍼 크리티컬 마법 광채 | Mixkit `Choir magic shine` | Mixkit Sound Effects Free License |
 | 메뉴 선택 | Kenney Interface Sounds `click_003.ogg` | CC0 1.0 |
 | 강화 성공 | Kenney Interface Sounds `confirmation_002.ogg` | CC0 1.0 |
 | 사용 불가 | Kenney Interface Sounds `back_003.ogg` | CC0 1.0 |
@@ -65,6 +67,8 @@
 일반 클릭에는 Freesound의 `Crunch` 공식 HQ 미리듣기 MP3를 사용합니다. 원본은 qubodup이 공개한 첫 번째 바삭한 토스트 한입 녹음이며 [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)입니다. 앱은 같은 녹음을 세 플레이어와 세 가지 작은 재생 속도 차이로 번갈아 사용해 연속 클릭의 반복감을 줄입니다. 원본 페이지, 로컬 인코딩과 SHA-256은 `assets/licenses/FREESOUND_COOKIE_SOUND_SOURCE.txt`에 기록했습니다.
 
 강한 크리티컬은 같은 깨짐음 위에 Mixkit `Short explosion` 충격음과 70ms 뒤의 `Fairy arcade sparkle`을 겹칩니다. 두 파일은 Mixkit 미리듣기 MP3이며 [Mixkit Free License](https://mixkit.co/license/)의 Sound Effects 항목을 따릅니다. 항목 ID, 다운로드 URL, 로컬 파일명과 SHA-256은 `assets/licenses/MIXKIT_SOUND_EFFECT_SOURCE.txt`에 기록했습니다. 짧은 시간에 크리티컬이 연속 발생하면 큰 레이어는 최소 간격으로 제한하고 작은 시각·기본 클릭 피드백만 유지합니다. 재생 속도, 상대 음량, 최소 간격과 지연은 `cookie-feedback.json`에서 관리합니다.
+
+슈퍼 크리티컬은 Mixkit `Movie trailer epic impact`와 90ms 뒤의 `Choir magic shine`을 전용으로 겹칩니다. 일반 크리티컬과 다른 두 원본을 사용하며, 4초 안에 다시 발동하면 보상은 전부 지급하고 긴 음원 레이어만 축약합니다. 두 파일의 항목 ID·직접 다운로드 주소·SHA-256도 같은 출처 기록 파일에 남겼습니다.
 
 ## 글꼴과 아이콘
 
@@ -92,4 +96,6 @@
 - [Creative Commons CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
 - [Mixkit Boom Sound Effects · Short explosion](https://mixkit.co/free-sound-effects/boom/)
 - [Mixkit Video Game Sound Effects · Fairy arcade sparkle](https://mixkit.co/free-sound-effects/video-game/)
+- [Mixkit Impact Sound Effects · Movie trailer epic impact](https://mixkit.co/free-sound-effects/impact/)
+- [Mixkit Magic Sound Effects · Choir magic shine](https://mixkit.co/free-sound-effects/magic/)
 - [Mixkit Free License](https://mixkit.co/license/)

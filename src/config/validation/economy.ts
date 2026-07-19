@@ -82,8 +82,7 @@ export function validateCookieUpgradeRules(value: unknown): UnknownRecord {
   return rules;
 }
 
-export function validateCookieCritical(value: unknown): UnknownRecord {
-  const path = 'COOKIE_CRITICAL';
+function validateCriticalConfig(value: unknown, path: string): UnknownRecord {
   const config = record(value, path);
   validateStringFields(config, path, ['upgradeId']);
   validateNumberFields(config, path, [
@@ -109,6 +108,14 @@ export function validateCookieCritical(value: unknown): UnknownRecord {
     );
   }
   return config;
+}
+
+export function validateCookieCritical(value: unknown): UnknownRecord {
+  return validateCriticalConfig(value, 'COOKIE_CRITICAL');
+}
+
+export function validateCookieSuperCritical(value: unknown): UnknownRecord {
+  return validateCriticalConfig(value, 'COOKIE_SUPER_CRITICAL');
 }
 
 export function validateCookies(value: unknown): UnknownRecord[] {

@@ -9,15 +9,19 @@ import { styles } from './battleScreenStyles';
 interface BattleResultModalProps {
   status: BattleStatus;
   rewardResult: BattleRewardResult | null;
+  autoBattleEnabled: boolean;
   onLeave: () => void;
   onStart: () => void;
+  onToggleAutoBattle: () => void;
 }
 
 export function BattleResultModal({
   status,
   rewardResult,
+  autoBattleEnabled,
   onLeave,
   onStart,
+  onToggleAutoBattle,
 }: BattleResultModalProps) {
   const victory = status === 'victory';
   const rewardPending = victory && rewardResult === null;
@@ -89,6 +93,11 @@ export function BattleResultModal({
           {victory && rewardResult?.unlockedNextDifficulty ? (
             <Text style={styles.unlockText}>다음 난이도가 열렸어요!</Text>
           ) : null}
+          {victory && autoBattleEnabled && !rewardPending ? (
+            <Text style={styles.autoBattleProgressText}>
+              자동 전투 중 · 다음 전투를 준비하고 있어요
+            </Text>
+          ) : null}
           <View style={styles.resultButtonRow}>
             <GameButton
               title="로비 이동"
@@ -98,8 +107,8 @@ export function BattleResultModal({
               style={styles.resultButton}
             />
             <GameButton
-              title={victory ? '다음 전투' : '다시 전투'}
-              onPress={onStart}
+              title={victory && autoBattleEnabled ? '자동 전투 끄기' : victory ? '다음 전투' : '다시 전투'}
+              onPress={victory && autoBattleEnabled ? onToggleAutoBattle : onStart}
               disabled={rewardPending}
               variant="green"
               style={styles.resultButton}

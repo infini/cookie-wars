@@ -4,7 +4,10 @@ import { Animated, StyleSheet, View } from 'react-native';
 import { COOKIE_FEEDBACK } from '../config';
 import { CookieFeedbackTier } from '../types/game';
 
-type CriticalEffectMode = Exclude<CookieFeedbackTier, 'normal'>;
+type CriticalEffectMode = Extract<
+  CookieFeedbackTier,
+  'criticalFull' | 'criticalCompact'
+>;
 
 const FX = COOKIE_FEEDBACK.criticalEffect;
 const FULL_FRAGMENTS = Array.from({ length: FX.fragmentCount }, (_, index) => index);

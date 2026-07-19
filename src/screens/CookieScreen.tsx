@@ -13,6 +13,7 @@ import { formatNumber } from '../utils/format';
 import { CookieImage } from '../components/CookieImage';
 import { Panel } from '../components/Panel';
 import { formatCriticalChancePercent } from '../domain/cookieCritical';
+import { formatSuperCriticalChancePercent } from '../domain/cookieSuperCritical';
 
 function InfoRow({ icon, label, value }: { icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; label: string; value: string }) {
   return (
@@ -49,6 +50,7 @@ export function CookieScreen() {
             <InfoRow icon="cookie" label="현재 쿠키" value={`${formatNumber(state.cookies)}개`} />
             <InfoRow icon="gesture-tap" label="클릭당 획득" value={`${formatNumber(stats.clickPower)}개`} />
             <InfoRow icon="bomb" label="쿠키 크리티컬" value={`${formatCriticalChancePercent(stats.criticalChanceUnits)}% · ×${formatNumber(stats.criticalRewardMultiplier)}`} />
+            <InfoRow icon="star-four-points-circle" label="슈퍼 크리티컬" value={`${formatSuperCriticalChancePercent(stats.superCriticalChanceUnits)}% · ×${formatNumber(stats.superCriticalRewardMultiplier)}`} />
             <InfoRow icon="clock-fast" label="자동 획득" value={`${formatNumber(stats.autoProduction)}개/초`} />
             <InfoRow icon="star-circle" label="진화 레벨" value={`Lv.${stats.totalUpgradeLevels}`} />
             <InfoRow icon="creation" label="현재 쿠키 보너스" value={`×${evolution.active.clickMultiplier.toFixed(2)}`} />

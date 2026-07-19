@@ -32,6 +32,21 @@
     ]
   },
   {
+    "id": "cookieSuperCritical",
+    "name": "쿠키 슈퍼 크리티컬",
+    "description": "희귀한 슈퍼 크리티컬 확률과 획득 배수가 함께 올라요. 확률은 최대 10%, 배수는 계속 성장해요.",
+    "unit": "슈퍼 크리티컬",
+    "countsTowardCookieEvolution": false,
+    "levels": [
+      { "level": 1, "value": 10, "cost": 0 },
+      { "level": 2, "value": 12, "cost": 600 },
+      { "level": 3, "value": 14, "cost": 2200 },
+      { "level": 4, "value": 16, "cost": 7000 },
+      { "level": 5, "value": 18, "cost": 21000 },
+      { "level": 6, "value": 20, "cost": 60000 }
+    ]
+  },
+  {
     "id": "cookieSize",
     "name": "쿠키 크기",
     "description": "누르기 좋은 커다란 쿠키로 자라나요.",

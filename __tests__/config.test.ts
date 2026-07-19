@@ -1,5 +1,6 @@
 import {
   AUDIO_SETTINGS,
+  BATTLE_AUTO,
   BATTLE_STAGE_RULES,
   BATTLE_RULES,
   BATTLE_REWARDS,
@@ -13,6 +14,8 @@ import {
   BOTS,
   COOKIE_CRITICAL,
   COOKIE_FEEDBACK,
+  COOKIE_INPUT,
+  COOKIE_SUPER_CRITICAL,
   COOKIE_UPGRADES,
   COOKIE_UPGRADE_RULES,
   COOKIES,
@@ -112,7 +115,7 @@ describe('데이터 테이블', () => {
   test('진행·음량·상점 값은 데이터 테이블에서 제공한다', () => {
     expect(PROGRESSION.winsToUnlockNextDifficulty).toBe(20);
     expect(PROGRESSION.giantDiscRewardPerFirstClear).toBe(1);
-    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(10);
+    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(11);
     expect(SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion).toBe(8);
     expect(SAVE_MIGRATIONS.battleMedalMigrationVersion).toBe(9);
     expect(SAVE_MIGRATIONS.battleMedalsPerLegacyWin).toBe(1);
@@ -151,6 +154,7 @@ describe('데이터 테이블', () => {
       'clickPower',
       'cookieCritical',
       'cookieHealth',
+      'cookieSuperCritical',
     ]);
     const cookieSize = COOKIE_UPGRADES.find((upgrade) => upgrade.id === 'cookieSize');
     expect(cookieSize).toMatchObject({
@@ -164,7 +168,12 @@ describe('데이터 테이블', () => {
       COOKIE_UPGRADES
         .filter((upgrade) => upgrade.countsTowardCookieEvolution)
         .map((upgrade) => upgrade.id),
-    ).toEqual(['clickPower', 'cookieCritical', 'autoProduction', 'cookieHealth']);
+    ).toEqual([
+      'clickPower',
+      'cookieCritical',
+      'autoProduction',
+      'cookieHealth',
+    ]);
     expect(COOKIE_UPGRADES.every(
       (upgrade) => typeof upgrade.countsTowardCookieEvolution === 'boolean',
     )).toBe(true);
@@ -190,12 +199,22 @@ describe('데이터 테이블', () => {
     expect(COOKIE_CRITICAL.probabilityScale).toBe(10_000);
     expect(COOKIE_CRITICAL.maximumChanceUnits).toBe(5_000);
     expect(COOKIE_CRITICAL.baseRewardMultiplier).toBe(10);
+    expect(COOKIE_SUPER_CRITICAL.probabilityScale).toBe(10_000);
+    expect(COOKIE_SUPER_CRITICAL.maximumChanceUnits).toBe(1_000);
+    expect(COOKIE_SUPER_CRITICAL.baseRewardMultiplier).toBe(100);
+    expect(BATTLE_AUTO.nextBattleDelayMs).toBeGreaterThan(0);
+    expect(COOKIE_INPUT.pressRetentionOffsetPixels)
+      .toBeGreaterThanOrEqual(COOKIE_INPUT.hitSlopPixels);
     expect(COOKIE_FEEDBACK.audio.voicePlaybackRates).toHaveLength(3);
     expect(COOKIE_FEEDBACK.audio.voiceVolumeMultipliers).toHaveLength(3);
     expect(COOKIE_FEEDBACK.audio.minimumFullCriticalIntervalMs)
       .toBeGreaterThanOrEqual(COOKIE_FEEDBACK.audio.criticalLayerDurationMs);
     expect(COOKIE_FEEDBACK.criticalEffect.maximumConcurrentFullEffects).toBe(2);
     expect(COOKIE_FEEDBACK.criticalEffect.durationMs)
+      .toBeLessThanOrEqual(COOKIE_FEEDBACK.floatingGain.durationMs);
+    expect(COOKIE_FEEDBACK.audio.minimumFullSuperCriticalIntervalMs)
+      .toBeGreaterThanOrEqual(COOKIE_FEEDBACK.audio.superCriticalLayerDurationMs);
+    expect(COOKIE_FEEDBACK.superCriticalEffect.durationMs)
       .toBeLessThanOrEqual(COOKIE_FEEDBACK.floatingGain.durationMs);
     expect(BOSS_BALANCE.playerPowerBaseSurvivalSeconds).toBeGreaterThan(0);
     expect(BOSS_BALANCE.hpMultiplierReference).toBeGreaterThan(0);

@@ -1,0 +1,5 @@
+{
+  "defaultEnabled": false,
+  "initialStartDelayMs": 600,
+  "nextBattleDelayMs": 900
+}

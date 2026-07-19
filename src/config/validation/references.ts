@@ -14,6 +14,7 @@ export interface ReferenceTables {
   bossAnimations: UnknownRecord[];
   botAnimations: UnknownRecord[];
   cookieCritical: UnknownRecord;
+  cookieSuperCritical: UnknownRecord;
 }
 
 export function validateReferences({
@@ -30,6 +31,7 @@ export function validateReferences({
   bossAnimations,
   botAnimations,
   cookieCritical,
+  cookieSuperCritical,
 }: ReferenceTables): void {
   const difficultyIds = new Set(difficulties.map((item) => item.id as string));
   const enemyDiscLevels = new Set(enemyDiscs.map((item) => item.level as number));
@@ -46,6 +48,34 @@ export function validateReferences({
     'COOKIE_CRITICAL.upgradeId',
     '쿠키 강화 ID',
   );
+  assertReference(
+    cookieSuperCritical.upgradeId as string,
+    upgradeIds,
+    'COOKIE_SUPER_CRITICAL.upgradeId',
+    '쿠키 강화 ID',
+  );
+  if (cookieCritical.upgradeId === cookieSuperCritical.upgradeId) {
+    throw new ConfigValidationError(
+      'COOKIE_SUPER_CRITICAL.upgradeId',
+      '일반 크리티컬과 다른 강화 ID여야 합니다.',
+    );
+  }
+  if (cookieCritical.probabilityScale !== cookieSuperCritical.probabilityScale) {
+    throw new ConfigValidationError(
+      'COOKIE_SUPER_CRITICAL.probabilityScale',
+      '일반 크리티컬과 같은 확률 눈금을 사용해야 합니다.',
+    );
+  }
+  if (
+    (cookieCritical.maximumChanceUnits as number)
+    + (cookieSuperCritical.maximumChanceUnits as number)
+    > (cookieCritical.probabilityScale as number)
+  ) {
+    throw new ConfigValidationError(
+      'COOKIE_SUPER_CRITICAL.maximumChanceUnits',
+      '두 크리티컬의 최대 확률 합은 100% 이하여야 합니다.',
+    );
+  }
 
   bossAnimations.forEach((animation, index) => assertReference(
     animation.id as string,

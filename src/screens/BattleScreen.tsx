@@ -44,6 +44,7 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
     leaveBattle,
     throwCastleDiscFromBattleField,
     cycleBattleSpeed,
+    toggleAutoBattle,
     hasWeapon,
   } = useBattleScreenSession(onReturnToGame);
   const giantDiscRenderSize = Math.round(screenWidth * GIANT_DISC.renderWidthRatio);
@@ -84,8 +85,13 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
             status={engine.state.status}
             screenWidth={screenWidth}
             battleSpeedMultiplier={game.battleSpeedMultiplier}
+            autoBattleEnabled={game.autoBattleEnabled}
             onCycleBattleSpeed={() => {
               cycleBattleSpeed();
+              feedback.tap();
+            }}
+            onToggleAutoBattle={() => {
+              toggleAutoBattle();
               feedback.tap();
             }}
           />
@@ -179,7 +185,8 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
             difficulty={difficulty}
             difficultyProgress={difficultyProgress}
             hasWeapon={hasWeapon}
-            onStart={startBattle}
+            autoBattleEnabled={game.autoBattleEnabled}
+            onStart={() => startBattle()}
           />
         </ImageBackground>
       </Pressable>
@@ -187,8 +194,10 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
       <BattleResultModal
         status={engine.state.status}
         rewardResult={rewardResult}
+        autoBattleEnabled={game.autoBattleEnabled}
         onLeave={leaveBattle}
-        onStart={startBattle}
+        onStart={() => startBattle()}
+        onToggleAutoBattle={toggleAutoBattle}
       />
     </View>
   );

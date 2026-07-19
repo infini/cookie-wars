@@ -18,6 +18,7 @@ import {
 import { getUpgradeProgress, UpgradeProgress } from './upgradeSelectors';
 import { getBattleMedalBonuses } from './battleRewardSelectors';
 import { getCookieCriticalStats } from '../cookieCritical';
+import { getCookieSuperCriticalStats } from '../cookieSuperCritical';
 
 export interface CookieEvolutionProgress {
   visibleUpgradeLevels: number;
@@ -39,6 +40,7 @@ export function calculateCookieStats(state: GameState): CookieStats {
   const evolution = getCookieEvolutionProgress(state);
   const medalBonuses = getBattleMedalBonuses(state);
   const critical = getCookieCriticalStats(state);
+  const superCritical = getCookieSuperCriticalStats(state);
   const clickPower = saturatingProductInteger(
     value('clickPower'),
     evolution.active.clickMultiplier,
@@ -58,6 +60,8 @@ export function calculateCookieStats(state: GameState): CookieStats {
     ),
     criticalChanceUnits: critical.chanceUnits,
     criticalRewardMultiplier: critical.rewardMultiplier,
+    superCriticalChanceUnits: superCritical.chanceUnits,
+    superCriticalRewardMultiplier: superCritical.rewardMultiplier,
     cookieRenderSize: clampFiniteNumber(getMaximumCookieRenderSize()),
     autoProduction: saturatingProductInteger(
       autoProduction,

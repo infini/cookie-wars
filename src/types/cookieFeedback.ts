@@ -1,14 +1,24 @@
-export type CookieFeedbackTier = 'normal' | 'criticalFull' | 'criticalCompact';
+export type CookieFeedbackTier =
+  | 'normal'
+  | 'criticalFull'
+  | 'criticalCompact'
+  | 'superCriticalFull'
+  | 'superCriticalCompact';
 
 export interface CookieAudioFeedbackConfig {
   minimumClickIntervalMs: number;
   minimumFullCriticalIntervalMs: number;
+  minimumFullSuperCriticalIntervalMs: number;
   criticalLayerDurationMs: number;
   criticalSparkleDelayMs: number;
   voicePlaybackRates: number[];
   voiceVolumeMultipliers: number[];
   criticalImpactVolumeMultiplier: number;
   criticalSparkleVolumeMultiplier: number;
+  superCriticalImpactVolumeMultiplier: number;
+  superCriticalShineVolumeMultiplier: number;
+  superCriticalShineDelayMs: number;
+  superCriticalLayerDurationMs: number;
 }
 
 export interface FloatingGainFeedbackConfig {
@@ -83,8 +93,59 @@ export interface CookieCriticalEffectConfig {
   sparkleHighlightColor: string;
 }
 
+export interface CookieSuperCriticalEffectConfig {
+  durationMs: number;
+  compactDurationMs: number;
+  sizePixels: number;
+  maximumConcurrentFullEffects: number;
+  maximumConcurrentCompactEffects: number;
+  flashMaximumOpacity: number;
+  flashStartScale: number;
+  flashEndScale: number;
+  coreSizeRatio: number;
+  coreStartScale: number;
+  corePeakScale: number;
+  coreEndScale: number;
+  corePeakProgress: number;
+  coreFadeStartProgress: number;
+  ringCount: number;
+  ringStaggerProgress: number;
+  ringFadeStartProgress: number;
+  ringStartScale: number;
+  ringEndScale: number;
+  ringBorderWidth: number;
+  rayCount: number;
+  compactRayCount: number;
+  rayLengthPixels: number;
+  rayWidthPixels: number;
+  rayStartScale: number;
+  rayEndScale: number;
+  rayRotationTurns: number;
+  sparkleCount: number;
+  compactSparkleCount: number;
+  sparkleStartProgress: number;
+  sparkleStaggerProgress: number;
+  sparkleFadeStartProgress: number;
+  sparkleStartDistancePixels: number;
+  sparkleEndDistancePixels: number;
+  sparkleSizePixels: number;
+  sparkleThicknessRatio: number;
+  compactScale: number;
+  labelFontSize: number;
+  labelTopRatio: number;
+  flashColor: string;
+  coreColorStart: string;
+  coreColorEnd: string;
+  ringColors: string[];
+  rayColor: string;
+  sparkleColors: string[];
+  labelColor: string;
+  labelShadowColor: string;
+}
+
 export interface CookieFeedbackConfig {
   audio: CookieAudioFeedbackConfig;
   floatingGain: FloatingGainFeedbackConfig;
   criticalEffect: CookieCriticalEffectConfig;
+  superCriticalEffect: CookieSuperCriticalEffectConfig;
 }

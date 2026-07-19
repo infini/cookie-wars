@@ -6,10 +6,14 @@ import {
 
 describe('쿠키 클릭 피드백 정책', () => {
   test('일반·강한 크리티컬·축소 크리티컬을 같은 시간 기준으로 구분한다', () => {
-    expect(getCookieFeedbackTier(false, 0, 100, 280)).toBe('normal');
-    expect(getCookieFeedbackTier(true, 0, 280, 280)).toBe('criticalFull');
-    expect(getCookieFeedbackTier(true, 100, 379, 280)).toBe('criticalCompact');
-    expect(getCookieFeedbackTier(true, 100, 380, 280)).toBe('criticalFull');
+    expect(getCookieFeedbackTier('normal', 0, 0, 100, 280, 900)).toBe('normal');
+    expect(getCookieFeedbackTier('critical', 0, 0, 280, 280, 900)).toBe('criticalFull');
+    expect(getCookieFeedbackTier('critical', 100, 0, 379, 280, 900)).toBe('criticalCompact');
+    expect(getCookieFeedbackTier('critical', 100, 0, 380, 280, 900)).toBe('criticalFull');
+    expect(getCookieFeedbackTier('superCritical', 0, 100, 999, 280, 900))
+      .toBe('superCriticalCompact');
+    expect(getCookieFeedbackTier('superCritical', 0, 100, 1000, 280, 900))
+      .toBe('superCriticalFull');
   });
 
   test('클릭 보이스는 직전에 재생한 보이스를 연속 선택하지 않는다', () => {

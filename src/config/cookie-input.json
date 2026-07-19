@@ -1,0 +1,5 @@
+{
+  "hitSlopPixels": 14,
+  "pressRetentionOffsetPixels": 84,
+  "releaseDeduplicationWindowMs": 120
+}

@@ -1,5 +1,6 @@
 import {
   AudioSettingsConfig,
+  BattleAutoConfig,
   BattleAudioConfig,
   BattleFeedbackConfig,
   BattleMapConfig,
@@ -16,6 +17,8 @@ import {
   CookieConfig,
   CookieCriticalConfig,
   CookieFeedbackConfig,
+  CookieInputConfig,
+  CookieSuperCriticalConfig,
   CookieUpgradeRulesConfig,
   DifficultyConfig,
   DiscConfig,
@@ -32,6 +35,7 @@ import {
 export interface GameConfigInput {
   AUDIO_SETTINGS: unknown;
   BATTLE_AUDIO: unknown;
+  BATTLE_AUTO: unknown;
   BATTLE_FEEDBACK: unknown;
   BATTLE_MAPS: unknown;
   BATTLE_RULES: unknown;
@@ -48,6 +52,8 @@ export interface GameConfigInput {
   COOKIE_UPGRADES: unknown;
   COOKIE_CRITICAL: unknown;
   COOKIE_FEEDBACK: unknown;
+  COOKIE_INPUT: unknown;
+  COOKIE_SUPER_CRITICAL: unknown;
   COOKIES: unknown;
   DIFFICULTIES: unknown;
   DISC_UPGRADE_RULES: unknown;
@@ -63,6 +69,7 @@ export interface GameConfigInput {
 export interface ValidatedGameConfig {
   AUDIO_SETTINGS: AudioSettingsConfig;
   BATTLE_AUDIO: BattleAudioConfig;
+  BATTLE_AUTO: BattleAutoConfig;
   BATTLE_FEEDBACK: BattleFeedbackConfig;
   BATTLE_MAPS: BattleMapConfig[];
   BATTLE_RULES: BattleRulesConfig;
@@ -79,6 +86,8 @@ export interface ValidatedGameConfig {
   COOKIE_UPGRADES: UpgradeConfig[];
   COOKIE_CRITICAL: CookieCriticalConfig;
   COOKIE_FEEDBACK: CookieFeedbackConfig;
+  COOKIE_INPUT: CookieInputConfig;
+  COOKIE_SUPER_CRITICAL: CookieSuperCriticalConfig;
   COOKIES: CookieConfig[];
   DIFFICULTIES: DifficultyConfig[];
   DISC_UPGRADE_RULES: DiscUpgradeRulesConfig;

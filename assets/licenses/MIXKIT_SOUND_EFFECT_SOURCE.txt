@@ -18,13 +18,31 @@ Item ID: 866
 Local encoding: MP3, 44.1 kHz, joint stereo
 SHA-256: 7b9e329ef3f03165c4c5f7ce49e3a4d404d718cae27ac96daffb8e642ba46c1e
 
+Asset: Movie trailer epic impact
+Runtime use: full cookie-super-critical impact layer
+Local file: assets/audio/cookie-super-critical-impact.mp3
+Source page: https://mixkit.co/free-sound-effects/impact/
+Downloaded preview: https://assets.mixkit.co/active_storage/sfx/2908/2908-preview.mp3
+Item ID: 2908
+Local encoding: MP3, 128 kbps, 44.1 kHz, joint stereo
+SHA-256: b38888dcdfb4d5c3b13988308b430a0172846dcaa0ccde2feedc8ed4d1d911c2
+
+Asset: Choir magic shine
+Runtime use: delayed full cookie-super-critical magic-shine layer
+Local file: assets/audio/cookie-super-critical-shine.mp3
+Source page: https://mixkit.co/free-sound-effects/magic/
+Downloaded preview: https://assets.mixkit.co/active_storage/sfx/658/658-preview.mp3
+Item ID: 658
+Local encoding: MP3, 128 kbps, 44.1 kHz, joint stereo
+SHA-256: d74385e8f1e14947172ca5a5b36ef0f89571be08b88f19f11e2145d8a43dda34
+
 Legacy retained asset: Short explosion
 Local file: assets/audio/cookie-critical-explosion.wav
 Runtime status: retained for source history; current code does not load it
 
 Item type: Sound Effects — Free License
 License page: https://mixkit.co/license/
-Retrieved and verified: 2026-07-18
+Retrieved and verified: 2026-07-19
 
 This file records the downloaded items, local-file correspondence, checksums,
 and applicable license page. Refer to the linked Mixkit license for the complete

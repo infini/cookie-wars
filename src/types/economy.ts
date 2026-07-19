@@ -33,6 +33,8 @@ export interface CookieCriticalConfig {
   displayMaximumFractionDigits: number;
 }
 
+export type CookieSuperCriticalConfig = CookieCriticalConfig;
+
 export interface DiscLevelConfig {
   level: number;
   damage: number;

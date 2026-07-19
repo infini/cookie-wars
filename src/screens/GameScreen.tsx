@@ -7,80 +7,24 @@ import { colors, gradients } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import { formatNumber } from '../utils/format';
 import { CookieImage } from '../components/CookieImage';
-import { CookieCriticalEffect } from '../components/CookieCriticalEffect';
 import { GameButton } from '../components/GameButton';
 import { StatChip } from '../components/StatChip';
-import { COOKIE_FEEDBACK, getCookie } from '../config';
+import { COOKIE_FEEDBACK, COOKIE_INPUT, getCookie } from '../config';
 import {
   getBattleMedalBonuses,
   getCookieEvolutionProgress,
 } from '../domain/gameSelectors';
 import { formatCriticalChancePercent } from '../domain/cookieCritical';
-import { CookieFeedbackTier } from '../types/game';
-
-interface FloatingGainProps {
-  id: number;
-  amount: number;
-  critical: boolean;
-  onDone: (id: number) => void;
-}
-
-function FloatingGain({ id, amount, critical, onDone }: FloatingGainProps) {
-  const progress = useRef(new Animated.Value(0)).current;
-  React.useEffect(() => {
-    const animation = Animated.timing(progress, {
-      toValue: 1,
-      duration: COOKIE_FEEDBACK.floatingGain.durationMs,
-      useNativeDriver: true,
-    });
-    animation.start(({ finished }) => {
-      if (finished) onDone(id);
-    });
-    return () => animation.stop();
-  }, [id, onDone, progress]);
-  return (
-    <Animated.Text
-      style={[
-        styles.floatingText,
-        critical && styles.criticalFloatingText,
-        {
-          opacity: progress.interpolate({
-            inputRange: [0, COOKIE_FEEDBACK.floatingGain.holdUntilProgress, 1],
-            outputRange: [1, 1, 0],
-          }),
-          transform: [
-            { translateY: progress.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, -COOKIE_FEEDBACK.floatingGain.risePixels],
-            }) },
-            { scale: progress.interpolate({
-              inputRange: [0, COOKIE_FEEDBACK.floatingGain.peakAtProgress, 1],
-              outputRange: [
-                COOKIE_FEEDBACK.floatingGain.startScale,
-                COOKIE_FEEDBACK.floatingGain.peakScale,
-                COOKIE_FEEDBACK.floatingGain.endScale,
-              ],
-            }) },
-          ],
-        },
-      ]}
-    >
-      {critical ? `크리티컬! +${formatNumber(amount)}` : `+${formatNumber(amount)}`}
-    </Animated.Text>
-  );
-}
+import { formatSuperCriticalChancePercent } from '../domain/cookieSuperCritical';
+import { CookieGainFeedback, CookieGainItem } from './game/CookieGainFeedback';
+import { useImmediateCookiePress } from './game/useImmediateCookiePress';
 
 export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
   const { state, stats, clickCookie } = useGame();
   const feedback = useFeedback();
   const scale = useRef(new Animated.Value(1)).current;
   const nextGainId = useRef(0);
-  const [gains, setGains] = useState<{
-    id: number;
-    amount: number;
-    critical: boolean;
-    feedbackTier: CookieFeedbackTier;
-  }[]>([]);
+  const [gains, setGains] = useState<CookieGainItem[]>([]);
   const removeGain = useCallback((id: number) => {
     setGains((current) => current.filter((item) => item.id !== id));
   }, []);
@@ -92,10 +36,12 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
     && medalBonuses.clickPowerBonusPercent
       === medalBonuses.castleHealthBonusPercent;
 
-  const handleCookiePress = () => {
+  const handleCookiePress = useCallback(() => {
     const result = clickCookie();
-    const feedbackTier = feedback.playCookieClick(result.critical);
-    if (feedbackTier === 'criticalFull') feedback.success();
+    const feedbackTier = feedback.playCookieClick(result.kind);
+    if (feedbackTier === 'criticalFull' || feedbackTier === 'superCriticalFull') {
+      feedback.success();
+    }
     else feedback.tap();
     const id = nextGainId.current++;
     setGains((current) => {
@@ -108,20 +54,8 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
       Animated.spring(scale, { toValue: 0.89, speed: 40, bounciness: 2, useNativeDriver: true }),
       Animated.spring(scale, { toValue: 1, speed: 25, bounciness: 12, useNativeDriver: true }),
     ]).start();
-  };
-
-  const fullEffectIds = new Set(
-    gains
-      .filter((gain) => gain.feedbackTier === 'criticalFull')
-      .slice(-COOKIE_FEEDBACK.criticalEffect.maximumConcurrentFullEffects)
-      .map((gain) => gain.id),
-  );
-  const compactEffectIds = new Set(
-    gains
-      .filter((gain) => gain.feedbackTier === 'criticalCompact')
-      .slice(-COOKIE_FEEDBACK.criticalEffect.maximumConcurrentCompactEffects)
-      .map((gain) => gain.id),
-  );
+  }, [clickCookie, feedback, scale]);
+  const cookiePressHandlers = useImmediateCookiePress(handleCookiePress);
 
   return (
     <View style={styles.root}>
@@ -146,10 +80,13 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={evolution.next
-          ? `쿠키 얻기, 한 번에 ${formatNumber(stats.clickPower)}개, 크리티컬 확률 ${formatCriticalChancePercent(stats.criticalChanceUnits)}퍼센트, 크리티컬 보상 ${formatNumber(stats.criticalRewardMultiplier)}배, 다음 쿠키 ${evolution.next.name}, 현재 진화 ${evolution.totalUpgradeLevels}레벨, 필요 ${evolution.next.requiredTotalUpgradeLevels}레벨, ${evolution.remainingLevels}번 더 강화하면 진화합니다`
-          : `쿠키 얻기, 한 번에 ${formatNumber(stats.clickPower)}개, 크리티컬 확률 ${formatCriticalChancePercent(stats.criticalChanceUnits)}퍼센트, 크리티컬 보상 ${formatNumber(stats.criticalRewardMultiplier)}배, 현재 진화 ${evolution.totalUpgradeLevels}레벨, 최고 쿠키 진화를 완료했습니다`}
+          ? `쿠키 얻기, 한 번에 ${formatNumber(stats.clickPower)}개, 크리티컬 확률 ${formatCriticalChancePercent(stats.criticalChanceUnits)}퍼센트, 슈퍼 크리티컬 확률 ${formatSuperCriticalChancePercent(stats.superCriticalChanceUnits)}퍼센트, 다음 쿠키 ${evolution.next.name}, 현재 진화 ${evolution.totalUpgradeLevels}레벨, 필요 ${evolution.next.requiredTotalUpgradeLevels}레벨, ${evolution.remainingLevels}번 더 강화하면 진화합니다`
+          : `쿠키 얻기, 한 번에 ${formatNumber(stats.clickPower)}개, 크리티컬 확률 ${formatCriticalChancePercent(stats.criticalChanceUnits)}퍼센트, 슈퍼 크리티컬 확률 ${formatSuperCriticalChancePercent(stats.superCriticalChanceUnits)}퍼센트, 현재 진화 ${evolution.totalUpgradeLevels}레벨, 최고 쿠키 진화를 완료했습니다`}
         accessibilityHint="화면 가운데 아무 곳이나 두 번 탭하면 쿠키를 얻어요. 진화 레벨은 쿠키 강화에서 클릭 힘, 쿠키 크리티컬, 자동 생산, 쿠키 성 체력을 강화하면 올라요."
-        onPress={handleCookiePress}
+        {...cookiePressHandlers}
+        android_disableSound
+        hitSlop={COOKIE_INPUT.hitSlopPixels}
+        pressRetentionOffset={COOKIE_INPUT.pressRetentionOffsetPixels}
         style={styles.hero}
       >
         <Text style={styles.guide}>가운데 어디든 눌러요!</Text>
@@ -181,20 +118,7 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
         <View style={styles.cookieStage}>
           <View style={styles.ringOuter} />
           <View style={styles.ringInner} />
-          {gains.map((gain) => (
-            <React.Fragment key={gain.id}>
-              {fullEffectIds.has(gain.id) ? (
-                <CookieCriticalEffect mode="criticalFull" />
-              ) : null}
-              {compactEffectIds.has(gain.id) ? (
-                <CookieCriticalEffect mode="criticalCompact" />
-              ) : null}
-              <FloatingGain
-                {...gain}
-                onDone={removeGain}
-              />
-            </React.Fragment>
-          ))}
+          <CookieGainFeedback gains={gains} onDone={removeGain} />
           <Animated.View style={{ transform: [{ scale }] }}>
             <LinearGradient colors={gradients.cookieButton} style={styles.cookieButton}>
               <CookieImage
@@ -209,6 +133,9 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
         </Text>
         <Text style={styles.criticalInfo}>
           💥 크리티컬 {formatCriticalChancePercent(stats.criticalChanceUnits)}% · 획득 ×{formatNumber(stats.criticalRewardMultiplier)}
+        </Text>
+        <Text style={styles.superCriticalInfo}>
+          ✨ 슈퍼 {formatSuperCriticalChancePercent(stats.superCriticalChanceUnits)}% · 획득 ×{formatNumber(stats.superCriticalRewardMultiplier)}
         </Text>
       </Pressable>
 
@@ -244,19 +171,8 @@ const styles = StyleSheet.create({
     borderWidth: 6, borderColor: '#FFD97A', shadowColor: colors.shadow, shadowOpacity: 0.35,
     shadowRadius: 10, shadowOffset: { width: 0, height: 8 }, elevation: 10,
   },
-  floatingText: {
-    position: 'absolute', zIndex: 8, top: 98, fontFamily: fonts.display, fontSize: 34,
-    color: colors.greenDark, textShadowColor: colors.white, textShadowRadius: 5,
-  },
-  criticalFloatingText: {
-    width: 280,
-    textAlign: 'center',
-    fontSize: 29,
-    color: '#F0182F',
-    textShadowColor: '#FFD35A',
-    textShadowRadius: 8,
-  },
   autoText: { fontFamily: fonts.bold, fontSize: 13, color: colors.muted, marginTop: 2 },
   criticalInfo: { fontFamily: fonts.extraBold, fontSize: 12, color: colors.red, marginTop: 2 },
+  superCriticalInfo: { fontFamily: fonts.extraBold, fontSize: 11, color: colors.purple, marginTop: 1 },
   battleButton: { marginHorizontal: 10, marginBottom: 2 },
 });
