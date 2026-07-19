@@ -22,6 +22,7 @@ import {
   CookieInputConfig,
   CookiePityConfig,
   CookieSuperCriticalConfig,
+  CookieSpecialEffectsConfig,
   CookieUpgradeRulesConfig,
   DifficultyExpansionConfig,
   DifficultyConfig,
@@ -61,6 +62,7 @@ export interface GameConfigInput {
   COOKIE_INPUT: unknown;
   COOKIE_PITY: unknown;
   COOKIE_SUPER_CRITICAL: unknown;
+  COOKIE_SPECIAL_EFFECTS: unknown;
   COOKIES: unknown;
   DIFFICULTIES: unknown;
   DIFFICULTY_EXPANSION: unknown;
@@ -99,6 +101,7 @@ export interface ValidatedGameConfig {
   COOKIE_INPUT: CookieInputConfig;
   COOKIE_PITY: CookiePityConfig;
   COOKIE_SUPER_CRITICAL: CookieSuperCriticalConfig;
+  COOKIE_SPECIAL_EFFECTS: CookieSpecialEffectsConfig;
   COOKIES: CookieConfig[];
   DIFFICULTIES: DifficultyConfig[];
   DIFFICULTY_EXPANSION: DifficultyExpansionConfig;

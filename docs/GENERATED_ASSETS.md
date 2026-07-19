@@ -48,7 +48,7 @@ python3 scripts/process_cookie_assets.py \
 
 기존 투명 PNG를 런타임 WebP로 다시 만들 때는 입력 파일을 별도 원본 디렉터리에 둔 뒤 `--transparent-input`을 추가합니다. 다른 개발 환경에서는 크로마키 변환 명령의 `--chroma-helper`에 사용 가능한 `remove_chroma_key.py` 경로를 명시합니다.
 
-## 마그마 조각 화산 폭발
+## 보관 중인 마그마 조각 화산 폭발
 
 마그마 조각을 얻었을 때 화면을 크게 채우는 전용 화산 원본을 Codex 내장 `imagegen`으로 생성했습니다. 원본은 `/Users/infini/.codex/generated_images/019f72f5-a7a4-7872-a715-f1335800694d/exec-47ef1a24-6c43-48b2-958a-6a1fa9fb4f89.png`, 최종 파일은 `assets/images/cookie-fragments/magma-volcano-eruption.webp`입니다.
 
@@ -56,7 +56,7 @@ python3 scripts/process_cookie_assets.py \
 Create one premium stylized 3D mobile-game VFX sprite of a chocolate-cookie volcano erupting violently. Show a readable baked-cookie crater, a brilliant yellow-orange lava blast, thick lava streams flowing down the volcano, hot rocks, sparks and smoke. Strong child-friendly fantasy impact, centered square composition, no character, no text, no UI, no logo. Use a perfectly flat chroma-key green background with no floor, cast shadow, scenery, gradient or texture outside the effect.
 ```
 
-원본의 녹색 배경은 `#03f908`을 기준으로 soft matte·despill 처리하고 512×512 투명 WebP로 축소했습니다. 최종 262,144픽셀 중 완전 투명 143,209픽셀, 부분 투명 10,382픽셀을 확인했으며 네 모서리는 투명합니다. 런타임은 이 이미지의 분화구 기준점에 아래 수직 화염을 직접 맞추고 타원 충격파·상승 불씨를 합성합니다.
+원본의 녹색 배경은 `#03f908`을 기준으로 soft matte·despill 처리하고 512×512 투명 WebP로 축소했습니다. 최종 262,144픽셀 중 완전 투명 143,209픽셀, 부분 투명 10,382픽셀을 확인했으며 네 모서리는 투명합니다. 이 파일은 제작 이력과 재가공을 위해 보관하며 1.0.22 런타임에서는 불러오지 않습니다.
 
 ### 마그마 수직 화염 기둥
 
@@ -66,7 +66,13 @@ Create one premium stylized 3D mobile-game VFX sprite of a chocolate-cookie volc
 Create a premium production-ready 2D mobile game VFX sprite: a single dramatic vertical volcanic fire eruption plume, viewed straight-on, erupting upward from a narrow bottom-center crater point. Tall roaring orange-red flames, incandescent yellow-white core, molten lava streaks, glowing embers and dark smoke toward the top, strong readable silhouette, polished fantasy defense-game quality, no volcano or ground, no text, no border, no UI. Isolate the entire plume on a perfectly uniform pure green chroma-key background (#00FF00). Keep the bottom origin tightly centered and the plume fully inside frame with generous transparent-keyable margin. Square image, high detail.
 ```
 
-균일 녹색을 soft matte·despill 처리해 투명 WebP로 저장하고, 바닥 중심의 좁은 발화점을 화산 분화구 중심과 맞췄습니다. 런타임은 한 이미지를 교체 재생하지 않고 native-driver 진행값으로 4회 세로 맥동·좌우 6px 흔들림·상승을 보간합니다.
+균일 녹색을 soft matte·despill 처리해 투명 WebP로 저장하고, 바닥 중심의 좁은 발화점을 화산 분화구 중심과 맞췄습니다. 이 단일 화염 기둥과 이전 절차적 맥동은 제작 이력용으로 보관하며 1.0.22 런타임에서는 불러오지 않습니다.
+
+## 외부 애니메이션 희귀 보상 VFX
+
+1.0.22 런타임은 직접 제작한 고정 이미지·절차적 도형 대신 OpenGameArt의 CC0 atlas를 사용합니다. Sinestesia의 4×4 노란 타격은 크리티컬 16프레임, 8×8 화염 폭발은 마그마 64개 원본 프레임입니다. Esteban Díaz/Inguz Media의 8×8 금색·청록 충격은 슈퍼 크리티컬로 합성하고, 청록 충격과 Calinou 번개 9개를 세 구간에 배치해 전기 64개 원본 프레임을 만듭니다.
+
+`scripts/process_external_cookie_feedback_vfx.py`는 전체 시퀀스의 합집합 알파 경계를 계산해 같은 정사각 crop을 모든 프레임에 적용한 뒤 384·512·576·640px animated WebP 6개를 생성합니다. 이 방식은 atlas의 큰 투명 여백 때문에 실제 효과가 작아지는 문제와 프레임별 crop 흔들림을 함께 막습니다. 최종 파일은 `assets/images/vfx/cookie-feedback/`에 있고 Android Fresco가 네이티브로 재생합니다. 원본 URL·라이선스 선택·다운로드 SHA-256은 `assets/licenses/OPENGAMEART_COOKIE_VFX_SOURCE.txt`를 기준으로 합니다.
 
 ### 메인 HUD 희귀 아이콘
 

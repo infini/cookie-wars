@@ -9,7 +9,12 @@ import { formatNumber } from '../utils/format';
 import { CookieImage } from '../components/CookieImage';
 import { CookieFragmentCollectible } from '../components/CookieFragmentCollectible';
 import { StatChip } from '../components/StatChip';
-import { COOKIE_FEEDBACK, COOKIE_INPUT, getCookie } from '../config';
+import {
+  COOKIE_FEEDBACK,
+  COOKIE_INPUT,
+  getCookie,
+  getCookieSpecialEffect,
+} from '../config';
 import { getBattleMedalBonuses, getCookieEvolutionProgress } from '../domain/gameSelectors';
 import { formatCriticalChancePercent } from '../domain/cookieCritical';
 import { formatSuperCriticalChancePercent } from '../domain/cookieSuperCritical';
@@ -60,7 +65,7 @@ export function GameScreen() {
       stageShake.setValue(0);
       Animated.timing(stageShake, {
         toValue: 1,
-        duration: COOKIE_FEEDBACK.superCriticalEffect.durationMs,
+        duration: getCookieSpecialEffect('superCritical').durationMs,
         useNativeDriver: true,
       }).start();
     }
@@ -99,7 +104,7 @@ export function GameScreen() {
       const previous = previousLimit > 0 ? source.slice(-previousLimit) : [];
       return [...previous, { id, ...result, feedbackTier }];
     });
-    if (result.kind === 'superCritical') {
+    if (result.kind === 'critical' || result.kind === 'superCritical') {
       showSpecialFeedback({
         kind: result.kind,
         amount: result.amount,
@@ -120,13 +125,13 @@ export function GameScreen() {
   }, []);
   const cookiePressHandlers = useImmediateCookiePress(handleCookiePress);
   const [stageTranslateX, stageTranslateY] = useMemo(() => {
-    const superEffect = COOKIE_FEEDBACK.superCriticalEffect;
+    const superEffect = COOKIE_FEEDBACK.superCriticalShake;
     const inputRange = [
       0,
-      superEffect.shakeFirstProgress,
-      superEffect.shakeSecondProgress,
-      superEffect.shakeThirdProgress,
-      superEffect.shakeEndProgress,
+      superEffect.firstProgress,
+      superEffect.secondProgress,
+      superEffect.thirdProgress,
+      superEffect.endProgress,
       1,
     ];
     return [
@@ -134,9 +139,9 @@ export function GameScreen() {
         inputRange,
         outputRange: [
           0,
-          -superEffect.shakeDistancePixels,
-          superEffect.shakeDistancePixels,
-          -superEffect.shakeDistancePixels * superEffect.shakeReturnRatio,
+          -superEffect.distancePixels,
+          superEffect.distancePixels,
+          -superEffect.distancePixels * superEffect.returnRatio,
           0,
           0,
         ],
@@ -145,9 +150,9 @@ export function GameScreen() {
         inputRange,
         outputRange: [
           0,
-          superEffect.shakeDistancePixels * superEffect.shakeReturnRatio,
-          -superEffect.shakeDistancePixels,
-          superEffect.shakeDistancePixels,
+          superEffect.distancePixels * superEffect.returnRatio,
+          -superEffect.distancePixels,
+          superEffect.distancePixels,
           0,
           0,
         ],

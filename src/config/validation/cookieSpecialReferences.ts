@@ -7,6 +7,7 @@ interface CookieSpecialReferenceTables {
   cookieSuperCritical: UnknownRecord;
   cookieFragments: UnknownRecord;
   cookieFeedback: UnknownRecord;
+  cookieSpecialEffects: UnknownRecord;
 }
 
 function validateProbabilityContracts(
@@ -109,18 +110,22 @@ function validateFeedbackPower(
   fragmentConfigs: UnknownRecord[],
   cookieFeedback: UnknownRecord,
   cookieFragments: UnknownRecord,
+  cookieSpecialEffects: UnknownRecord,
   upgradeById: Map<string, UnknownRecord>,
   referenceBaseChance: number,
 ): void {
   const feedbackAudio = cookieFeedback.audio as UnknownRecord;
-  const claimEffect = cookieFragments.claimEffect as UnknownRecord;
+  const effectById = new Map(
+    (cookieSpecialEffects.effects as UnknownRecord[])
+      .map((effect) => [effect.id as string, effect]),
+  );
   const fragmentAudio = cookieFragments.audio as UnknownRecord;
   const feedbackPower = [
     {
       path: 'COOKIE_CRITICAL',
       rank: cookieCritical.feedbackPowerRank as number,
       chance: referenceBaseChance,
-      visualDuration: undefined,
+      visualDuration: (effectById.get('critical') as UnknownRecord).durationMs as number,
       sound: (feedbackAudio.criticalImpactVolumeMultiplier as number)
         + (feedbackAudio.criticalSparkleVolumeMultiplier as number),
     },
@@ -129,7 +134,7 @@ function validateFeedbackPower(
       rank: cookieSuperCritical.feedbackPowerRank as number,
       chance: ((upgradeById.get(cookieSuperCritical.upgradeId as string) as UnknownRecord)
         .levels as UnknownRecord[])[0].value as number,
-      visualDuration: (cookieFeedback.superCriticalEffect as UnknownRecord).durationMs as number,
+      visualDuration: (effectById.get('superCritical') as UnknownRecord).durationMs as number,
       sound: (feedbackAudio.superCriticalImpactVolumeMultiplier as number)
         + (feedbackAudio.superCriticalShockwaveVolumeMultiplier as number),
     },
@@ -138,9 +143,8 @@ function validateFeedbackPower(
       rank: fragment.feedbackPowerRank as number,
       chance: ((upgradeById.get(fragment.upgradeId as string) as UnknownRecord)
         .levels as UnknownRecord[])[0].value as number,
-      visualDuration: fragment.id === 'magma'
-        ? claimEffect.magmaDurationMs as number
-        : claimEffect.electricDurationMs as number,
+      visualDuration: (effectById.get(fragment.id as string) as UnknownRecord)
+        .durationMs as number,
       sound: fragment.id === 'magma'
         ? (fragmentAudio.magmaVolumeMultiplier as number)
           * (fragmentAudio.magmaRepeatCount as number)
@@ -171,20 +175,22 @@ function validateFeedbackPower(
       );
     }
   });
-  const visualFeedback = feedbackPower.filter(
-    (item): item is typeof item & { visualDuration: number } => (
-      item.visualDuration !== undefined
-    ),
-  );
-  visualFeedback.slice(1).forEach((item, index) => {
-    const previous = visualFeedback[index];
+  feedbackPower.slice(1).forEach((item, index) => {
+    const previous = feedbackPower[index];
     if (item.visualDuration <= previous.visualDuration) {
       throw new ConfigValidationError(
         `${item.path}.feedbackPowerRank`,
-        '마그마, 슈퍼 크리티컬, 전기 순으로 시각 연출 수명이 길어야 합니다.',
+        '크리티컬, 마그마, 슈퍼 크리티컬, 전기 순으로 연출 수명이 길어야 합니다.',
       );
     }
   });
+  const superDuration = (effectById.get('superCritical') as UnknownRecord).durationMs as number;
+  if ((feedbackAudio.superCriticalShockwaveDelayMs as number) >= superDuration) {
+    throw new ConfigValidationError(
+      'COOKIE_FEEDBACK.audio.superCriticalShockwaveDelayMs',
+      '슈퍼 크리티컬 효과 지속 시간보다 짧아야 합니다.',
+    );
+  }
 }
 
 export function validateCookieSpecialReferences({
@@ -194,6 +200,7 @@ export function validateCookieSpecialReferences({
   cookieSuperCritical,
   cookieFragments,
   cookieFeedback,
+  cookieSpecialEffects,
 }: CookieSpecialReferenceTables): void {
   const upgradeIds = new Set(upgrades.map((item) => item.id as string));
   const upgradeById = new Map(upgrades.map((item) => [item.id as string, item]));
@@ -228,6 +235,7 @@ export function validateCookieSpecialReferences({
     fragmentConfigs,
     cookieFeedback,
     cookieFragments,
+    cookieSpecialEffects,
     upgradeById,
     referenceBaseChance,
   );

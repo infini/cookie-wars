@@ -9,7 +9,6 @@ import {
   validateNumberFields,
 } from './primitives';
 import { assertLess } from './feedbackEffectPrimitives';
-import { validateSuperCriticalEffect } from './superCriticalFeedback';
 
 function validateCookieAudio(config: UnknownRecord, path: string): UnknownRecord {
   const audioPath = `${path}.audio`;
@@ -99,16 +98,26 @@ function validateFloatingGain(config: UnknownRecord, path: string): UnknownRecor
   return gain;
 }
 
+function validateSuperCriticalShake(config: UnknownRecord, path: string): void {
+  const shakePath = `${path}.superCriticalShake`;
+  const shake = record(config.superCriticalShake, shakePath);
+  validateNumberFields(shake, shakePath, [
+    'firstProgress', 'secondProgress', 'thirdProgress', 'endProgress',
+    'distancePixels', 'returnRatio',
+  ], { min: 0 });
+  ['firstProgress', 'secondProgress', 'thirdProgress', 'endProgress', 'returnRatio']
+    .forEach((field) => numberField(shake, field, shakePath, { min: 0, max: 1 }));
+  numberField(shake, 'distancePixels', shakePath, { min: 1 });
+  assertLess(shake, shakePath, 'firstProgress', 'secondProgress');
+  assertLess(shake, shakePath, 'secondProgress', 'thirdProgress');
+  assertLess(shake, shakePath, 'thirdProgress', 'endProgress');
+}
+
 export function validateCookieFeedback(value: unknown): UnknownRecord {
   const path = 'COOKIE_FEEDBACK';
   const config = record(value, path);
-  const audio = validateCookieAudio(config, path);
-  const gain = validateFloatingGain(config, path);
-  validateSuperCriticalEffect(
-    config,
-    path,
-    gain.durationMs as number,
-    audio.superCriticalShockwaveDelayMs as number,
-  );
+  validateCookieAudio(config, path);
+  validateFloatingGain(config, path);
+  validateSuperCriticalShake(config, path);
   return config;
 }

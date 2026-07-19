@@ -91,7 +91,7 @@ services/storage          engine/useBattleEngine
 
 조각 발견과 보상은 `domain/cookieFragments.ts`가 담당합니다. 두 번째 독립 난수를 마그마·전기 순서의 겹치지 않는 정수 구간으로 나눠 클릭 보상 판정과 확률적으로 결합되지 않게 합니다. 클릭 명령은 조각 종류만 반환하고 즉시 보상을 주지 않습니다. UI가 같은 활성 ID를 5초 안에 정확히 한 번 눌렀을 때만 `claimCookieFragment` 명령이 현재 클릭 힘과 테이블 배수를 계산해 `GAIN_COOKIES`를 보내므로, 만료·중복 탭·교체된 조각은 저장 통화를 바꾸지 않습니다.
 
-조각 획득 연출은 게임 판정과 분리됩니다. 마그마는 화산과 기준점을 맞춘 프로젝트 전용 화염 기둥을 4회 맥동시키고 타원 충격파·상승 불씨를 합성합니다. 전기는 CC0 번개 11종을 서로 다른 위치에서 시차 점멸시키고 마름모 충격파·방사 파편·회전 코어를 합성합니다. 화면 비율·수·위치·수명·키프레임 순서는 `cookie-fragments.json`에 있고 사운드 테이블은 변경하지 않았습니다. 두 동적 컴포넌트는 native-driver 진행값만 소비해 프레임별 React 상태를 만들지 않습니다.
+희귀 획득 연출은 게임 판정과 분리됩니다. `CookieSpecialFeedback`이 일반 크리티컬·마그마·슈퍼·전기를 종류별 최대 한 개로 관리하고 `CookieAnimatedSpecialEffect`가 외부 CC0 16/64프레임 animated WebP의 공통 배치만 담당합니다. 화면 비율·위치·수명·희귀도 레이어는 `cookie-special-effects.json`, 조각 확률·배수·발견 표현과 음향은 `cookie-fragments.json`에 있습니다. Android Fresco가 프레임을 네이티브 재생하므로 프레임별 React 상태나 JS interval을 만들지 않습니다.
 
 `battleRewardSelectors.ts`는 저장된 `battleMedals`를 안전 정수로 정규화하고 `battle-rewards.json`의 능력별 퍼센트를 곱해 세 영구 배율을 만듭니다. `cookieSelectors.ts`는 강화 값과 현재 쿠키 진화 배율을 먼저 계산한 뒤 이 배율을 클릭 힘·자동 생산·쿠키 성 체력에 각각 마지막으로 적용합니다. 훈장 수는 진화 합계에 들어가지 않아 전투 보상과 쿠키 종류 해금 규칙이 서로 결합되지 않습니다.
 
@@ -147,9 +147,9 @@ v8 이하 저장은 정규화된 `difficultyWinCounts`를 모두 합산하고 `b
 
 `useCookieAudioFeedback`은 Freesound CC0 `Crunch` MP3의 3보이스 풀과 연속 클릭 제한만 소유합니다. `useCookieSpecialAudioFeedback`은 일반 크리티컬 2개, 슈퍼 2개, 마그마 2개, 전기 3개의 로컬 Mixkit 플레이어를 종류별 그룹으로 관리합니다. 같은 종류가 다시 발동하면 해당 그룹의 플레이어·예약 타이머·비동기 요청 세대만 취소하고 처음부터 재생하며, 다른 종류는 서로 끊지 않아 시각 정책과 동일하게 최대 네 종류가 합성됩니다. 마그마는 180ms 간격 2회, 전기 천둥은 최대 상대 음량 1.0의 220ms 간격 3회로 테이블에 정의합니다. 시각 수명과 음향 레이어 강도는 낮은 확률일수록 오르도록 교차 테이블로 검증합니다. 화면 전환·사운드 OFF·Provider 해제는 모든 그룹과 예약 타이머를 취소합니다. `FeedbackContext`는 메뉴·전투 사운드와 진동을 조정하고, 전투 종료 시 재생 세대 번호를 올려 모든 액션음의 재시작을 막습니다.
 
-일반 크리티컬은 전용 시각 컴포넌트를 두지 않고 `CookieGainFeedback`의 노란 획득 숫자와 오디오만 사용합니다. `CookieSuperCriticalEffect`는 하나의 native-driver 진행값으로 충전 마름모, 3회 확장 충격파, 순차 참격, 번개, 회전 엠블럼과 파편을 합성합니다. `SuperCriticalMotionBurst`는 충전·충격파만, `AngularImpactPrimitives`는 참격·번개·파편 생성만 담당합니다.
+`CookieAnimatedSpecialEffect`는 네 희귀 보상의 공통 배치·크기 계산만 담당하고, Android Fresco가 로컬 애니메이션 WebP를 네이티브로 재생합니다. 크리티컬 16프레임, 나머지 64프레임 원본을 React 상태나 JS 프레임 타이머 없이 디코딩하므로 메인 화면의 연속 클릭 로직과 애니메이션 프레임 진행을 분리합니다. `CookieCriticalEffect`와 `CookieSuperCriticalEffect`는 전체/축약 소스 선택만, `CookieFragmentClaimEffect`는 마그마·전기 보상 숫자의 native-driver 이동·소멸만 담당합니다.
 
-`MagmaFragmentClaimVisual`은 프로젝트 전용 래스터 화염 기둥을 화산 분화구에 정렬하고 진행값 보간으로 맥동·흔들림을 만듭니다. `MagmaEruptionDynamics`는 타원 충격파와 상승 불씨를 담당합니다. `ElectricFragmentClaimVisual`은 11개 정적 CC0 낙뢰 이미지의 시차 점멸을 조정하고 `ElectricStrikeDynamics`는 마름모 충격파와 방사 파편을 그립니다. 이 세 연출은 React Native `Animated` native driver를 사용하며 JS 타이머나 프레임별 상태 갱신을 추가하지 않습니다.
+위치·최소 크기·화면 비율·지속 시간은 `cookie-special-effects.json` 한 테이블에 있으며, 같은 종류만 교체하는 수명주기는 `CookieSpecialFeedback`이 관리합니다. 외부 원본을 WebP로 합성·변환하는 재현 스크립트는 `scripts/process_external_cookie_feedback_vfx.py`, 정적 번들 연결은 `externalCookieFeedbackVfx.ts`로 분리했습니다. `withAnimatedWebp` Expo config plugin이 prebuild마다 Android의 Fresco animated WebP 의존성을 활성화합니다.
 
 `useBattleScreenSession`은 저장된 `autoBattleEnabled`를 읽어 idle 상태의 최초 시작, active 상태의 성 쿨타임별 자동 발사, 승리 보상 확정 뒤 다음 전투 시작을 각각 독립 effect로 조정합니다. 패배와 최종 난이도 마지막 전투는 자동 전환 조건에서 제외합니다. 사용자가 HUD나 결과 모달에서 설정을 끄면 각 effect의 cleanup이 예약 진행을 취소합니다. 실제 발사 가능 여부와 피해는 수동 입력과 같은 엔진 명령을 사용하므로 자동 모드가 전투 판정을 우회하지 않습니다.
 

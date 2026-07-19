@@ -19,6 +19,7 @@ import {
   COOKIE_INPUT,
   COOKIE_PITY,
   COOKIE_SUPER_CRITICAL,
+  COOKIE_SPECIAL_EFFECTS,
   COOKIE_UPGRADES,
   COOKIE_UPGRADE_RULES,
   COOKIES,
@@ -318,14 +319,12 @@ describe('데이터 테이블', () => {
       spriteSizePixels: 56,
       hitSlopPixels: 40,
     });
-    expect(COOKIE_FRAGMENTS.claimEffect).toMatchObject({
-      magmaPlumeSizeRatio: 0.72,
-      electricBoltCount: 11,
-      magmaScreenWidthRatio: 0.78,
-      magmaScreenHeightRatio: 0.38,
-      electricScreenWidthRatio: 1.3,
-      electricScreenHeightRatio: 0.82,
-    });
+    expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.id)).toEqual([
+      'critical',
+      'magma',
+      'superCritical',
+      'electric',
+    ]);
     expect(BATTLE_AUTO.nextBattleDelayMs).toBeGreaterThan(0);
     expect(COOKIE_INPUT.pressRetentionOffsetPixels)
       .toBeGreaterThanOrEqual(COOKIE_INPUT.hitSlopPixels);
@@ -337,23 +336,24 @@ describe('데이터 테이블', () => {
     expect(COOKIE_FEEDBACK.audio.voicePlaybackRates).toHaveLength(3);
     expect(COOKIE_FEEDBACK.audio.voiceVolumeMultipliers).toHaveLength(3);
     expect(COOKIE_FEEDBACK.floatingGain).toMatchObject({
-      normalFontSize: 17,
-      criticalFontSize: 14.5,
-      superCriticalFontSize: 12.5,
+      normalFontSize: 22.1,
+      criticalFontSize: 18.85,
+      superCriticalFontSize: 16.25,
       normalColor: '#FFFFFF',
       criticalColor: '#FFD84A',
       superCriticalColor: '#FF405A',
     });
-    expect(COOKIE_FRAGMENTS.claimEffect.rewardFontSize).toBe(13.5);
+    expect(COOKIE_SPECIAL_EFFECTS.fragmentReward.fontSize).toBe(17.55);
     expect(COOKIE_FRAGMENTS.types.map((fragment) => fragment.labelColor))
       .toEqual(['#FF7A00', '#A855F7']);
     expect(COOKIE_FEEDBACK.audio.minimumFullCriticalIntervalMs)
       .toBeGreaterThanOrEqual(COOKIE_FEEDBACK.audio.criticalLayerDurationMs);
-    expect(COOKIE_FEEDBACK).not.toHaveProperty('criticalEffect');
     expect(COOKIE_FEEDBACK.audio.minimumFullSuperCriticalIntervalMs)
       .toBeGreaterThanOrEqual(COOKIE_FEEDBACK.audio.superCriticalLayerDurationMs);
-    expect(COOKIE_FEEDBACK.superCriticalEffect.durationMs)
-      .toBeLessThanOrEqual(COOKIE_FEEDBACK.floatingGain.durationMs);
+    expect(
+      COOKIE_SPECIAL_EFFECTS.effects.find((effect) => effect.id === 'superCritical')
+        ?.durationMs,
+    ).toBeLessThanOrEqual(COOKIE_FEEDBACK.floatingGain.durationMs);
     expect(
       COOKIE_FEEDBACK.audio.superCriticalImpactVolumeMultiplier
       + COOKIE_FEEDBACK.audio.superCriticalShockwaveVolumeMultiplier,
@@ -365,36 +365,28 @@ describe('데이터 테이블', () => {
       .toBeGreaterThan(COOKIE_FEEDBACK.audio.criticalImpactVolumeMultiplier);
     expect(COOKIE_FEEDBACK.audio.superCriticalShockwaveVolumeMultiplier)
       .toBeGreaterThan(COOKIE_FEEDBACK.audio.criticalSparkleVolumeMultiplier);
-    expect(COOKIE_FEEDBACK.superCriticalEffect.durationMs).toBe(1_800);
+    expect(
+      COOKIE_SPECIAL_EFFECTS.effects.find((effect) => effect.id === 'superCritical')
+        ?.durationMs,
+    ).toBe(1_800);
     expect([
       COOKIE_CRITICAL.feedbackPowerRank,
       COOKIE_FRAGMENTS.types.find((item) => item.id === 'magma')?.feedbackPowerRank,
       COOKIE_SUPER_CRITICAL.feedbackPowerRank,
       COOKIE_FRAGMENTS.types.find((item) => item.id === 'electric')?.feedbackPowerRank,
     ]).toEqual([1, 2, 3, 4]);
-    expect([
-      COOKIE_FRAGMENTS.claimEffect.magmaDurationMs,
-      COOKIE_FEEDBACK.superCriticalEffect.durationMs,
-      COOKIE_FRAGMENTS.claimEffect.electricDurationMs,
-    ]).toEqual([1_500, 1_800, 2_200]);
-    expect(COOKIE_FRAGMENTS.claimEffect.magmaScreenHeightRatio)
-      .toBeLessThan(COOKIE_FRAGMENTS.claimEffect.electricScreenHeightRatio);
-    expect(COOKIE_FRAGMENTS.claimEffect.magmaFlashMaximumOpacity)
-      .toBeLessThan(COOKIE_FRAGMENTS.claimEffect.electricFlashMaximumOpacity);
-    expect(COOKIE_FRAGMENTS.claimEffect.electricBoltCount).toBe(11);
-    expect(COOKIE_FRAGMENTS.claimEffect.magmaPlumePulseCount).toBeGreaterThanOrEqual(4);
-    expect(COOKIE_FRAGMENTS.claimEffect.magmaShockwaveCount).toBeGreaterThanOrEqual(3);
-    expect(COOKIE_FRAGMENTS.claimEffect.magmaEmberCount).toBeGreaterThanOrEqual(16);
-    expect(COOKIE_FRAGMENTS.claimEffect.electricBoltFlickerMinimumOpacity)
-      .toBeLessThan(COOKIE_FRAGMENTS.claimEffect.electricBoltEchoOpacity);
-    expect(COOKIE_FRAGMENTS.claimEffect.electricPulseCount).toBeGreaterThanOrEqual(3);
-    expect(COOKIE_FRAGMENTS.claimEffect.electricSparkCount).toBeGreaterThanOrEqual(18);
-    expect(COOKIE_FEEDBACK.superCriticalEffect.chargeEndProgress)
-      .toBeLessThan(COOKIE_FEEDBACK.superCriticalEffect.impactPeakProgress);
-    expect(COOKIE_FEEDBACK.superCriticalEffect.secondaryImpactProgress)
-      .toBeGreaterThan(COOKIE_FEEDBACK.superCriticalEffect.impactPeakProgress);
-    expect(COOKIE_FEEDBACK.superCriticalEffect.shockwaveCount).toBeGreaterThanOrEqual(3);
-    expect(COOKIE_FEEDBACK.superCriticalEffect.slashStaggerProgress).toBeGreaterThan(0);
+    expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.durationMs))
+      .toEqual([1_100, 1_500, 1_800, 2_200]);
+    expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.minimumSizePixels))
+      .toEqual([250, 330, 528, 676]);
+    expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.offsetXScreenRatio))
+      .toEqual([0, -0.08, 0.09, 0]);
+    expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.offsetYScreenRatio))
+      .toEqual([0, -0.06, -0.07, 0.08]);
+    expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.sourceFrameCount))
+      .toEqual([16, 64, 64, 64]);
+    expect(COOKIE_FEEDBACK.superCriticalShake.firstProgress)
+      .toBeLessThan(COOKIE_FEEDBACK.superCriticalShake.endProgress);
     expect(BOSS_BALANCE.playerPowerBaseSurvivalSeconds).toBeGreaterThan(0);
     expect(BOSS_BALANCE.hpMultiplierReference).toBeGreaterThan(0);
     expect(BOSS_BALANCE.maximumPowerScaledSurvivalSeconds)
@@ -975,9 +967,13 @@ describe('데이터 테이블 런타임 검증', () => {
     expect(() => validateGameConfig(invalidRank)).toThrow('feedbackPowerRank');
 
     const invalidDuration = cloneConfig();
-    invalidDuration.COOKIE_FRAGMENTS.claimEffect.magmaDurationMs =
-      invalidDuration.COOKIE_FEEDBACK.superCriticalEffect.durationMs;
-    expect(() => validateGameConfig(invalidDuration)).toThrow('feedbackPowerRank');
+    invalidDuration.COOKIE_SPECIAL_EFFECTS.effects
+      .find((effect: any) => effect.id === 'magma').durationMs =
+        invalidDuration.COOKIE_SPECIAL_EFFECTS.effects
+          .find((effect: any) => effect.id === 'superCritical').durationMs;
+    expect(() => validateGameConfig(invalidDuration)).toThrow(
+      'COOKIE_SPECIAL_EFFECTS.effects.superCritical.durationMs',
+    );
   });
 
   test('확률 보정 우선순위는 네 특별 보상을 정확히 한 번씩 포함해야 한다', () => {
@@ -1013,9 +1009,9 @@ describe('데이터 테이블 런타임 검증', () => {
   });
 
   test.each([
-    ['COOKIE_FEEDBACK.superCriticalEffect.shakeEndProgress', (config: any) => {
-      config.COOKIE_FEEDBACK.superCriticalEffect.shakeEndProgress =
-        config.COOKIE_FEEDBACK.superCriticalEffect.shakeThirdProgress;
+    ['COOKIE_FEEDBACK.superCriticalShake.endProgress', (config: any) => {
+      config.COOKIE_FEEDBACK.superCriticalShake.endProgress =
+        config.COOKIE_FEEDBACK.superCriticalShake.thirdProgress;
     }],
   ])('%s의 보간 범위가 잘못되면 거부한다', (path, breakRange) => {
     const invalid = cloneConfig();
@@ -1025,10 +1021,13 @@ describe('데이터 테이블 런타임 검증', () => {
 
   test('전기 연출 수명이 슈퍼 크리티컬보다 짧으면 거부한다', () => {
     const invalid = cloneConfig();
-    invalid.COOKIE_FRAGMENTS.claimEffect.electricDurationMs =
-      invalid.COOKIE_FEEDBACK.superCriticalEffect.durationMs;
+    const electricEffect = invalid.COOKIE_SPECIAL_EFFECTS.effects
+      .find((effect: any) => effect.id === 'electric');
+    electricEffect.durationMs = invalid.COOKIE_SPECIAL_EFFECTS.effects
+      .find((effect: any) => effect.id === 'superCritical').durationMs;
+    electricEffect.compactDurationMs = electricEffect.durationMs;
     expect(() => validateGameConfig(invalid)).toThrow(
-      'COOKIE_FRAGMENTS.types.electric.feedbackPowerRank',
+      'COOKIE_SPECIAL_EFFECTS.effects.electric.durationMs',
     );
   });
 

@@ -1,0 +1,66 @@
+{
+  "effects": [
+    {
+      "id": "critical",
+      "durationMs": 1100,
+      "compactDurationMs": 650,
+      "minimumSizePixels": 250,
+      "screenWidthRatio": 0.64,
+      "screenHeightRatio": 0.28,
+      "offsetXScreenRatio": 0,
+      "offsetYScreenRatio": 0,
+      "zIndex": 9,
+      "sourceFrameCount": 16
+    },
+    {
+      "id": "magma",
+      "durationMs": 1500,
+      "compactDurationMs": 1500,
+      "minimumSizePixels": 330,
+      "screenWidthRatio": 0.858,
+      "screenHeightRatio": 0.418,
+      "offsetXScreenRatio": -0.08,
+      "offsetYScreenRatio": -0.06,
+      "zIndex": 10,
+      "sourceFrameCount": 64
+    },
+    {
+      "id": "superCritical",
+      "durationMs": 1800,
+      "compactDurationMs": 720,
+      "minimumSizePixels": 528,
+      "screenWidthRatio": 1.1,
+      "screenHeightRatio": 0.6,
+      "offsetXScreenRatio": 0.09,
+      "offsetYScreenRatio": -0.07,
+      "zIndex": 11,
+      "sourceFrameCount": 64
+    },
+    {
+      "id": "electric",
+      "durationMs": 2200,
+      "compactDurationMs": 2200,
+      "minimumSizePixels": 676,
+      "screenWidthRatio": 1.69,
+      "screenHeightRatio": 1.066,
+      "offsetXScreenRatio": 0,
+      "offsetYScreenRatio": 0.08,
+      "zIndex": 12,
+      "sourceFrameCount": 64
+    }
+  ],
+  "fragmentReward": {
+    "fontSize": 17.55,
+    "topRatio": 0.68,
+    "shadowRadius": 16,
+    "shadowColor": "#351339",
+    "peakProgress": 0.08,
+    "magmaFadeStartProgress": 0.62,
+    "electricFadeStartProgress": 0.82,
+    "startScale": 0.48,
+    "peakScale": 1.18,
+    "endScale": 0.96,
+    "magmaShakeDistancePixels": 5,
+    "electricShakeDistancePixels": 18
+  }
+}

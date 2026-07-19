@@ -29,10 +29,13 @@
 | `assets/images/ui/critical-stat-icon.webp`, `super-critical-stat-icon.webp` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 | `assets/images/vfx/magma-eruption-*.webp` 16프레임(보관, 런타임 미사용) | OpenGameArt `Fire Explosion`, Felis Chaus | CC0 1.0 |
 | `assets/images/vfx/lightning-bolt-*.webp` 11종 | OpenGameArt `Lightning animation`, Calinou | CC0 1.0 |
+| `assets/images/vfx/cookie-feedback/critical*.webp` | OpenGameArt `Hit Animation 2`, Sinestesia | CC0 1.0 |
+| `assets/images/vfx/cookie-feedback/magma.webp` | OpenGameArt `2D Explosion Animations`, Sinestesia | CC0 1.0 |
+| `assets/images/vfx/cookie-feedback/super-critical*.webp`, `electric.webp` | OpenGameArt `2DFX Impact spritesheets`, Esteban Díaz / Inguz Media Studio | 원본 다중 라이선스 중 CC0 1.0 선택 |
 
 생성 이미지는 특정 상용 게임의 캐릭터나 로고를 복제하지 않고 독자적인 3D 모바일 게임 아트 방향으로 제작했습니다. 아군 원반은 파랑·금색, 적 원반은 빨강·검붉은색입니다. 현재 전투에서 사용하는 30개 JPG 맵은 모두 세로 9:16, 상단 고유 랜드마크, 낮은 디테일의 중앙 70%, 동적 쿠키 성을 위한 열린 하단 지면을 유지합니다. 기존 초원·과수원·설원·악마계·신계와 Blood Moon의 수정 광산·버섯 숲·증기 주조소·심해 도시·운석 지대·창조 공방·무한 공간은 지형과 건축 자체가 다르며 단순 색상·재질 변형을 사용하지 않았습니다. 30개 정적 WebP 보스와 보스별 6프레임은 갑옷·몸체 재료·실루엣·전쟁망치가 다르고 모든 프레임에서 망치를 실제로 들고 있습니다. 5종 봇의 30프레임은 종류별 재질과 장비를 유지하면서 달리기와 원반 투척 자세를 구분합니다. 21~80단계 생성 쿠키 60종은 구운 쿠키 질감과 고유 실루엣을 유지합니다. 14단계 별빛 쇼트케이크도 6단계 딸기 케이크와 중복되지 않는 프로젝트 전용 이미지로 교체했습니다.
 
-외부 화산·번개 원본 페이지, 직접 다운로드 주소와 SHA-256은 `assets/licenses/OPENGAMEART_COOKIE_VFX_SOURCE.txt`에 기록했습니다. `process_external_cookie_vfx.py`가 화산 atlas를 16프레임으로 자르고 번개 11종의 검은 배경을 투명 알파로 변환합니다. 두 원본은 CC0 1.0입니다. 현재 런타임은 번개 11종과 프로젝트 전용 마그마 화염만 정적 연결하고 외부 화산 프레임은 출처·재현을 위해 보관합니다. 앱은 실행 중 네트워크를 사용하지 않습니다.
+외부 VFX 원본 페이지, 직접 다운로드 주소와 SHA-256은 `assets/licenses/OPENGAMEART_COOKIE_VFX_SOURCE.txt`에 기록했습니다. 기존 `process_external_cookie_vfx.py`는 보관용 화산 프레임과 번개를 변환하고, 신규 `process_external_cookie_feedback_vfx.py`는 16/64프레임 atlas를 Android 네이티브 애니메이션 WebP 6종으로 변환합니다. 슈퍼는 Inguz의 금색·청록 충격을, 전기는 청록 충격과 Calinou 번개를 합성하지만 모든 픽셀 애니메이션 원본은 외부 CC0 에셋입니다. 앱은 실행 중 네트워크를 사용하지 않습니다.
 
 표에서 `프로젝트 전용 원본`으로 표시한 생성 이미지는 코드의 MIT License 범위에 포함하지 않습니다. 별도 표기가 없는 한 이미지 자체의 재사용·재배포에는 프로젝트 소유자의 별도 허가가 필요합니다.
 
@@ -76,7 +79,7 @@
 
 일반 클릭에는 Freesound의 `Crunch` 공식 HQ 미리듣기 MP3를 사용합니다. 원본은 qubodup이 공개한 첫 번째 바삭한 토스트 한입 녹음이며 [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)입니다. 앱은 같은 녹음을 세 플레이어와 세 가지 작은 재생 속도 차이로 번갈아 사용해 연속 클릭의 반복감을 줄입니다. 원본 페이지, 로컬 인코딩과 SHA-256은 `assets/licenses/FREESOUND_COOKIE_SOUND_SOURCE.txt`에 기록했습니다.
 
-강한 크리티컬은 같은 깨짐음 위에 Mixkit `Short explosion` 충격음과 70ms 뒤의 `Fairy arcade sparkle`을 겹칩니다. 두 파일은 Mixkit 미리듣기 MP3이며 [Mixkit Free License](https://mixkit.co/license/)의 Sound Effects 항목을 따릅니다. 항목 ID, 다운로드 URL, 로컬 파일명과 SHA-256은 `assets/licenses/MIXKIT_SOUND_EFFECT_SOURCE.txt`에 기록했습니다. 일반 크리티컬은 별도 시각 이펙트를 사용하지 않고 노란 획득 숫자와 이 전용 음향으로 구분합니다. 같은 종류가 다시 발동하면 이전 같은 종류의 레이어와 지연 재생을 정지·되감고 새 소리를 처음부터 재생합니다. 다른 종류의 특수 보상음은 서로 끊지 않고 함께 재생됩니다. 재생 속도, 상대 음량과 지연은 `cookie-feedback.json`에서 관리합니다.
+강한 크리티컬은 같은 깨짐음 위에 Mixkit `Short explosion` 충격음과 70ms 뒤의 `Fairy arcade sparkle`을 겹칩니다. 두 파일은 Mixkit 미리듣기 MP3이며 [Mixkit Free License](https://mixkit.co/license/)의 Sound Effects 항목을 따릅니다. 항목 ID, 다운로드 URL, 로컬 파일명과 SHA-256은 `assets/licenses/MIXKIT_SOUND_EFFECT_SOURCE.txt`에 기록했습니다. 일반 크리티컬은 노란 획득 숫자와 Sinestesia의 외부 CC0 타격 애니메이션으로 구분합니다. 같은 종류가 다시 발동하면 이전 같은 종류의 레이어와 지연 재생을 정지·되감고 새 소리를 처음부터 재생합니다. 다른 종류의 특수 보상음은 서로 끊지 않고 함께 재생됩니다. 재생 속도, 상대 음량과 지연은 `cookie-feedback.json`에서 관리합니다.
 
 슈퍼 크리티컬은 Mixkit `Movie trailer epic impact`와 110ms 뒤의 `Heavy electric shockwave impact`를 겹쳐 첫 충격 뒤 `콰광` 하는 저음·전기 폭발이 이어지도록 구성합니다. 두 상대 음량을 일반 크리티컬보다 크게 설정했습니다. 같은 슈퍼 크리티컬이 다시 나오면 이전 긴 꼬리를 정지하고 새 음원을 처음부터 재생합니다. 두 파일의 항목 ID·직접 다운로드 주소·SHA-256도 같은 출처 기록 파일에 남겼습니다. 이전 `Choir magic shine`은 출처 추적용으로만 보관하고 런타임에서는 불러오지 않습니다.
 
@@ -104,6 +107,9 @@
 - [Kenney Digital Audio](https://kenney.nl/assets/digital-audio)
 - [Kenney RPG Audio](https://kenney.nl/assets/rpg-audio)
 - [Hope (Orchestral battle music)](https://opengameart.org/content/hopeorchestral-battle-music)
+- [OpenGameArt · Hit Animation 2](https://opengameart.org/content/hit-animation-2-frame-by-frame)
+- [OpenGameArt · 2D Explosion Animations](https://opengameart.org/content/2d-explosion-animations-frame-by-frame)
+- [OpenGameArt · 2DFX Impact spritesheets](https://opengameart.org/node/128928)
 - [Freesound · Crunch by qubodup](https://freesound.org/people/qubodup/sounds/816237/)
 - [Creative Commons CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
 - [Mixkit Boom Sound Effects · Short explosion](https://mixkit.co/free-sound-effects/boom/)

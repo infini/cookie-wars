@@ -4,6 +4,7 @@ import {
   BOT_ANIMATION,
   COOKIES,
   COOKIE_FRAGMENTS,
+  COOKIE_SPECIAL_EFFECTS,
   MONSTERS,
 } from '../src/config';
 import { hasBattleMapImage } from '../src/components/BattleMapImage';
@@ -13,11 +14,7 @@ import { hasCookieRareStatImage } from '../src/components/CookieRareStatImage';
 import { hasMonsterImage } from '../src/components/MonsterSprite';
 import { hasBossAnimationImage } from '../src/components/battle/BossAnimationSprite';
 import { hasBotAnimationImage } from '../src/components/battle/BotAnimationSprite';
-import {
-  ELECTRIC_BOLT_IMAGES,
-  hasCookieFragmentVfxImage,
-} from '../src/components/cookieFragments/externalVfxImages';
-import { MAGMA_FIRE_PLUME } from '../src/components/cookieFragments/MagmaFragmentClaimVisual';
+import { hasCookieFeedbackVfxSource } from '../src/components/cookieFeedback/externalCookieFeedbackVfx';
 
 describe('데이터 테이블 이미지 레지스트리', () => {
   test('모든 난이도 전장과 몬스터 imageKey가 실제 정적 이미지에 연결된다', () => {
@@ -42,13 +39,9 @@ describe('데이터 테이블 이미지 레지스트리', () => {
     expect(hasCookieRareStatImage('superCritical')).toBe(true);
   });
 
-  test('화산 화염 기둥과 외부 CC0 번개가 정적 WebP에 연결된다', () => {
-    expect(MAGMA_FIRE_PLUME).toBeDefined();
-    expect(ELECTRIC_BOLT_IMAGES.length).toBeGreaterThanOrEqual(
-      COOKIE_FRAGMENTS.claimEffect.electricBoltCount,
-    );
-    ELECTRIC_BOLT_IMAGES.forEach((_, index) => {
-      expect(hasCookieFragmentVfxImage(index)).toBe(true);
+  test('네 특별 보상이 외부 CC0 애니메이션 WebP에 연결된다', () => {
+    COOKIE_SPECIAL_EFFECTS.effects.forEach((effect) => {
+      expect(hasCookieFeedbackVfxSource(effect.id)).toBe(true);
     });
   });
 

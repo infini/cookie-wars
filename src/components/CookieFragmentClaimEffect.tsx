@@ -1,14 +1,19 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, useWindowDimensions } from 'react-native';
-import { COOKIE_FRAGMENTS, getCookieFragment } from '../config';
+import {
+  COOKIE_SPECIAL_EFFECTS,
+  getCookieFragment,
+  getCookieSpecialEffect,
+} from '../config';
 import { fonts } from '../theme/typography';
 import type { CookieFragmentKind } from '../types/game';
 import { formatNumber } from '../utils/format';
-import { ImpactFlash } from './cookieFeedback/AngularImpactPrimitives';
-import { ElectricFragmentClaimVisual } from './cookieFragments/ElectricFragmentClaimVisual';
-import { MagmaFragmentClaimVisual } from './cookieFragments/MagmaFragmentClaimVisual';
+import {
+  CookieAnimatedSpecialEffect,
+  resolveCookieSpecialEffectLayout,
+} from './cookieFeedback/CookieAnimatedSpecialEffect';
 
-const FX = COOKIE_FRAGMENTS.claimEffect;
+const REWARD = COOKIE_SPECIAL_EFFECTS.fragmentReward;
 
 export const CookieFragmentClaimEffect = React.memo(
   function CookieFragmentClaimEffect({
@@ -22,94 +27,64 @@ export const CookieFragmentClaimEffect = React.memo(
   }) {
     const progress = useRef(new Animated.Value(0)).current;
     const viewport = useWindowDimensions();
-    const config = getCookieFragment(kind);
-    const duration = kind === 'magma' ? FX.magmaDurationMs : FX.electricDurationMs;
+    const fragment = getCookieFragment(kind);
+    const effect = getCookieSpecialEffect(kind);
+    const layout = resolveCookieSpecialEffectLayout(effect, viewport.width, viewport.height);
     const fadeStartProgress = kind === 'magma'
-      ? FX.magmaFadeStartProgress
-      : FX.electricFadeStartProgress;
+      ? REWARD.magmaFadeStartProgress
+      : REWARD.electricFadeStartProgress;
     const shakeDistance = kind === 'magma'
-      ? FX.magmaShakeDistancePixels
-      : FX.electricShakeDistancePixels;
+      ? REWARD.magmaShakeDistancePixels
+      : REWARD.electricShakeDistancePixels;
 
     useEffect(() => {
       const animation = Animated.timing(progress, {
         toValue: 1,
-        duration,
+        duration: effect.durationMs,
         useNativeDriver: true,
       });
       animation.start();
       return () => animation.stop();
-    }, [duration, progress]);
+    }, [effect.durationMs, progress]);
 
-    const opacity = progress.interpolate({
-      inputRange: [0, FX.flashPeakProgress, fadeStartProgress, 1],
-      outputRange: [0, 1, 1, 0],
-    });
-    const size = Math.max(
-      kind === 'magma' ? FX.magmaSizePixels : FX.electricSizePixels,
-      viewport.width * (kind === 'magma'
-        ? FX.magmaScreenWidthRatio
-        : FX.electricScreenWidthRatio),
-      viewport.height * (kind === 'magma'
-        ? FX.magmaScreenHeightRatio
-        : FX.electricScreenHeightRatio),
-    );
     return (
       <Animated.View
         pointerEvents="none"
         style={[
-          styles.effect,
+          styles.layer,
           {
-            width: size,
-            height: size,
-            marginLeft: -size / 2,
-            marginTop: -size / 2,
             transform: [{
               translateX: progress.interpolate({
-                inputRange: [0, FX.flashPeakProgress, FX.flashFadeProgress, 1],
+                inputRange: [0, REWARD.peakProgress, fadeStartProgress, 1],
                 outputRange: [0, -shakeDistance, shakeDistance, 0],
               }),
             }],
           },
         ]}
       >
-        <ImpactFlash
-          progress={progress}
-          size={size}
-          color={kind === 'magma' ? config.glowColor : FX.electricColors[0]}
-          maximumOpacity={kind === 'magma'
-            ? FX.magmaFlashMaximumOpacity
-            : FX.electricFlashMaximumOpacity}
-          startScale={FX.flashStartScale}
-          endScale={FX.flashEndScale}
-          rotationDegrees={kind === 'magma'
-            ? FX.magmaFlashRotationDegrees
-            : FX.electricFlashRotationDegrees}
-          peakProgress={FX.flashPeakProgress}
-          fadeStartProgress={FX.flashFadeProgress}
-        />
-        {kind === 'magma'
-          ? <MagmaFragmentClaimVisual progress={progress} size={size} />
-          : <ElectricFragmentClaimVisual progress={progress} size={size} />}
+        <CookieAnimatedSpecialEffect kind={kind} />
         <Animated.Text
           style={[
             styles.reward,
             {
-              top: size * FX.rewardTopRatio,
-              width: size,
-              color: config.labelColor,
-              fontSize: FX.rewardFontSize,
-              textShadowColor: FX.rewardShadowColor,
-              textShadowRadius: FX.rewardShadowRadius,
-              opacity,
+              left: '50%',
+              top: '50%',
+              width: layout.size,
+              marginLeft: -layout.size / 2 + layout.offsetX,
+              marginTop: layout.size * (REWARD.topRatio - 0.5) + layout.offsetY,
+              zIndex: effect.zIndex + 1,
+              color: fragment.labelColor,
+              fontSize: REWARD.fontSize,
+              textShadowColor: REWARD.shadowColor,
+              textShadowRadius: REWARD.shadowRadius,
+              opacity: progress.interpolate({
+                inputRange: [0, REWARD.peakProgress, fadeStartProgress, 1],
+                outputRange: [0, 1, 1, 0],
+              }),
               transform: [{
                 scale: progress.interpolate({
-                  inputRange: [0, FX.flashPeakProgress, 1],
-                  outputRange: [
-                    FX.rewardStartScale,
-                    FX.rewardPeakScale,
-                    FX.rewardEndScale,
-                  ],
+                  inputRange: [0, REWARD.peakProgress, 1],
+                  outputRange: [REWARD.startScale, REWARD.peakScale, REWARD.endScale],
                 }),
               }],
             },
@@ -123,6 +98,6 @@ export const CookieFragmentClaimEffect = React.memo(
 );
 
 const styles = StyleSheet.create({
-  effect: { position: 'absolute', left: '50%', top: '50%', zIndex: 12 },
+  layer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
   reward: { position: 'absolute', textAlign: 'center', fontFamily: fonts.extraBold },
 });

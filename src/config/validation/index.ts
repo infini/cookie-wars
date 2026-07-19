@@ -29,6 +29,7 @@ import {
 import { validateCookieFeedback } from './feedback';
 import { validateCookieFragments } from './cookieFragments';
 import { validateCookiePity } from './cookiePity';
+import { validateCookieSpecialEffects } from './cookieSpecialEffects';
 import {
   validateDifficultyExpansion,
   validateDifficultyExpansionReferences,
@@ -59,6 +60,7 @@ export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig 
   validateCookiePity(input.COOKIE_PITY);
   const cookieFeedback = validateCookieFeedback(input.COOKIE_FEEDBACK);
   const cookieFragments = validateCookieFragments(input.COOKIE_FRAGMENTS);
+  const cookieSpecialEffects = validateCookieSpecialEffects(input.COOKIE_SPECIAL_EFFECTS);
   validateBattleAudio(input.BATTLE_AUDIO);
   validateBattleFeedback(input.BATTLE_FEEDBACK);
   const maps = validateBattleMaps(input.BATTLE_MAPS);
@@ -110,6 +112,7 @@ export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig 
     cookieSuperCritical,
     cookieFragments,
     cookieFeedback,
+    cookieSpecialEffects,
   });
   validateDifficultyExpansionReferences({
     expansion: difficultyExpansion,

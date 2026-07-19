@@ -8,12 +8,17 @@ export type {
   CookieAudioFeedbackConfig,
   CookieFeedbackConfig,
   CookieFeedbackTier,
-  CookieSuperCriticalEffectConfig,
+  CookieSuperCriticalShakeConfig,
   FloatingGainFeedbackConfig,
 } from './cookieFeedback';
 export type {
+  CookieFragmentRewardEffectConfig,
+  CookieSpecialEffectConfig,
+  CookieSpecialEffectKind,
+  CookieSpecialEffectsConfig,
+} from './cookieSpecialEffects';
+export type {
   CookieFragmentAudioConfig,
-  CookieFragmentClaimEffectConfig,
   CookieFragmentKind,
   CookieFragmentSpawnEffectConfig,
   CookieFragmentStats,

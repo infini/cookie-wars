@@ -102,8 +102,6 @@
 - `lifetimeMs`: 조각이 등장 동작을 마친 뒤 획득 가능한 시간. 현재 정확히 5,000ms
 - `types[]`: 조각 ID, 연결 강화 ID, 한국어 이름, 기본·레벨당 보상 배수, 확률 상한, 전용 이미지·색상
 - `spawnEffect.*`: 좌우 교대 출현, 최초 크기의 50%인 56px 조각, 체감 터치 범위를 유지하는 40px 여백, 튀어나오는 거리·회전·쿠키 부스러기, 오라, 남은 시간 막대
-- `claimEffect.magma*`: 화산·화염 정렬 위치, 화염 4회 맥동·좌우 흔들림, 타원 충격파·불씨의 개수·크기·키프레임
-- `claimEffect.electric*`: CC0 번개 11개의 위치·시차·점멸, 마름모 충격파·방사 파편·회전 코어의 개수·크기·키프레임
 - `audio.*`: Mixkit 화염·강한 근거리 천둥의 상대 음량, 화염·천둥 반복 횟수·간격
 
 한 번의 독립 난수를 테이블 순서의 겹치지 않는 구간으로 나눠 동시에 두 조각이 나오지 않습니다. Lv.1은 마그마 400단위인 0.2%·50배, 전기 100단위인 0.05%·200배입니다. 마그마는 강화마다 +100단위(0.05%p)·+5배, 전기는 +25단위(0.0125%p)·+20배입니다. 네 희귀 보상 모두 `레벨당 확률 증가 ÷ 기본 확률 = 25%`, `레벨당 배수 증가 ÷ 기본 배수 = 10%`이며 교차 테이블 검증이 이 비율과 모든 명시 레벨 값을 강제합니다. 마그마 확률은 Lv.97의 5%, 전기는 Lv.117의 1.5%에서 멈추지만 보상 배수와 강화는 이후에도 무한히 증가합니다. 보상은 수령 시점의 현재 클릭 힘에 조각 배수만 곱하고 크리티컬 배수와 중복 곱하지 않습니다. 저장에는 강화 레벨이 있으므로 기존 사용자도 현재 단계에 해당하는 확률과 새 배수를 즉시 소급 적용받습니다.
@@ -139,22 +137,28 @@
 게임 보상 수치는 포함하지 않고 쿠키 클릭의 소리와 화면 연출만 제어합니다.
 
 - `audio.minimumClickIntervalMs`: 빠른 연속 입력에서 기본 깨짐음이 겹치는 최소 간격. 현재 40ms
-- `audio.minimumFullCriticalIntervalMs`: 일반 크리티컬 전용 음향의 연속 재생 제어 기준 간격. 일반 크리티컬은 시각 이펙트를 렌더하지 않음
+- `audio.minimumFullCriticalIntervalMs`: 일반 크리티컬 전용 음향·전체/축약 시각 등급의 연속 재생 제어 기준 간격
 - `audio.criticalLayerDurationMs`: 충격음과 지연 반짝임의 꼬리가 끝나는 최대 길이. 현재 1,620ms이며 전체 크리티컬 최소 간격은 이 값보다 짧을 수 없습니다.
 - `audio.criticalSparkleDelayMs`: 충격음 뒤 반짝임 레이어 지연. 현재 70ms
 - `audio.voicePlaybackRates`, `voiceVolumeMultipliers`: Freesound `Crunch` 원본을 번갈아 재생하는 세 보이스의 속도와 상대 음량
 - `audio.criticalImpactVolumeMultiplier`, `criticalSparkleVolumeMultiplier`: Mixkit 충격·반짝임 레이어의 상대 음량
 - `audio.minimumFullSuperCriticalIntervalMs`, `superCriticalLayerDurationMs`: 슈퍼 전체·축약 시각 등급 기준 간격과 전용 음향 꼬리 길이. 현재 7,000ms·6,800ms
 - `audio.superCriticalImpactVolumeMultiplier`, `superCriticalShockwaveVolumeMultiplier`, `superCriticalShockwaveDelayMs`: 슈퍼 전용 Mixkit 첫 충격과 `콰광` 전기 폭발의 음량·지연
-- `floatingGain.*`: `+획득량` 텍스트의 동시 표시 상한, 수명, 상승 거리와 크기 키프레임
-- `superCriticalEffect.durationMs`, `compactDurationMs`, `sizePixels`: 슈퍼 전체·축약 효과의 수명과 기준 크기
-- `superCriticalEffect.charge*`, `secondaryImpactProgress`, `shockwave*`: 충전 시점, 두 번째 충격과 3회 마름모 충격파의 크기·시차
-- `superCriticalEffect.column*`, `slash*`, `ghostSlash*`: 수직 낙뢰 기둥과 순차 참격 레이어
-- `superCriticalEffect.lightning*`, `shard*`, `shake*`: 8갈래 번개, 12개 각진 파편과 쿠키 무대 흔들림
-- `superCriticalEffect.emblem*`: 중앙 전용 엠블럼의 크기·회전·등장·소멸 키프레임
-- `superCriticalEffect.label*`: 슈퍼 크리티컬 문구의 크기·위치·그림자·스케일
+- `floatingGain.*`: `+획득량` 텍스트의 동시 표시 상한, 수명, 상승 거리와 크기 키프레임. 세 글자 크기는 이전 값의 정확히 130%
+- `superCriticalShake.*`: 슈퍼 전체 연출 때만 적용하는 쿠키 무대 흔들림 진행률·거리
 
-크리티컬 판정은 수치 테이블과 천장 테이블만 사용합니다. 일반 크리티컬은 별도 화면 연출 없이 색이 다른 획득 숫자와 음향만 사용하고, 시각 수명은 마그마 1,500ms < 슈퍼 1,800ms < 전기 2,200ms입니다. 사운드 레이어 강도도 일반 `0.72+0.42` < 마그마 `0.92×2` < 슈퍼 `0.98+1.0` < 전기 `1.0×3`으로 정렬됩니다. `feedbackPowerRank` 1~4와 기본 확률 역순·시각/음향 강도 순서를 교차 테이블 검증으로 강제합니다. 다른 종류는 시각·음향을 함께 합성하고 같은 종류만 새 연출로 교체합니다. 보이스 배열 불일치, 범위 밖 음량·진행률, 역전된 키프레임 순서는 설정 검증에서 거부합니다.
+크리티컬 판정은 수치 테이블과 천장 테이블만 사용합니다. 시각 연출의 수명·크기·위치는 아래 `cookie-special-effects.json`에서 관리합니다. 사운드 레이어 강도는 일반 `0.72+0.42` < 마그마 `0.92×2` < 슈퍼 `0.98+1.0` < 전기 `1.0×3`으로 정렬됩니다. `feedbackPowerRank` 1~4와 기본 확률 역순·시각/음향 강도 순서를 교차 테이블 검증으로 강제합니다. 다른 종류는 시각·음향을 함께 합성하고 같은 종류만 새 연출로 교체합니다. 보이스 배열 불일치, 범위 밖 음량·진행률, 역전된 키프레임 순서는 설정 검증에서 거부합니다.
+
+### `cookie-special-effects.json`
+
+- `effects[].id`: `critical`, `magma`, `superCritical`, `electric` 중 하나이며 네 ID를 정확히 한 번씩 정의
+- `durationMs`, `compactDurationMs`: 전체·연속 발동 축약 애니메이션 수명
+- `minimumSizePixels`, `screenWidthRatio`, `screenHeightRatio`: 기기 크기와 무관하게 계산하는 최소 크기와 화면 점유 비율
+- `offsetXScreenRatio`, `offsetYScreenRatio`: 화면 중앙 기준 연출 위치. 현재 크리티컬 중앙, 마그마 왼쪽 위, 슈퍼 오른쪽 위, 전기 아래
+- `zIndex`, `sourceFrameCount`: 희귀도별 합성 순서와 외부 원본 프레임 수
+- `fragmentReward.*`: 마그마·전기 실제 획득량 문구의 크기·위치·그림자·진행률·흔들림
+
+테이블 검증은 네 종류를 `크리티컬 < 마그마 < 슈퍼 < 전기` 순으로 정렬해 전체 수명, 최소 크기, 가로·세로 화면 점유 비율과 z-index가 모두 엄격히 증가하도록 강제합니다. 현재 최소 크기는 250 < 330 < 528 < 676px이고, 마그마는 이전 300px·0.78·0.38의 110%, 슈퍼는 이전 440px의 120%, 전기는 이전 520px·1.3·0.82의 130%입니다. `fragmentReward.fontSize`도 13.5에서 17.55로 130% 확대했습니다.
 
 ### `discs.json`과 무한 강화
 

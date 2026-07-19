@@ -22,6 +22,7 @@ import cookieFragmentData from './cookie-fragments.json';
 import cookieInputData from './cookie-input.json';
 import cookiePityData from './cookie-pity.json';
 import cookieSuperCriticalData from './cookie-super-critical.json';
+import cookieSpecialEffectData from './cookie-special-effects.json';
 import cookieData from './cookies.json';
 import difficultyData from './difficulties.json';
 import difficultyExpansionData from './difficulty-expansion.json';
@@ -38,6 +39,7 @@ import {
   BotConfig,
   CookieConfig,
   CookieFragmentKind,
+  CookieSpecialEffectKind,
   CookieFragmentTypeConfig,
   DifficultyConfig,
   DiscConfig,
@@ -75,6 +77,7 @@ export const CONFIG_TABLES = validateGameConfig({
   COOKIE_INPUT: cookieInputData,
   COOKIE_PITY: cookiePityData,
   COOKIE_SUPER_CRITICAL: cookieSuperCriticalData,
+  COOKIE_SPECIAL_EFFECTS: cookieSpecialEffectData,
   COOKIES: cookieData,
   DIFFICULTIES: difficultyData,
   DIFFICULTY_EXPANSION: difficultyExpansionData,
@@ -113,6 +116,7 @@ export const {
   COOKIE_INPUT,
   COOKIE_PITY,
   COOKIE_SUPER_CRITICAL,
+  COOKIE_SPECIAL_EFFECTS,
   COOKIES,
   DIFFICULTIES,
   DIFFICULTY_EXPANSION,
@@ -138,6 +142,9 @@ const discById = new Map(DISCS.map((item) => [item.id, item]));
 const cookieById = new Map(COOKIES.map((item) => [item.id, item]));
 const cookieFragmentById = new Map(
   COOKIE_FRAGMENTS.types.map((item) => [item.id, item]),
+);
+const cookieSpecialEffectById = new Map(
+  COOKIE_SPECIAL_EFFECTS.effects.map((item) => [item.id, item]),
 );
 const enemyDiscByLevel = new Map(ENEMY_DISCS.map((item) => [item.level, item]));
 const bossAnimationByMonsterId = new Map(
@@ -201,6 +208,14 @@ export function getCookie(id: string): CookieConfig {
 
 export function getCookieFragment(kind: CookieFragmentKind): CookieFragmentTypeConfig {
   return requireConfig(cookieFragmentById.get(kind), 'COOKIE_FRAGMENTS.types.id', kind);
+}
+
+export function getCookieSpecialEffect(kind: CookieSpecialEffectKind) {
+  return requireConfig(
+    cookieSpecialEffectById.get(kind),
+    'COOKIE_SPECIAL_EFFECTS.effects.id',
+    kind,
+  );
 }
 
 export function getBossAnimation(monsterId: string) {

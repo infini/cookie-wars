@@ -18,6 +18,7 @@ export interface ReferenceTables {
   cookieSuperCritical: UnknownRecord;
   cookieFragments: UnknownRecord;
   cookieFeedback: UnknownRecord;
+  cookieSpecialEffects: UnknownRecord;
 }
 
 export function validateReferences({
@@ -37,6 +38,7 @@ export function validateReferences({
   cookieSuperCritical,
   cookieFragments,
   cookieFeedback,
+  cookieSpecialEffects,
 }: ReferenceTables): void {
   const difficultyIds = new Set(difficulties.map((item) => item.id as string));
   const enemyDiscLevels = new Set(enemyDiscs.map((item) => item.level as number));
@@ -65,6 +67,7 @@ export function validateReferences({
     cookieSuperCritical,
     cookieFragments,
     cookieFeedback,
+    cookieSpecialEffects,
   });
 
   bossAnimations.forEach((animation, index) => assertReference(
