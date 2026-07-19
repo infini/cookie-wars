@@ -13,8 +13,6 @@ export type {
 } from './cookieFeedback';
 export type {
   CookieFragmentRewardEffectConfig,
-  CookieLineBurstEffectConfig,
-  CookieLineBurstKind,
   CookieSpecialEffectConfig,
   CookieSpecialEffectKind,
   CookieSpecialEffectsConfig,

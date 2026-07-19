@@ -40,7 +40,6 @@ import {
   BotConfig,
   CookieConfig,
   CookieFragmentKind,
-  CookieLineBurstKind,
   CookieSpecialEffectKind,
   CookieFragmentTypeConfig,
   DifficultyConfig,
@@ -150,9 +149,6 @@ const cookieFragmentById = new Map(
 const cookieSpecialEffectById = new Map(
   COOKIE_SPECIAL_EFFECTS.effects.map((item) => [item.id, item]),
 );
-const cookieLineBurstById = new Map(
-  COOKIE_SPECIAL_EFFECTS.lineBursts.map((item) => [item.id, item]),
-);
 const enemyDiscByLevel = new Map(ENEMY_DISCS.map((item) => [item.level, item]));
 const bossAnimationByMonsterId = new Map(
   BOSS_ANIMATION.sets.map((item) => [item.id, item]),
@@ -221,14 +217,6 @@ export function getCookieSpecialEffect(kind: CookieSpecialEffectKind) {
   return requireConfig(
     cookieSpecialEffectById.get(kind),
     'COOKIE_SPECIAL_EFFECTS.effects.id',
-    kind,
-  );
-}
-
-export function getCookieLineBurst(kind: CookieLineBurstKind) {
-  return requireConfig(
-    cookieLineBurstById.get(kind),
-    'COOKIE_SPECIAL_EFFECTS.lineBursts.id',
     kind,
   );
 }

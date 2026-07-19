@@ -1,0 +1,62 @@
+{
+  "encodingQuality": 92,
+  "grade": {
+    "saturation": 1.65,
+    "contrast": 1.12,
+    "paletteBlend": 0.72,
+    "midpoint": 148,
+    "glowRadiusRatio": 0.012,
+    "minimumGlowRadius": 3,
+    "glowOpacity": 0.62
+  },
+  "effects": {
+    "critical": {
+      "outputSize": 384,
+      "fillRatio": 0.94,
+      "fullDurationMs": 1100,
+      "compactDurationMs": 650,
+      "neonGrade": {
+        "shadow": "#ff4c00",
+        "middle": "#f4ff00",
+        "highlight": "#efffff",
+        "glow": "#cfff00"
+      }
+    },
+    "magma": {
+      "outputSize": 512,
+      "fillRatio": 0.94,
+      "fullDurationMs": 1500,
+      "compactDurationMs": null,
+      "neonGrade": {
+        "shadow": "#ec004c",
+        "middle": "#ff6200",
+        "highlight": "#fff533",
+        "glow": "#ff2b91"
+      }
+    },
+    "super-critical": {
+      "outputSize": 576,
+      "fillRatio": 0.94,
+      "fullDurationMs": 1800,
+      "compactDurationMs": 720,
+      "neonGrade": {
+        "shadow": "#7900ff",
+        "middle": "#ff24d6",
+        "highlight": "#7dffff",
+        "glow": "#b900ff"
+      }
+    },
+    "electric": {
+      "outputSize": 640,
+      "fillRatio": 0.72,
+      "fullDurationMs": 2200,
+      "compactDurationMs": null,
+      "neonGrade": {
+        "shadow": "#3150ff",
+        "middle": "#00f5ff",
+        "highlight": "#efffff",
+        "glow": "#902cff"
+      }
+    }
+  }
+}

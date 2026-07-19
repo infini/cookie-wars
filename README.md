@@ -4,9 +4,9 @@
 
 ## 설치
 
-- APK: [`artifacts/cookie-wars-v1.0.24.apk`](artifacts/cookie-wars-v1.0.24.apk)
-- APK 크기: 130,153,704바이트 (124.12MiB)
-- SHA-256: `d77b8a52aa0698b2458ab33ea1a4752b531d87417e5118ebe6ff8deff5e6e995`
+- APK: [`artifacts/cookie-wars-v1.0.25.apk`](artifacts/cookie-wars-v1.0.25.apk)
+- APK 크기: 139,174,192바이트 (132.73MiB)
+- SHA-256: `7f83bd413555ca4168c51ecfbedd303b1b449bc8d770ac6f1045d4e9a53b51b3`
 - 패키지명: `com.cookiewars.game`
 - 지원 범위: Android 7.0(API 24) 이상
 - 화면 방향: 세로 고정
@@ -32,8 +32,8 @@ APK를 Android 스마트폰으로 옮긴 뒤 파일을 열어 설치합니다. P
 - 강화 화면에 보이는 쿠키 관련 7종 전체의 현재 단계가 쿠키 진화 레벨과 다음 쿠키까지 남은 강화 횟수에 즉시 소급 반영
 - 5초 타이머, 좌우 교대 발사·부스러기 낙하와 최초 크기의 50%로 줄인 전용 투명 WebP 수집 에셋·동일한 체감 터치 범위
 - Freesound CC0 `Crunch`를 세 가지 속도로 번갈아 쓰는 쿠키 클릭음과 Mixkit 충격·반짝임을 겹친 크리티컬 사운드
-- 예전의 화면을 가르는 데이터 기반 선 연출로 복원한 일반·슈퍼 크리티컬, CodeManu CC0 60프레임 지면 분출 마그마, 기존 청록 충격과 세 줄 동시 낙뢰를 합친 전기 연출
-- 크리티컬은 중앙, 마그마는 중앙 왼쪽 위, 슈퍼 크리티컬은 중앙 오른쪽 위, 전기는 중앙 아래에서 서로 구분되도록 배치
+- CodeManu CC0 원본을 사용한 60프레임 네온 옐로 타격 크리티컬·형광 오렌지와 핑크 외곽광의 마그마·네온 마젠타와 시안 소용돌이 슈퍼 크리티컬, 형광 시안과 보라 외곽광의 세 줄 동시 낙뢰 전기 연출
+- 네 희귀 연출을 모두 중앙에 배치하고 색·실루엣·지속 시간·화면 점유 범위로 종류와 희귀도를 구분
 - `크리티컬 < 마그마 < 슈퍼 크리티컬 < 전기` 순으로 지속 시간·화면 점유 범위·레이어 밀도를 높이고 마그마 +10%·슈퍼 +20%·전기 +30% 크기 확대
 - 네 종류는 서로 겹쳐 합성하되 같은 종류가 다시 나오면 이전 같은 종류의 시각·음향만 새 연출로 교체
 - 모든 획득 숫자를 기존 대비 30% 키우고 시각·사운드는 희귀도가 높을수록 강해지도록 교차 테이블 검증
@@ -121,7 +121,7 @@ src/
 
 - [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md): 화면, 플레이 흐름, 전투·보상·해금 규칙
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): 코드 계층, 상태 변경, 저장과 확장 구조
-- [`docs/CODE_REVIEW.md`](docs/CODE_REVIEW.md): 1.0.24 코드 리뷰 결과, 해결 사항과 후속 점검
+- [`docs/CODE_REVIEW.md`](docs/CODE_REVIEW.md): 1.0.25 코드 리뷰 결과, 해결 사항과 후속 점검
 - [`docs/DATA_TABLES.md`](docs/DATA_TABLES.md): 모든 JSON 테이블의 필드와 수정 방법
 - [`docs/ASSET_LICENSES.md`](docs/ASSET_LICENSES.md): 외부 리소스 출처와 라이선스
 - [`docs/GENERATED_ASSETS.md`](docs/GENERATED_ASSETS.md): 전장·보스·쿠키봇·쿠키 생성 프롬프트, 변환 절차와 검수 기준

@@ -1,23 +1,44 @@
 #!/usr/bin/env python3
-"""외부 CC0 마그마·번개 프레임을 Android용 애니메이션 WebP로 변환한다."""
+"""외부 CC0 희귀 쿠키 보상 프레임을 Android용 애니메이션 WebP로 변환한다."""
 
 from __future__ import annotations
 
 import argparse
 import gc
+import json
 from pathlib import Path
+from typing import NamedTuple
 
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageEnhance, ImageFilter, ImageOps
+
+
+class NeonGrade(NamedTuple):
+    shadow: str
+    middle: str
+    highlight: str
+    glow: str
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--critical-animation", type=Path, required=True)
     parser.add_argument("--magma-animation", type=Path, required=True)
-    parser.add_argument("--electric-atlas", type=Path, required=True)
-    parser.add_argument("--lightning-dir", type=Path, required=True)
+    parser.add_argument("--super-animation", type=Path, required=True)
+    parser.add_argument("--electric-atlas", type=Path)
+    parser.add_argument("--lightning-dir", type=Path)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--quality", type=int, default=92)
+    parser.add_argument(
+        "--settings",
+        type=Path,
+        default=Path(__file__).with_name("cookie-feedback-vfx.json"),
+    )
+    parser.add_argument("--quality", type=int)
     return parser.parse_args()
+
+
+def load_settings(path: Path) -> dict:
+    with path.open(encoding="utf-8") as source:
+        return json.load(source)
 
 
 def split_atlas(path: Path, columns: int, rows: int) -> list[Image.Image]:
@@ -90,6 +111,44 @@ def fit_sequence(
         canvas = Image.new("RGBA", (size, size))
         canvas.alpha_composite(cropped, (offset, offset))
         output.append(canvas)
+    return output
+
+
+def apply_neon_grade(
+    frames: list[Image.Image],
+    grade: NeonGrade,
+    settings: dict,
+) -> list[Image.Image]:
+    """원본 동작과 명암을 유지하면서 형광 팔레트와 외곽 발광을 합성한다."""
+    output: list[Image.Image] = []
+    glow_radius = max(
+        settings["minimumGlowRadius"],
+        round(frames[0].width * settings["glowRadiusRatio"]),
+    )
+    for frame in frames:
+        alpha = frame.getchannel("A")
+        rgb = frame.convert("RGB")
+        vivid = ImageEnhance.Color(rgb).enhance(settings["saturation"])
+        vivid = ImageEnhance.Contrast(vivid).enhance(settings["contrast"])
+        luminance = ImageOps.grayscale(vivid)
+        fluorescent = ImageOps.colorize(
+            luminance,
+            black=grade.shadow,
+            mid=grade.middle,
+            white=grade.highlight,
+            midpoint=settings["midpoint"],
+        )
+        graded_rgb = Image.blend(vivid, fluorescent, settings["paletteBlend"])
+        graded = graded_rgb.convert("RGBA")
+        graded.putalpha(alpha)
+
+        glow_alpha = alpha.filter(ImageFilter.GaussianBlur(glow_radius)).point(
+            lambda value: round(value * settings["glowOpacity"]),
+        )
+        glow = Image.new("RGBA", frame.size, grade.glow)
+        glow.putalpha(glow_alpha)
+        glow.alpha_composite(graded)
+        output.append(glow)
     return output
 
 
@@ -174,8 +233,9 @@ def compose_electric_effect(
     impact_frames: list[Image.Image],
     lightning_frames: list[Image.Image],
     size: int,
+    impact_fill_ratio: float,
 ) -> list[Image.Image]:
-    fitted_impacts = fit_sequence(impact_frames, size, 0.72)
+    fitted_impacts = fit_sequence(impact_frames, size, impact_fill_ratio)
     output: list[Image.Image] = []
     for index, impact in enumerate(fitted_impacts):
         canvas = lightning_layer(lightning_frames, index, size)
@@ -186,22 +246,99 @@ def compose_electric_effect(
 
 def main() -> None:
     args = parse_args()
-    magma = fit_sequence(load_animation_frames(args.magma_animation), 512, 0.96)
-    save_speed_variants(magma, args.output_dir, "magma", 1_500, None, args.quality)
+    settings = load_settings(args.settings)
+    effects = settings["effects"]
+    grade_settings = settings["grade"]
+    quality = args.quality or settings["encodingQuality"]
+
+    critical_settings = effects["critical"]
+
+    critical = apply_neon_grade(
+        fit_sequence(
+            load_animation_frames(args.critical_animation),
+            critical_settings["outputSize"],
+            critical_settings["fillRatio"],
+        ),
+        NeonGrade(**critical_settings["neonGrade"]),
+        grade_settings,
+    )
+    save_speed_variants(
+        critical,
+        args.output_dir,
+        "critical",
+        critical_settings["fullDurationMs"],
+        critical_settings["compactDurationMs"],
+        quality,
+    )
+    del critical
+    gc.collect()
+
+    magma_settings = effects["magma"]
+    magma = apply_neon_grade(
+        fit_sequence(
+            load_animation_frames(args.magma_animation),
+            magma_settings["outputSize"],
+            magma_settings["fillRatio"],
+        ),
+        NeonGrade(**magma_settings["neonGrade"]),
+        grade_settings,
+    )
+    save_speed_variants(
+        magma,
+        args.output_dir,
+        "magma",
+        magma_settings["fullDurationMs"],
+        magma_settings["compactDurationMs"],
+        quality,
+    )
     del magma
     gc.collect()
 
-    electric = split_atlas(args.electric_atlas, 8, 8)
-    lightning = load_lightning_frames(args.lightning_dir)
-    electric_effect = compose_electric_effect(electric, lightning, 640)
-    save_speed_variants(
-        electric_effect,
-        args.output_dir,
-        "electric",
-        2_200,
-        None,
-        args.quality,
+    super_settings = effects["super-critical"]
+    super_critical = apply_neon_grade(
+        fit_sequence(
+            load_animation_frames(args.super_animation),
+            super_settings["outputSize"],
+            super_settings["fillRatio"],
+        ),
+        NeonGrade(**super_settings["neonGrade"]),
+        grade_settings,
     )
+    save_speed_variants(
+        super_critical,
+        args.output_dir,
+        "super-critical",
+        super_settings["fullDurationMs"],
+        super_settings["compactDurationMs"],
+        quality,
+    )
+    del super_critical
+    gc.collect()
+
+    if (args.electric_atlas is None) != (args.lightning_dir is None):
+        raise ValueError("전기 재생성에는 --electric-atlas와 --lightning-dir가 모두 필요합니다.")
+    if args.electric_atlas is not None and args.lightning_dir is not None:
+        electric_settings = effects["electric"]
+        electric = split_atlas(args.electric_atlas, 8, 8)
+        lightning = load_lightning_frames(args.lightning_dir)
+        electric_effect = apply_neon_grade(
+            compose_electric_effect(
+                electric,
+                lightning,
+                electric_settings["outputSize"],
+                electric_settings["fillRatio"],
+            ),
+            NeonGrade(**electric_settings["neonGrade"]),
+            grade_settings,
+        )
+        save_speed_variants(
+            electric_effect,
+            args.output_dir,
+            "electric",
+            electric_settings["fullDurationMs"],
+            electric_settings["compactDurationMs"],
+            quality,
+        )
 
 
 if __name__ == "__main__":

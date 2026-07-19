@@ -381,17 +381,13 @@ describe('데이터 테이블', () => {
     expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.minimumSizePixels))
       .toEqual([360, 400, 528, 676]);
     expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.offsetXScreenRatio))
-      .toEqual([0, -0.08, 0.09, 0]);
+      .toEqual([0, 0, 0, 0]);
     expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.offsetYScreenRatio))
-      .toEqual([0, -0.06, -0.07, 0.08]);
+      .toEqual([0, 0, 0, 0]);
     expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.sourceFrameCount))
-      .toEqual([0, 60, 0, 64]);
+      .toEqual([60, 60, 60, 64]);
     expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.zIndex))
       .toEqual([21, 22, 23, 24]);
-    expect(COOKIE_SPECIAL_EFFECTS.lineBursts.map((effect) => effect.id))
-      .toEqual(['critical', 'superCritical']);
-    expect(COOKIE_SPECIAL_EFFECTS.lineBursts[1].radialLineCount)
-      .toBeGreaterThan(COOKIE_SPECIAL_EFFECTS.lineBursts[0].radialLineCount);
     expect(MINI_GAME).toMatchObject({
       minimumDurationSeconds: 10,
       maximumDurationSeconds: 60,
@@ -992,12 +988,11 @@ describe('데이터 테이블 런타임 검증', () => {
     );
   });
 
-  test('슈퍼 크리티컬 선형 연출은 일반 크리티컬보다 강해야 한다', () => {
+  test('모든 희귀 보상 연출은 화면 중앙에 있어야 한다', () => {
     const invalid = cloneConfig();
-    invalid.COOKIE_SPECIAL_EFFECTS.lineBursts[1].radialLineCount =
-      invalid.COOKIE_SPECIAL_EFFECTS.lineBursts[0].radialLineCount;
+    invalid.COOKIE_SPECIAL_EFFECTS.effects[1].offsetXScreenRatio = 0.1;
     expect(() => validateGameConfig(invalid)).toThrow(
-      'COOKIE_SPECIAL_EFFECTS.lineBursts.superCritical.radialLineCount',
+      'COOKIE_SPECIAL_EFFECTS.effects.magma.offset',
     );
   });
 

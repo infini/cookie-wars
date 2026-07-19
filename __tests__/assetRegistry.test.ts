@@ -15,6 +15,7 @@ import { hasMonsterImage } from '../src/components/MonsterSprite';
 import { hasBossAnimationImage } from '../src/components/battle/BossAnimationSprite';
 import { hasBotAnimationImage } from '../src/components/battle/BotAnimationSprite';
 import { hasCookieFeedbackVfxSource } from '../src/components/cookieFeedback/externalCookieFeedbackVfx';
+import COOKIE_FEEDBACK_VFX_BUILD from '../scripts/cookie-feedback-vfx.json';
 
 describe('데이터 테이블 이미지 레지스트리', () => {
   test('모든 난이도 전장과 몬스터 imageKey가 실제 정적 이미지에 연결된다', () => {
@@ -39,15 +40,28 @@ describe('데이터 테이블 이미지 레지스트리', () => {
     expect(hasCookieRareStatImage('superCritical')).toBe(true);
   });
 
-  test('마그마·전기 조각이 외부 애니메이션 WebP에 연결된다', () => {
-    COOKIE_FRAGMENTS.types.forEach((fragment) => {
-      expect(hasCookieFeedbackVfxSource(fragment.id)).toBe(true);
+  test('네 희귀 보상이 모두 외부 애니메이션 WebP에 연결된다', () => {
+    COOKIE_SPECIAL_EFFECTS.effects.forEach((effect) => {
+      expect(hasCookieFeedbackVfxSource(effect.id)).toBe(true);
     });
   });
 
-  test('일반·슈퍼 크리티컬은 데이터 기반 선형 연출을 가진다', () => {
-    expect(COOKIE_SPECIAL_EFFECTS.lineBursts.map((effect) => effect.id))
-      .toEqual(['critical', 'superCritical']);
+  test('네 희귀 보상 변환 테이블이 서로 구분되는 형광 팔레트를 가진다', () => {
+    const expectedIds = ['critical', 'magma', 'super-critical', 'electric'];
+    expect(Object.keys(COOKIE_FEEDBACK_VFX_BUILD.effects)).toEqual(expectedIds);
+    const grades = expectedIds.map((id) => (
+      COOKIE_FEEDBACK_VFX_BUILD.effects[
+        id as keyof typeof COOKIE_FEEDBACK_VFX_BUILD.effects
+      ].neonGrade
+    ));
+    grades.forEach((grade) => {
+      Object.values(grade).forEach((color) => {
+        expect(color).toMatch(/^#[0-9a-f]{6}$/);
+      });
+    });
+    expect(new Set(grades.map((grade) => JSON.stringify(grade))).size).toBe(4);
+    expect(COOKIE_FEEDBACK_VFX_BUILD.grade.paletteBlend).toBeGreaterThan(0.5);
+    expect(COOKIE_FEEDBACK_VFX_BUILD.grade.glowOpacity).toBeGreaterThan(0.5);
   });
 
   test('모든 보스 애니메이션 키가 실제 정적 WebP에 연결된다', () => {

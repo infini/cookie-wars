@@ -6,7 +6,7 @@
 
 `src/navigation/navigation.json`이 대분류 순서, 소분류 소속, 한국어 라벨, 아이콘, 화면 제목, 기본 leaf와 몬스터 NEW 배지 출처를 관리합니다. `navigation/model.ts`는 중복 ID, 누락 화면, 잘못된 부모·기본 leaf 참조를 시작 시 검증하고 기본/기억 화면 선택과 배지 상향을 순수 함수로 제공합니다. `ScreenLayout`은 공통 상단 정보와 설정, 자식이 둘 이상일 때만 나타나는 `SubmenuNav`, 5개 대분류 `BottomNav`를 조합합니다. `TopBar`는 게임 화면에서 부제·잔액 대신 현재 진화 쿠키 이름을 표시하고 다른 화면에서는 기존 화면 제목·잔액을 유지합니다. 게임·대결·전투에는 소메뉴 네이티브 뷰 자체가 생기지 않아 콘텐츠 영역을 유지합니다.
 
-`GameScreen`은 두 통계 카드 아래의 중앙 영역 전체를 하나의 쿠키 획득 `Pressable`로 사용합니다. 별도 전투 이동 버튼을 제거해 공통 하단 `전투` 메뉴만 이동 책임을 가지며, 다음 진화까지 남은 강화 수와 진행 막대는 중앙 쿠키 위에 간결하게 둡니다. 하단은 전투 훈장·자동 생산·클릭 획득과 두 줄 희귀 보상 아이콘만 조합합니다. `useImmediateCookiePress`는 터치 시작에 즉시 보상을 주고 같은 터치의 후속 `onPress`만 제거하며, 접근성 서비스처럼 `onPress`만 보내는 입력은 그대로 처리합니다. hit slop·이동 허용 범위·중복 제거 시간은 `cookie-input.json`에서 읽습니다. 획득 텍스트는 `screens/game/CookieGainFeedback`, 네 희귀 연출의 독립 수명은 `CookieSpecialFeedback`, 5초 조각 수명과 중복 수령 방지는 `useCookieFragmentCollection`로 분리했습니다. 일반·슈퍼 크리티컬은 `CookieLineBurstEffect`의 공통 선형 렌더러와 서로 다른 JSON 밀도를 사용하고, 마그마·전기는 Android 네이티브 animated WebP로 재생합니다. 다른 종류는 서로 겹치고 같은 종류만 새 ID로 교체되며, 슈퍼 크리티컬일 때만 별도 native-driver 값으로 쿠키 무대를 짧게 흔듭니다. 조각 `Pressable`은 메인 쿠키와 형제인 투명 오버레이에 있으므로 획득 터치가 기본 클릭으로 전파되지 않습니다.
+`GameScreen`은 두 통계 카드 아래의 중앙 영역 전체를 하나의 쿠키 획득 `Pressable`로 사용합니다. 별도 전투 이동 버튼을 제거해 공통 하단 `전투` 메뉴만 이동 책임을 가지며, 다음 진화까지 남은 강화 수와 진행 막대는 중앙 쿠키 위에 간결하게 둡니다. 하단은 전투 훈장·자동 생산·클릭 획득과 두 줄 희귀 보상 아이콘만 조합합니다. `useImmediateCookiePress`는 터치 시작에 즉시 보상을 주고 같은 터치의 후속 `onPress`만 제거하며, 접근성 서비스처럼 `onPress`만 보내는 입력은 그대로 처리합니다. hit slop·이동 허용 범위·중복 제거 시간은 `cookie-input.json`에서 읽습니다. 획득 텍스트는 `screens/game/CookieGainFeedback`, 네 희귀 연출의 독립 수명은 `CookieSpecialFeedback`, 5초 조각 수명과 중복 수령 방지는 `useCookieFragmentCollection`로 분리했습니다. 네 희귀 보상은 공통 `CookieAnimatedSpecialEffect`에서 Android 네이티브 animated WebP로 재생하며 모두 중앙에 배치합니다. 다른 종류는 서로 겹치고 같은 종류만 새 ID로 교체되며, 슈퍼 크리티컬일 때만 별도 native-driver 값으로 쿠키 무대를 짧게 흔듭니다. 조각 `Pressable`은 메인 쿠키와 형제인 투명 오버레이에 있으므로 획득 터치가 기본 클릭으로 전파되지 않습니다.
 
 `MiniGameScreen`은 저장 통화와 분리된 로컬 UI 상태만 사용합니다. `domain/miniGame.ts`가 10초 단위 시간 변경, A→인계→B 단계 전이와 승자 판정을 순수 함수로 제공하고, `useMiniGamePhaseTimer`는 종료 시각을 `Date.now()`로 고정해 렌더 지연이나 앱 일시 정지 뒤에도 클릭 허용 경계를 정확히 유지합니다. A와 B는 같은 선택 시간을 사용하며 B 종료 뒤에만 두 기록과 승자를 함께 표시합니다.
 
@@ -94,7 +94,7 @@ services/storage          engine/useBattleEngine
 
 조각 발견과 보상은 `domain/cookieFragments.ts`가 담당합니다. 두 번째 독립 난수를 마그마·전기 순서의 겹치지 않는 정수 구간으로 나눠 클릭 보상 판정과 확률적으로 결합되지 않게 합니다. 클릭 명령은 조각 종류만 반환하고 즉시 보상을 주지 않습니다. UI가 같은 활성 ID를 5초 안에 정확히 한 번 눌렀을 때만 `claimCookieFragment` 명령이 현재 클릭 힘과 테이블 배수를 계산해 `GAIN_COOKIES`를 보내므로, 만료·중복 탭·교체된 조각은 저장 통화를 바꾸지 않습니다.
 
-희귀 획득 연출은 게임 판정과 분리됩니다. `CookieSpecialFeedback`이 일반 크리티컬·마그마·슈퍼·전기를 종류별 최대 한 개로 관리합니다. 일반·슈퍼는 `CookieLineBurstEffect`가 JSON의 선 개수·길이·색·시간을 native-driver 애니메이션으로 표현하고, 마그마·전기는 `CookieAnimatedSpecialEffect`가 외부 CC0 animated WebP의 공통 배치를 담당합니다. 화면 비율·위치·수명·희귀도 레이어는 `cookie-special-effects.json`, 조각 확률·배수·발견 표현과 음향은 `cookie-fragments.json`에 있습니다. WebP는 Android Fresco가 네이티브 재생하므로 프레임별 React 상태나 JS interval을 만들지 않습니다.
+희귀 획득 연출은 게임 판정과 분리됩니다. `CookieSpecialFeedback`이 일반 크리티컬·마그마·슈퍼·전기를 종류별 최대 한 개로 관리하고 `CookieAnimatedSpecialEffect`가 외부 CC0 animated WebP 네 종류의 공통 중앙 배치와 크기를 담당합니다. 화면 비율·위치·수명·희귀도 레이어는 `cookie-special-effects.json`, 조각 확률·배수·발견 표현과 음향은 `cookie-fragments.json`에 있습니다. WebP는 Android Fresco가 네이티브 재생하므로 프레임별 React 상태나 JS interval을 만들지 않습니다.
 
 `battleRewardSelectors.ts`는 저장된 `battleMedals`를 안전 정수로 정규화하고 `battle-rewards.json`의 능력별 퍼센트를 곱해 세 영구 배율을 만듭니다. `cookieSelectors.ts`는 강화 값과 현재 쿠키 진화 배율을 먼저 계산한 뒤 이 배율을 클릭 힘·자동 생산·쿠키 성 체력에 각각 마지막으로 적용합니다. 훈장 수는 진화 합계에 들어가지 않아 전투 보상과 쿠키 종류 해금 규칙이 서로 결합되지 않습니다.
 
@@ -150,9 +150,9 @@ v8 이하 저장은 정규화된 `difficultyWinCounts`를 모두 합산하고 `b
 
 `useCookieAudioFeedback`은 Freesound CC0 `Crunch` MP3의 3보이스 풀과 연속 클릭 제한만 소유합니다. `useCookieSpecialAudioFeedback`은 일반 크리티컬 2개, 슈퍼 2개, 마그마 2개, 전기 3개의 로컬 Mixkit 플레이어를 종류별 그룹으로 관리합니다. 같은 종류가 다시 발동하면 해당 그룹의 플레이어·예약 타이머·비동기 요청 세대만 취소하고 처음부터 재생하며, 다른 종류는 서로 끊지 않아 시각 정책과 동일하게 최대 네 종류가 합성됩니다. 마그마는 180ms 간격 2회, 전기 천둥은 최대 상대 음량 1.0의 220ms 간격 3회로 테이블에 정의합니다. 시각 수명과 음향 레이어 강도는 낮은 확률일수록 오르도록 교차 테이블로 검증합니다. 화면 전환·사운드 OFF·Provider 해제는 모든 그룹과 예약 타이머를 취소합니다. `FeedbackContext`는 메뉴·전투 사운드와 진동을 조정하고, 전투 종료 시 재생 세대 번호를 올려 모든 액션음의 재시작을 막습니다.
 
-`CookieAnimatedSpecialEffect`는 마그마·전기 WebP의 공통 배치·크기 계산만 담당하고 Android Fresco가 각각 60·64프레임 로컬 애니메이션을 네이티브로 재생합니다. `CookieLineBurstEffect`는 일반·슈퍼의 선형 섬광을 한 진행값으로 구동하고 두 래퍼는 종류만 고릅니다. `CookieFragmentClaimEffect`는 마그마·전기 보상 숫자의 native-driver 이동·소멸만 담당합니다. 메인 연속 클릭 판정은 어느 표현의 프레임 진행에도 의존하지 않습니다.
+`CookieAnimatedSpecialEffect`는 네 WebP의 공통 배치·크기 계산만 담당하고 Android Fresco가 크리티컬·마그마·슈퍼 60프레임, 전기 64프레임 원본 기반 로컬 애니메이션을 네이티브로 재생합니다. 일반·슈퍼 래퍼는 전체·축약 재생 소스만 고르고 `CookieFragmentClaimEffect`는 마그마·전기 보상 숫자의 native-driver 이동·소멸만 담당합니다. 메인 연속 클릭 판정은 어느 표현의 프레임 진행에도 의존하지 않습니다.
 
-위치·최소 크기·화면 비율·지속 시간과 일반·슈퍼 선형 섬광 수치는 `cookie-special-effects.json` 한 테이블에 있으며, 같은 종류만 교체하는 수명주기는 `CookieSpecialFeedback`이 관리합니다. 외부 마그마·전기를 WebP로 합성·변환하는 재현 스크립트는 `scripts/process_external_cookie_feedback_vfx.py`, 정적 번들 연결은 `externalCookieFeedbackVfx.ts`로 분리했습니다. `withAnimatedWebp` Expo config plugin이 prebuild마다 Android의 Fresco animated WebP 의존성을 활성화합니다.
+위치·최소 크기·화면 비율·지속 시간은 `cookie-special-effects.json` 한 테이블에 있으며 모든 위치 오프셋은 0으로 검증합니다. 같은 종류만 교체하는 수명주기는 `CookieSpecialFeedback`이 관리합니다. 외부 네 연출을 WebP로 변환·합성하는 재현 스크립트는 `scripts/process_external_cookie_feedback_vfx.py`, 출력·형광 색보정 값은 `scripts/cookie-feedback-vfx.json`, 정적 번들 연결은 `externalCookieFeedbackVfx.ts`로 분리했습니다. `withAnimatedWebp` Expo config plugin이 prebuild마다 Android의 Fresco animated WebP 의존성을 활성화합니다.
 
 `useBattleScreenSession`은 저장된 `autoBattleEnabled`를 읽어 idle 상태의 최초 시작, active 상태의 성 쿨타임별 자동 발사, 승리 보상 확정 뒤 다음 전투 시작을 각각 독립 effect로 조정합니다. 패배와 최종 난이도 마지막 전투는 자동 전환 조건에서 제외합니다. 사용자가 HUD나 결과 모달에서 설정을 끄면 각 effect의 cleanup이 예약 진행을 취소합니다. 실제 발사 가능 여부와 피해는 수동 입력과 같은 엔진 명령을 사용하므로 자동 모드가 전투 판정을 우회하지 않습니다.
 

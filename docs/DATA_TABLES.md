@@ -159,12 +159,21 @@
 - `effects[].id`: `critical`, `magma`, `superCritical`, `electric` 중 하나이며 네 ID를 정확히 한 번씩 정의
 - `durationMs`, `compactDurationMs`: 전체·연속 발동 축약 애니메이션 수명
 - `minimumSizePixels`, `screenWidthRatio`, `screenHeightRatio`: 기기 크기와 무관하게 계산하는 최소 크기와 화면 점유 비율
-- `offsetXScreenRatio`, `offsetYScreenRatio`: 화면 중앙 기준 연출 위치. 현재 크리티컬 중앙, 마그마 왼쪽 위, 슈퍼 오른쪽 위, 전기 아래
-- `zIndex`, `sourceFrameCount`: 희귀도별 합성 순서와 외부 원본 프레임 수. 절차적 선형 연출인 일반·슈퍼는 0, WebP인 마그마·전기는 60·64
-- `lineBursts[]`: 일반·슈퍼의 주 선·보조선 개수, 길이·너비·각도, 방사선, 색상, 섬광과 진행률. 축약 모드 수치도 같은 행에서 관리
+- `offsetXScreenRatio`, `offsetYScreenRatio`: 화면 중앙 기준 연출 위치. 네 종류 모두 정확히 0이며 검증기가 중앙 이외의 값을 거부
+- `zIndex`, `sourceFrameCount`: 희귀도별 합성 순서와 외부 원본 프레임 수. 크리티컬·마그마·슈퍼는 60, 전기는 64
 - `fragmentReward.*`: 마그마·전기 실제 획득량 문구의 크기·위치·그림자·진행률·흔들림
 
-테이블 검증은 네 종류를 `크리티컬 < 마그마 < 슈퍼 < 전기` 순으로 정렬해 전체 수명, 최소 크기, 가로·세로 화면 점유 비율과 z-index가 모두 엄격히 증가하도록 강제합니다. 현재 최소 크기는 360 < 400 < 528 < 676px이고, 일반·슈퍼는 서로 다른 밀도의 선형 섬광, 마그마·전기는 외부 CC0 60·64프레임 WebP입니다. `fragmentReward.fontSize`는 17.55로 확대했습니다.
+테이블 검증은 네 종류를 `크리티컬 < 마그마 < 슈퍼 < 전기` 순으로 정렬해 전체 수명, 최소 크기, 가로·세로 화면 점유 비율과 z-index가 모두 엄격히 증가하도록 강제합니다. 현재 최소 크기는 360 < 400 < 528 < 676px이고 네 종류 모두 외부 CC0 원본을 변환한 animated WebP입니다. `fragmentReward.fontSize`는 17.55입니다.
+
+### `scripts/cookie-feedback-vfx.json`
+
+- `encodingQuality`: 최종 animated WebP 인코딩 품질
+- `grade.*`: 네 효과에 공통인 채도·대비·형광 팔레트 혼합률·명암 중간점·외곽 발광 반경과 불투명도
+- `effects.*.outputSize`, `fillRatio`: 종류별 출력 해상도와 투명 캔버스 안의 피사체 점유율
+- `effects.*.fullDurationMs`, `compactDurationMs`: 전체·연속 발동 파일의 인코딩 재생 시간
+- `effects.*.neonGrade`: 그림자·중간톤·하이라이트·외곽광의 종류별 형광색 팔레트
+
+빌드용 변환 스크립트는 이 테이블을 읽어 크리티컬은 네온 옐로, 마그마는 형광 오렌지·핑크, 슈퍼는 네온 마젠타·시안, 전기는 형광 시안·보라로 보정합니다. 네 팔레트는 서로 달라야 하며 테스트는 모든 색이 6자리 RGB 형식이고 팔레트 혼합률·발광 불투명도가 50%보다 큰지 확인합니다. 런타임 판정 수치와 분리된 빌드 데이터이므로 색보정 변경이 쿠키 획득 확률·배수에는 영향을 주지 않습니다.
 
 ### `discs.json`과 무한 강화
 

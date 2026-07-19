@@ -70,9 +70,9 @@ Create a premium production-ready 2D mobile game VFX sprite: a single dramatic v
 
 ## 외부 애니메이션 희귀 보상 VFX
 
-현재 런타임의 일반·슈퍼 크리티컬은 `cookie-special-effects.json`에 정의한 서로 다른 밀도의 선형 섬광을 native driver로 재생합니다. 마그마는 OpenGameArt에서 CC0로 배포된 CodeManu의 60프레임 지면 분출 GIF를 사용합니다. 전기는 Esteban Díaz/Inguz Media의 8×8 청록 충격과 Calinou 번개 세 갈래를 동시에 세 구간 배치해 64프레임으로 만듭니다.
+현재 런타임은 네 희귀 효과를 모두 중앙의 animated WebP로 재생합니다. OpenGameArt에서 CC0로 배포된 CodeManu의 60프레임 `BigHit`은 네온 옐로 타격 크리티컬, `Explosion2`는 형광 오렌지·옐로 폭발과 핑크 외곽광 마그마, `TheVortex`는 네온 마젠타·시안 에너지 소용돌이 슈퍼 크리티컬입니다. 전기는 Esteban Díaz/Inguz Media의 8×8 청록 충격과 Calinou 번개 세 갈래를 동시에 세 구간 배치하고 형광 시안·보라 외곽광으로 보정한 64프레임 파일입니다.
 
-`scripts/process_external_cookie_feedback_vfx.py`는 전체 시퀀스의 합집합 알파 경계를 계산해 같은 정사각 crop을 모든 프레임에 적용한 뒤 512px 마그마와 640px 전기 animated WebP 두 개를 생성합니다. 이 방식은 원본의 큰 투명 여백 때문에 실제 효과가 작아지는 문제와 프레임별 crop 흔들림을 함께 막습니다. 최종 파일은 `assets/images/vfx/cookie-feedback/`에 있고 Android Fresco가 네이티브로 재생합니다. 원본 URL·라이선스 선택·다운로드 SHA-256은 `assets/licenses/OPENGAMEART_COOKIE_VFX_SOURCE.txt`를 기준으로 합니다.
+`scripts/process_external_cookie_feedback_vfx.py`는 전체 시퀀스의 합집합 알파 경계를 계산해 같은 정사각 crop을 모든 프레임에 적용한 뒤 384px 크리티컬, 512px 마그마, 576px 슈퍼와 640px 전기 animated WebP, 두 축약 속도 파일을 생성합니다. `scripts/cookie-feedback-vfx.json`이 출력 크기·채움 비율·재생 시간·인코딩 품질과 종류별 형광 팔레트, 채도·대비·혼합·외곽 발광을 관리합니다. 이 방식은 원본의 큰 투명 여백 때문에 실제 효과가 작아지는 문제와 프레임별 crop 흔들림을 함께 막습니다. 최종 파일은 `assets/images/vfx/cookie-feedback/`에 있고 Android Fresco가 네이티브로 재생합니다. 원본 URL·라이선스 선택·다운로드 SHA-256은 `assets/licenses/OPENGAMEART_COOKIE_VFX_SOURCE.txt`를 기준으로 합니다.
 
 ### 메인 HUD 희귀 아이콘
 
