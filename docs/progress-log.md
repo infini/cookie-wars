@@ -29,6 +29,9 @@
 - SHA-256: `613aecab4795de59ad16ff316aeb2591491ead2cc25277eef104d90b8fef12b5`
 - APK 매니페스트: `com.cookiewars.game`, versionCode 15, versionName 1.0.14, minSdk 24, 세로 고정 확인
 
-### 제한과 후속 확인
+### 실기기 설치와 후속 확인
 
-- 작업 완료 시점에 `adb devices -l`에 연결된 Android 기기가 없어 APK 설치와 실기기 터치·음향·연속 자동 전투 체감 검증은 수행하지 못했다. 다음 USB 연결 시 같은 APK를 설치해 확인한다.
+- 2026-07-19 POCO F6(`24069PC21G`)에 `adb install -r`로 APK를 덮어쓰기 설치해 기존 앱 데이터와 최초 설치 시각을 유지했다.
+- 설치된 패키지는 `com.cookiewars.game`, versionCode 15, versionName 1.0.14로 확인했다.
+- 앱 실행 뒤 `MainActivity`가 전면 상태이고 프로세스가 유지되며, 첫 실행 로그에 치명적 예외가 없음을 확인했다.
+- 실제 터치 감도, 슈퍼 크리티컬의 음량·진동·시각 연출, 장시간 자동 전투의 체감은 사용자 플레이로 추가 확인한다.
