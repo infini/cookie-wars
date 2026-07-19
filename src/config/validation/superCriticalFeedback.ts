@@ -23,7 +23,7 @@ export function validateSuperCriticalEffect(
   validateStringFields(effect, path, ['flashColor', 'labelColor', 'labelShadowColor']);
   [
     'columnGradientColors', 'slashGradientColors', 'ghostSlashColors',
-    'lightningColors', 'shardColors',
+    'lightningColors', 'shardColors', 'riftColors',
   ].forEach((field) => validateColorArray(
     effect,
     path,
@@ -41,6 +41,8 @@ export function validateSuperCriticalEffect(
     'lightningZigzagOffsetPixels', 'shardCount', 'compactShardCount',
     'shardStartDistancePixels', 'shardEndDistancePixels', 'shardMinimumSizePixels',
     'shardMaximumSizePixels', 'labelFontSize', 'labelShadowRadius',
+    'riftSegmentCount', 'riftSegmentLengthPixels', 'riftSegmentWidthPixels',
+    'riftZigzagPixels', 'riftTurnDegrees', 'riftGlowWidthMultiplier',
   ];
   validateNumberFields(effect, path, [
     ...integerFields, 'flashMaximumOpacity', 'compactFlashMaximumOpacity',
@@ -55,7 +57,10 @@ export function validateSuperCriticalEffect(
     'lightningFadeStartProgress', 'lightningSegmentStartScale', 'shardStartProgress',
     'shardRevealProgress', 'shardFadeStartProgress', 'shardRotationTurns',
     'shardAngleOffsetDegrees', 'compactScale', 'labelTopRatio', 'labelStartScale',
-    'labelPeakScale', 'labelEndScale',
+    'labelPeakScale', 'labelEndScale', 'riftTopRatio',
+    'riftHorizontalSpreadRatio', 'riftRevealProgress',
+    'riftSegmentStaggerProgress', 'riftFadeStartProgress', 'riftStartScale',
+    'riftEndScale', 'riftGlowMaximumOpacity',
   ], { min: 0 });
   integerFields.forEach((field) => numberField(effect, field, path, { integer: true, min: 1 }));
   numberField(effect, 'maximumConcurrentFullEffects', path, { integer: true, min: 1, max: 2 });
@@ -67,7 +72,12 @@ export function validateSuperCriticalEffect(
   numberField(effect, 'lightningSegmentCount', path, { integer: true, min: 1, max: 8 });
   numberField(effect, 'shardCount', path, { integer: true, min: 1, max: 24 });
   numberField(effect, 'compactShardCount', path, { integer: true, min: 1, max: 16 });
-  ['flashMaximumOpacity', 'compactFlashMaximumOpacity', 'shakeReturnRatio', 'labelTopRatio']
+  numberField(effect, 'riftSegmentCount', path, { integer: true, min: 1, max: 12 });
+  [
+    'flashMaximumOpacity', 'compactFlashMaximumOpacity', 'shakeReturnRatio',
+    'labelTopRatio', 'riftTopRatio', 'riftHorizontalSpreadRatio',
+    'riftGlowMaximumOpacity',
+  ]
     .forEach((field) => numberField(effect, field, path, { min: 0, max: 1 }));
   [
     'impactPeakProgress', 'impactFadeStartProgress', 'shakeFirstProgress',
@@ -76,6 +86,7 @@ export function validateSuperCriticalEffect(
     'lightningBranchStaggerProgress', 'lightningSegmentStaggerProgress',
     'lightningFadeStartProgress', 'lightningSegmentStartScale', 'shardStartProgress',
     'shardRevealProgress', 'shardFadeStartProgress',
+    'riftRevealProgress', 'riftSegmentStaggerProgress', 'riftFadeStartProgress',
   ].forEach((field) => numberField(effect, field, path, { min: 0, max: 1 }));
 
   assertLess(effect, path, 'impactPeakProgress', 'impactFadeStartProgress');
@@ -90,6 +101,8 @@ export function validateSuperCriticalEffect(
   assertLess(effect, path, 'shardStartDistancePixels', 'shardEndDistancePixels');
   assertLess(effect, path, 'shardMinimumSizePixels', 'shardMaximumSizePixels');
   assertLess(effect, path, 'labelStartScale', 'labelPeakScale');
+  assertLess(effect, path, 'riftRevealProgress', 'riftFadeStartProgress');
+  assertLess(effect, path, 'riftStartScale', 'riftEndScale');
   if ((effect.compactSlashCount as number) > (effect.slashCount as number)) {
     throw new ConfigValidationError(`${path}.compactSlashCount`, 'slashCount 이하여야 합니다.');
   }
@@ -111,6 +124,15 @@ export function validateSuperCriticalEffect(
     throw new ConfigValidationError(
       `${path}.lightningFadeStartProgress`,
       '마지막 번개 조각 시작 시점보다 커야 합니다.',
+    );
+  }
+  const finalRiftStart = (effect.riftRevealProgress as number)
+    + ((effect.riftSegmentCount as number) - 1)
+      * (effect.riftSegmentStaggerProgress as number);
+  if (finalRiftStart >= (effect.riftFadeStartProgress as number)) {
+    throw new ConfigValidationError(
+      `${path}.riftSegmentStaggerProgress`,
+      '마지막 천공 균열도 fade 전에 나타나야 합니다.',
     );
   }
   if ((effect.durationMs as number) > gainDurationMs) {

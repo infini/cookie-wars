@@ -11,11 +11,15 @@ import {
   saturatingAdd,
   saturatingSubtract,
 } from '../domain/safeNumbers';
-import { GameState, SoundVolumeLevel } from '../types/game';
+import { normalizeCookiePityMisses } from '../domain/cookiePity';
+import { normalizeSoundVolumeLevel } from '../domain/audioSettings';
 import {
-  normalizeSoundVolumeLevel,
-  restoreSavedGame,
-} from './gameSave';
+  CookieClickResult,
+  CookiePityMisses,
+  GameState,
+  SoundVolumeLevel,
+} from '../types/game';
+import { restoreSavedGame } from './gameSave';
 
 export { initialGameState } from './gameInitialState';
 export { mergeSavedGame, prepareSavedGame, restoreSavedGame } from './gameSave';
@@ -23,6 +27,7 @@ export { mergeSavedGame, prepareSavedGame, restoreSavedGame } from './gameSave';
 export type GameAction =
   | { type: 'HYDRATE'; payload: Partial<GameState>; now: number }
   | { type: 'GAIN_COOKIES'; amount: number }
+  | { type: 'CLICK_COOKIE'; result: CookieClickResult; pityMisses: CookiePityMisses }
   | { type: 'BUY_UPGRADE'; upgradeId: string }
   | { type: 'BUY_DISC'; discId: string }
   | { type: 'UPGRADE_DISC'; discId: string }
@@ -68,6 +73,22 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         cookies,
         lifetimeCookies,
+      };
+    }
+    case 'CLICK_COOKIE': {
+      const amount = clampSafeInteger(action.result.amount);
+      const currentCookies = clampSafeInteger(state.cookies);
+      const currentLifetimeCookies = Math.max(
+        currentCookies,
+        clampSafeInteger(state.lifetimeCookies),
+      );
+      return {
+        ...state,
+        cookies: amount > 0 ? saturatingAdd(currentCookies, amount) : currentCookies,
+        lifetimeCookies: amount > 0
+          ? saturatingAdd(currentLifetimeCookies, amount)
+          : currentLifetimeCookies,
+        cookiePityMisses: normalizeCookiePityMisses(action.pityMisses),
       };
     }
     case 'BUY_UPGRADE': {

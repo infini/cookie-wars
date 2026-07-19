@@ -12,6 +12,7 @@ import {
   ImpactFlash,
   SlashBurst,
 } from './cookieFeedback/AngularImpactPrimitives';
+import { SuperCriticalSkyRift } from './cookieFeedback/SuperCriticalSkyRift';
 
 type SuperCriticalEffectMode = Extract<
   CookieFeedbackTier,
@@ -65,6 +66,7 @@ export const CookieSuperCriticalEffect = React.memo(
           peakProgress={FX.impactPeakProgress}
           fadeStartProgress={FX.impactFadeStartProgress}
         />
+        <SuperCriticalSkyRift progress={progress} size={size} compact={!full} />
         <Animated.View
           style={[
             styles.lightningColumn,

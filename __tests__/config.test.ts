@@ -14,7 +14,9 @@ import {
   BOTS,
   COOKIE_CRITICAL,
   COOKIE_FEEDBACK,
+  COOKIE_FRAGMENTS,
   COOKIE_INPUT,
+  COOKIE_PITY,
   COOKIE_SUPER_CRITICAL,
   COOKIE_UPGRADES,
   COOKIE_UPGRADE_RULES,
@@ -115,7 +117,7 @@ describe('데이터 테이블', () => {
   test('진행·음량·상점 값은 데이터 테이블에서 제공한다', () => {
     expect(PROGRESSION.winsToUnlockNextDifficulty).toBe(20);
     expect(PROGRESSION.giantDiscRewardPerFirstClear).toBe(1);
-    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(11);
+    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(13);
     expect(SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion).toBe(8);
     expect(SAVE_MIGRATIONS.battleMedalMigrationVersion).toBe(9);
     expect(SAVE_MIGRATIONS.battleMedalsPerLegacyWin).toBe(1);
@@ -155,7 +157,10 @@ describe('데이터 테이블', () => {
       'cookieCritical',
       'cookieHealth',
       'cookieSuperCritical',
+      'electricFragmentChance',
+      'magmaFragmentChance',
     ]);
+    expect(COOKIE_UPGRADE_RULES.clickPower.valueIncreasePerLevel).toBe(50);
     const cookieSize = COOKIE_UPGRADES.find((upgrade) => upgrade.id === 'cookieSize');
     expect(cookieSize).toMatchObject({
       enabled: false,
@@ -171,6 +176,9 @@ describe('데이터 테이블', () => {
     ).toEqual([
       'clickPower',
       'cookieCritical',
+      'cookieSuperCritical',
+      'magmaFragmentChance',
+      'electricFragmentChance',
       'autoProduction',
       'cookieHealth',
     ]);
@@ -196,16 +204,46 @@ describe('데이터 테이블', () => {
     expect(COOKIES[29].name).toBe('무한 우주 쿠키');
     expect(COOKIES[30].name).toBe('혜성 꼬리 쿠키');
     expect(COOKIES[COOKIES.length - 1].name).toBe('쿠키왕국 심장 쿠키');
-    expect(COOKIE_CRITICAL.probabilityScale).toBe(100_000);
-    expect(COOKIE_CRITICAL.maximumChanceUnits).toBe(50_000);
+    expect(COOKIE_CRITICAL.probabilityScale).toBe(200_000);
+    expect(COOKIE_CRITICAL.maximumChanceUnits).toBe(100_000);
     expect(COOKIE_CRITICAL.baseRewardMultiplier).toBe(10);
-    expect(COOKIE_SUPER_CRITICAL.probabilityScale).toBe(100_000);
-    expect(COOKIE_SUPER_CRITICAL.maximumChanceUnits).toBe(10_000);
+    expect(COOKIE_SUPER_CRITICAL.probabilityScale).toBe(200_000);
+    expect(COOKIE_SUPER_CRITICAL.maximumChanceUnits).toBe(20_000);
     expect(COOKIE_SUPER_CRITICAL.baseRewardMultiplier).toBe(100);
-    expect(COOKIE_UPGRADE_RULES.cookieSuperCritical.valueIncreasePerLevel).toBe(25);
+    expect(COOKIE_UPGRADE_RULES.cookieSuperCritical.valueIncreasePerLevel).toBe(50);
+    expect(COOKIE_FRAGMENTS.probabilityScale).toBe(200_000);
+    expect(COOKIE_FRAGMENTS.lifetimeMs).toBe(5_000);
+    expect(COOKIE_FRAGMENTS.types.map((fragment) => ({
+      id: fragment.id,
+      chance: COOKIE_UPGRADES.find((upgrade) => upgrade.id === fragment.upgradeId)?.levels[0].value,
+      reward: fragment.baseRewardMultiplier,
+      rewardIncrease: fragment.rewardMultiplierIncreasePerLevel,
+    }))).toEqual([
+      { id: 'magma', chance: 400, reward: 50, rewardIncrease: 5 },
+      { id: 'electric', chance: 100, reward: 200, rewardIncrease: 20 },
+    ]);
+    expect(COOKIE_UPGRADE_RULES.magmaFragmentChance.valueIncreasePerLevel).toBe(100);
+    expect(COOKIE_UPGRADE_RULES.electricFragmentChance.valueIncreasePerLevel).toBe(25);
+    expect(COOKIE_FRAGMENTS.audio).toMatchObject({
+      magmaRepeatCount: 2,
+      magmaRepeatIntervalMs: 180,
+      electricThunderVolumeMultiplier: 1,
+      electricThunderDelayMs: 0,
+      electricThunderRepeatCount: 3,
+      electricThunderRepeatIntervalMs: 220,
+    });
+    expect(COOKIE_FRAGMENTS.spawnEffect).toMatchObject({
+      spriteSizePixels: 56,
+      hitSlopPixels: 40,
+    });
     expect(BATTLE_AUTO.nextBattleDelayMs).toBeGreaterThan(0);
     expect(COOKIE_INPUT.pressRetentionOffsetPixels)
       .toBeGreaterThanOrEqual(COOKIE_INPUT.hitSlopPixels);
+    expect(COOKIE_PITY).toEqual({
+      enabled: true,
+      criticalPriority: ['superCritical', 'critical'],
+      fragmentPriority: ['electric', 'magma'],
+    });
     expect(COOKIE_FEEDBACK.audio.voicePlaybackRates).toHaveLength(3);
     expect(COOKIE_FEEDBACK.audio.voiceVolumeMultipliers).toHaveLength(3);
     expect(COOKIE_FEEDBACK.audio.minimumFullCriticalIntervalMs)
@@ -217,6 +255,31 @@ describe('데이터 테이블', () => {
       .toBeGreaterThanOrEqual(COOKIE_FEEDBACK.audio.superCriticalLayerDurationMs);
     expect(COOKIE_FEEDBACK.superCriticalEffect.durationMs)
       .toBeLessThanOrEqual(COOKIE_FEEDBACK.floatingGain.durationMs);
+    expect(
+      COOKIE_FEEDBACK.audio.superCriticalImpactVolumeMultiplier
+      + COOKIE_FEEDBACK.audio.superCriticalShockwaveVolumeMultiplier,
+    ).toBeGreaterThan(
+      COOKIE_FEEDBACK.audio.criticalImpactVolumeMultiplier
+      + COOKIE_FEEDBACK.audio.criticalSparkleVolumeMultiplier,
+    );
+    expect(COOKIE_FEEDBACK.audio.superCriticalImpactVolumeMultiplier)
+      .toBeGreaterThan(COOKIE_FEEDBACK.audio.criticalImpactVolumeMultiplier);
+    expect(COOKIE_FEEDBACK.audio.superCriticalShockwaveVolumeMultiplier)
+      .toBeGreaterThan(COOKIE_FEEDBACK.audio.criticalSparkleVolumeMultiplier);
+    expect(COOKIE_FEEDBACK.criticalEffect.durationMs).toBe(930);
+    expect(COOKIE_FEEDBACK.superCriticalEffect.durationMs).toBe(1_800);
+    expect([
+      COOKIE_CRITICAL.feedbackPowerRank,
+      COOKIE_FRAGMENTS.types.find((item) => item.id === 'magma')?.feedbackPowerRank,
+      COOKIE_SUPER_CRITICAL.feedbackPowerRank,
+      COOKIE_FRAGMENTS.types.find((item) => item.id === 'electric')?.feedbackPowerRank,
+    ]).toEqual([1, 2, 3, 4]);
+    expect([
+      COOKIE_FEEDBACK.criticalEffect.durationMs,
+      COOKIE_FRAGMENTS.claimEffect.magmaDurationMs,
+      COOKIE_FEEDBACK.superCriticalEffect.durationMs,
+      COOKIE_FRAGMENTS.claimEffect.electricDurationMs,
+    ]).toEqual([930, 1_500, 1_800, 1_950]);
     expect(BOSS_BALANCE.playerPowerBaseSurvivalSeconds).toBeGreaterThan(0);
     expect(BOSS_BALANCE.hpMultiplierReference).toBeGreaterThan(0);
     expect(BOSS_BALANCE.maximumPowerScaledSurvivalSeconds)
@@ -682,6 +745,42 @@ describe('데이터 테이블 런타임 검증', () => {
     expect(() => validateGameConfig(invalid)).toThrow(
       'AUDIO_SETTINGS.levels[2].volume',
     );
+  });
+
+  test('네 가지 쿠키 특별 보상의 레벨당 확률·배수 성장 비율을 동일하게 강제한다', () => {
+    const invalidChance = cloneConfig();
+    invalidChance.COOKIE_UPGRADE_RULES.electricFragmentChance.valueIncreasePerLevel = 26;
+    expect(() => validateGameConfig(invalidChance)).toThrow(
+      'COOKIE_FRAGMENTS.types[1].upgradeId',
+    );
+
+    const invalidReward = cloneConfig();
+    invalidReward.COOKIE_FRAGMENTS.types[0].rewardMultiplierIncreasePerLevel = 6;
+    expect(() => validateGameConfig(invalidReward)).toThrow(
+      'COOKIE_FRAGMENTS.types[0].rewardMultiplierIncreasePerLevel',
+    );
+
+    const missingRule = cloneConfig();
+    delete missingRule.COOKIE_UPGRADE_RULES.electricFragmentChance;
+    expect(() => validateGameConfig(missingRule)).toThrow(
+      'COOKIE_UPGRADE_RULES.electricFragmentChance',
+    );
+  });
+
+  test('희귀할수록 시각·음향 피드백 등급이 높아야 한다', () => {
+    const invalidRank = cloneConfig();
+    invalidRank.COOKIE_FRAGMENTS.types[0].feedbackPowerRank = 3;
+    expect(() => validateGameConfig(invalidRank)).toThrow('feedbackPowerRank');
+
+    const invalidDuration = cloneConfig();
+    invalidDuration.COOKIE_FRAGMENTS.claimEffect.magmaDurationMs = 900;
+    expect(() => validateGameConfig(invalidDuration)).toThrow('feedbackPowerRank');
+  });
+
+  test('확률 보정 우선순위는 네 특별 보상을 정확히 한 번씩 포함해야 한다', () => {
+    const invalid = cloneConfig();
+    invalid.COOKIE_PITY.fragmentPriority = ['magma', 'magma'];
+    expect(() => validateGameConfig(invalid)).toThrow('COOKIE_PITY.fragmentPriority');
   });
 
   test('쿠키 클릭 보이스의 재생 속도와 음량 설정 개수가 다르면 거부한다', () => {

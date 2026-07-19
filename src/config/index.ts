@@ -17,7 +17,9 @@ import cookieUpgradeData from './cookie-upgrades.json';
 import cookieUpgradeRuleData from './cookie-upgrade-rules.json';
 import cookieCriticalData from './cookie-critical.json';
 import cookieFeedbackData from './cookie-feedback.json';
+import cookieFragmentData from './cookie-fragments.json';
 import cookieInputData from './cookie-input.json';
+import cookiePityData from './cookie-pity.json';
 import cookieSuperCriticalData from './cookie-super-critical.json';
 import cookieData from './cookies.json';
 import difficultyData from './difficulties.json';
@@ -33,6 +35,8 @@ import {
   BattleMapConfig,
   BotConfig,
   CookieConfig,
+  CookieFragmentKind,
+  CookieFragmentTypeConfig,
   DifficultyConfig,
   DiscConfig,
   EnemyDiscConfig,
@@ -64,7 +68,9 @@ export const CONFIG_TABLES = validateGameConfig({
   COOKIE_UPGRADES: cookieUpgradeData,
   COOKIE_CRITICAL: cookieCriticalData,
   COOKIE_FEEDBACK: cookieFeedbackData,
+  COOKIE_FRAGMENTS: cookieFragmentData,
   COOKIE_INPUT: cookieInputData,
+  COOKIE_PITY: cookiePityData,
   COOKIE_SUPER_CRITICAL: cookieSuperCriticalData,
   COOKIES: cookieData,
   DIFFICULTIES: difficultyData,
@@ -98,7 +104,9 @@ export const {
   COOKIE_UPGRADES,
   COOKIE_CRITICAL,
   COOKIE_FEEDBACK,
+  COOKIE_FRAGMENTS,
   COOKIE_INPUT,
+  COOKIE_PITY,
   COOKIE_SUPER_CRITICAL,
   COOKIES,
   DIFFICULTIES,
@@ -122,6 +130,9 @@ const botById = new Map(BOTS.map((item) => [item.id, item]));
 const upgradeById = new Map(COOKIE_UPGRADES.map((item) => [item.id, item]));
 const discById = new Map(DISCS.map((item) => [item.id, item]));
 const cookieById = new Map(COOKIES.map((item) => [item.id, item]));
+const cookieFragmentById = new Map(
+  COOKIE_FRAGMENTS.types.map((item) => [item.id, item]),
+);
 const enemyDiscByLevel = new Map(ENEMY_DISCS.map((item) => [item.level, item]));
 const bossAnimationByMonsterId = new Map(
   BOSS_ANIMATION.sets.map((item) => [item.id, item]),
@@ -180,6 +191,10 @@ export function getDisc(id: string): DiscConfig | undefined {
 
 export function getCookie(id: string): CookieConfig {
   return requireConfig(cookieById.get(id), 'COOKIES.id', id);
+}
+
+export function getCookieFragment(kind: CookieFragmentKind): CookieFragmentTypeConfig {
+  return requireConfig(cookieFragmentById.get(kind), 'COOKIE_FRAGMENTS.types.id', kind);
 }
 
 export function getBossAnimation(monsterId: string) {

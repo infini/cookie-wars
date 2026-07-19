@@ -1,15 +1,23 @@
 {
   "clickPower": {
-    "valueIncreasePerLevel": 25,
+    "valueIncreasePerLevel": 50,
     "costGrowthMultiplier": 1.25
   },
   "cookieCritical": {
-    "valueIncreasePerLevel": 250,
+    "valueIncreasePerLevel": 500,
     "costGrowthMultiplier": 1.25
   },
   "cookieSuperCritical": {
-    "valueIncreasePerLevel": 25,
+    "valueIncreasePerLevel": 50,
     "costGrowthMultiplier": 1.32
+  },
+  "magmaFragmentChance": {
+    "valueIncreasePerLevel": 100,
+    "costGrowthMultiplier": 1.3
+  },
+  "electricFragmentChance": {
+    "valueIncreasePerLevel": 25,
+    "costGrowthMultiplier": 1.34
   },
   "autoProduction": {
     "valueIncreasePerLevel": 25,

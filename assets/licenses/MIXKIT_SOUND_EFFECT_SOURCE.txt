@@ -45,6 +45,24 @@ Item ID: 2599
 Local encoding: MP3, about 257 kbps, 44.1 kHz, stereo, 6.69 seconds
 SHA-256: db01ea375897b47166292daa4ab4c9798fa2ff2087c397db62de5ae262286abc
 
+Asset: Big fire spell burning
+Runtime use: magma cookie-fragment claim flame layer
+Local file: assets/audio/cookie-fragment-magma.mp3
+Source page: https://mixkit.co/free-sound-effects/fire/
+Downloaded preview: https://assets.mixkit.co/active_storage/sfx/1332/1332-preview.mp3
+Item ID: 1332
+Local encoding: MP3, about 241 kbps, 44.1 kHz, 4.00 seconds
+SHA-256: 422443e5061c428abd3249880cf35f08c23fe568f2a870b2102e9b0b062430f5
+
+Asset: Strong close thunder explosion
+Runtime use: electric cookie-fragment triple close-thunder strike
+Local file: assets/audio/cookie-fragment-thunder.mp3
+Source page: https://mixkit.co/free-sound-effects/thunder/
+Downloaded preview: https://assets.mixkit.co/active_storage/sfx/1300/1300-preview.mp3
+Item ID: 1300
+Local encoding: MP3, 128 kbps, 44.1 kHz, joint stereo, 8.91 seconds
+SHA-256: 17214dd177fb69e480614f179b16712697034ff3afa0a403a946da82477d6f61
+
 Legacy retained asset: Short explosion
 Local file: assets/audio/cookie-critical-explosion.wav
 Runtime status: retained for source history; current code does not load it

@@ -1,4 +1,6 @@
 import type { SoundVolumeLevel } from './audio';
+import type { CookieFragmentKind } from './cookieFragments';
+import type { CookiePityMisses, CriticalPityKind } from './cookiePity';
 
 export interface GameState {
   saveVersion: number;
@@ -24,6 +26,7 @@ export interface GameState {
   vibrationEnabled: boolean;
   battleSpeedMultiplier: number;
   autoBattleEnabled: boolean;
+  cookiePityMisses: CookiePityMisses;
   lastSavedAt: number;
 }
 
@@ -41,11 +44,18 @@ export interface CookieStats {
   totalUpgradeLevels: number;
 }
 
-export type CookieClickKind = 'normal' | 'critical' | 'superCritical';
+export type CookieClickKind = 'normal' | CriticalPityKind;
 
 export interface CookieClickResult {
   amount: number;
   kind: CookieClickKind;
+  spawnedFragmentKind?: CookieFragmentKind;
+}
+
+export interface CookieFragmentRewardResult {
+  kind: CookieFragmentKind;
+  amount: number;
+  multiplier: number;
 }
 
 export interface BattleRewardResult {

@@ -30,6 +30,7 @@ export function calculateUpgradeLevel(
   const requestedLevel = clampSafeInteger(level, {
     fallback: first.level,
     minimum: first.level,
+    maximum: config.maximumLevel,
   });
   const explicit = config.levels.find((item) => item.level === requestedLevel);
   if (explicit) {
@@ -75,7 +76,9 @@ export function getUpgradeProgress(
     minimum: firstLevel,
   });
   const current = calculateUpgradeLevel(config, savedLevel);
-  const nextLevel = nextSafeInteger(current.level, firstLevel);
+  const nextLevel = config.maximumLevel !== undefined && current.level >= config.maximumLevel
+    ? undefined
+    : nextSafeInteger(current.level, firstLevel);
   const explicitNext = nextLevel === undefined
     ? undefined
     : config.levels.find((level) => level.level === nextLevel);

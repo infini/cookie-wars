@@ -10,28 +10,55 @@ import {
   calculateCookieSuperCriticalStatsForLevel,
   formatSuperCriticalChancePercent,
 } from '../domain/cookieSuperCritical';
+import {
+  calculateCookieFragmentStatsForLevel,
+  formatCookieFragmentChancePercent,
+} from '../domain/cookieFragments';
 import { useFeedback } from '../services/FeedbackContext';
 import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import { formatNumber } from '../utils/format';
+import { getCookiePityAttemptLimit } from '../domain/cookiePity';
 import { GameButton } from '../components/GameButton';
 import { Panel } from '../components/Panel';
-import { COOKIE_CRITICAL, COOKIE_SUPER_CRITICAL } from '../config';
+import {
+  COOKIE_CRITICAL,
+  COOKIE_FRAGMENTS,
+  COOKIE_PITY,
+  COOKIE_SUPER_CRITICAL,
+} from '../config';
 import type { UpgradeConfig, UpgradeLevelConfig } from '../types/game';
 
 const icons: Record<string, React.ComponentProps<typeof MaterialCommunityIcons>['name']> = {
   clickPower: 'gesture-tap',
   cookieCritical: 'bomb',
   cookieSuperCritical: 'star-four-points-circle',
+  magmaFragmentChance: 'fire',
+  electricFragmentChance: 'lightning-bolt',
   autoProduction: 'clock-fast',
   cookieHealth: 'shield-home',
 };
+
+function formatPityLimit(chanceUnits: number, probabilityScale: number): string {
+  return COOKIE_PITY.enabled
+    ? `\n최대 ${formatNumber(getCookiePityAttemptLimit(chanceUnits, probabilityScale))}회 안에 확정`
+    : '';
+}
 
 function formatUpgradeValue(
   upgrade: UpgradeConfig,
   level: UpgradeLevelConfig,
 ): string {
+  const fragment = COOKIE_FRAGMENTS.types.find((item) => item.upgradeId === upgrade.id);
+  if (fragment) {
+    const stats = calculateCookieFragmentStatsForLevel(
+      fragment.id,
+      level.level,
+      level.value,
+    );
+    return `${formatCookieFragmentChancePercent(stats.chanceUnits, fragment.id)}% · ×${formatNumber(stats.rewardMultiplier)}${formatPityLimit(stats.chanceUnits, COOKIE_FRAGMENTS.probabilityScale)}`;
+  }
   if (
     upgrade.id !== COOKIE_CRITICAL.upgradeId
     && upgrade.id !== COOKIE_SUPER_CRITICAL.upgradeId
@@ -43,10 +70,10 @@ function formatUpgradeValue(
       level.level,
       level.value,
     );
-    return `${formatSuperCriticalChancePercent(superCritical.chanceUnits)}% · ×${formatNumber(superCritical.rewardMultiplier)}`;
+    return `${formatSuperCriticalChancePercent(superCritical.chanceUnits)}% · ×${formatNumber(superCritical.rewardMultiplier)}${formatPityLimit(superCritical.chanceUnits, COOKIE_SUPER_CRITICAL.probabilityScale)}`;
   }
   const critical = calculateCookieCriticalStatsForLevel(level.level, level.value);
-  return `${formatCriticalChancePercent(critical.chanceUnits)}% · ×${formatNumber(critical.rewardMultiplier)}`;
+  return `${formatCriticalChancePercent(critical.chanceUnits)}% · ×${formatNumber(critical.rewardMultiplier)}${formatPityLimit(critical.chanceUnits, COOKIE_CRITICAL.probabilityScale)}`;
 }
 
 export function UpgradeScreen() {
@@ -56,7 +83,7 @@ export function UpgradeScreen() {
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <Text style={styles.help}>쿠키를 사용해서 더 강해져요!</Text>
-      <Text style={styles.levelHelp}>진화 합계에는 저장된 이전 강화 레벨도 보존돼요.</Text>
+      <Text style={styles.levelHelp}>화면의 7가지 강화가 모두 쿠키 진화 레벨에 포함돼요.</Text>
       {sortedUpgrades.map((progress) => {
         const { config: upgrade, current, next, affordable } = progress;
         const handleUpgrade = () => {

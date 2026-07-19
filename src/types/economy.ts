@@ -12,6 +12,7 @@ export interface UpgradeConfig {
   countsTowardCookieEvolution: boolean;
   enabled?: boolean;
   visible?: boolean;
+  maximumLevel?: number;
   renderBaseSizePixels?: number;
   renderMaximumSizePixels?: number;
   levels: UpgradeLevelConfig[];
@@ -30,6 +31,7 @@ export interface CookieCriticalConfig {
   maximumChanceUnits: number;
   baseRewardMultiplier: number;
   rewardMultiplierIncreasePerLevel: number;
+  feedbackPowerRank: number;
   displayMaximumFractionDigits: number;
 }
 

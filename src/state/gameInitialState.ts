@@ -12,6 +12,7 @@ import {
   makeInitialUpgradeLevels,
 } from '../domain/gameSelectors';
 import { GameState } from '../types/game';
+import { INITIAL_COOKIE_PITY_MISSES } from '../domain/cookiePity';
 
 const initialDifficultyWinCounts = Object.fromEntries(
   DIFFICULTIES.map((difficulty) => [difficulty.id, 0]),
@@ -41,5 +42,6 @@ export const initialGameState: GameState = {
   vibrationEnabled: true,
   battleSpeedMultiplier: BATTLE_RULES.defaultBattleSpeedMultiplier,
   autoBattleEnabled: BATTLE_AUTO.defaultEnabled,
+  cookiePityMisses: INITIAL_COOKIE_PITY_MISSES,
   lastSavedAt: 0,
 };

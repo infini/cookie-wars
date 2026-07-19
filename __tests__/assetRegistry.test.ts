@@ -1,5 +1,6 @@
-import { BOSS_ANIMATION, BOT_ANIMATION, COOKIES } from '../src/config';
+import { BOSS_ANIMATION, BOT_ANIMATION, COOKIES, COOKIE_FRAGMENTS } from '../src/config';
 import { hasCookieImage } from '../src/components/CookieImage';
+import { hasCookieFragmentImage } from '../src/components/CookieFragmentImage';
 import { hasBossAnimationImage } from '../src/components/battle/BossAnimationSprite';
 import { hasBotAnimationImage } from '../src/components/battle/BotAnimationSprite';
 
@@ -7,6 +8,12 @@ describe('데이터 테이블 이미지 레지스트리', () => {
   test('모든 쿠키 imageKey가 실제 정적 이미지에 연결된다', () => {
     COOKIES.forEach((cookie) => {
       expect(hasCookieImage(cookie.imageKey)).toBe(true);
+    });
+  });
+
+  test('두 쿠키 조각이 실제 정적 WebP에 연결된다', () => {
+    COOKIE_FRAGMENTS.types.forEach((fragment) => {
+      expect(hasCookieFragmentImage(fragment.id)).toBe(true);
     });
   });
 

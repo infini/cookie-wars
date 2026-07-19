@@ -7,9 +7,11 @@
 | 파일 | 제어 범위 |
 |---|---|
 | `cookie-upgrades.json` | 쿠키 업그레이드의 초기 레벨, 능력치, 가격 |
-| `cookie-upgrade-rules.json` | 클릭 힘·일반/슈퍼 크리티컬·자동 생산·쿠키 성 체력의 무한 강화 증가량 |
+| `cookie-upgrade-rules.json` | 클릭 힘·일반/슈퍼 크리티컬·조각 발견·자동 생산·쿠키 성 체력의 후속 강화 증가량 |
 | `cookie-critical.json` | 크리티컬 확률 단위·상한과 획득 배수 |
 | `cookie-super-critical.json` | 슈퍼 크리티컬 확률 단위·상한과 획득 배수 |
+| `cookie-fragments.json` | 마그마·전기 조각의 확률·보상·5초 수명·등장/획득 연출·음향 |
+| `cookie-pity.json` | 4종 희귀 보상의 연속 실패 천장 활성화와 동시 확정 우선순위 |
 | `cookie-feedback.json` | 쿠키 클릭 사운드 변주·중첩 제한, 획득 텍스트와 일반/슈퍼 크리티컬 연출 |
 | `cookie-input.json` | 쿠키 터치 hit slop·이동 허용 범위·중복 제거 시간 |
 | `battle-auto.json` | 자동 전투 기본값과 시작·다음 전투 지연 |
@@ -60,34 +62,58 @@
 - `enabled`: `false`이면 현재 저장 레벨은 읽되 다음 단계 구매를 만들지 않음
 - `visible`: `false`이면 강화 화면 목록에서 숨김
 - `countsTowardCookieEvolution`: `true`인 행의 현재 레벨만 쿠키 진화 레벨 합계에 포함
+- `maximumLevel`: 선택 항목의 명시적 최고 단계. 없으면 후속 규칙이 존재하는 동안 무한 강화
 - `renderBaseSizePixels`, `renderMaximumSizePixels`: 비율 값을 실제 메인 화면 크기로 바꾸는 기준·상한
 - `levels[].level`: 단계 번호
 - `levels[].value`: 해당 단계의 실제 능력치
 - `levels[].cost`: 그 단계로 올라갈 때 소모할 쿠키. 첫 단계는 기본 보유이므로 0
 
-`cookie-upgrade-rules.json`에 ID가 있는 클릭 힘(`clickPower`), 쿠키 크리티컬(`cookieCritical`), 쿠키 슈퍼 크리티컬(`cookieSuperCritical`), 자동 생산(`autoProduction`), 쿠키 성 체력(`cookieHealth`)은 명시 레벨 뒤에도 무한히 강화됩니다.
+`cookie-upgrade-rules.json`에 ID가 있는 항목은 명시 레벨 뒤의 능력치와 가격도 데이터로 생성합니다. 화면에 보이는 클릭 힘(`clickPower`), 쿠키 크리티컬(`cookieCritical`), 쿠키 슈퍼 크리티컬(`cookieSuperCritical`), 마그마·전기 조각, 자동 생산(`autoProduction`), 쿠키 성 체력(`cookieHealth`) 7종은 모두 최고 레벨이 없습니다. 네 희귀 보상은 발동 확률만 각 상한에서 멈추고 획득 배수와 강화 단계는 계속 성장합니다.
 
 - `valueIncreasePerLevel`: 이후 한 레벨마다 증가하는 능력치
 - `costGrowthMultiplier`: 이후 강화 비용 증가 배율
 
-클릭 힘(`clickPower`), 쿠키 크리티컬(`cookieCritical`), 자동 생산(`autoProduction`), 쿠키 성 체력(`cookieHealth`)은 `countsTowardCookieEvolution: true`입니다. 슈퍼 크리티컬과 쿠키 크기(`cookieSize`)는 `false`이므로 새 기능 추가나 이전 저장 복구가 기존 쿠키 진화 진행을 갑자기 올리지 않습니다. 네 기여 강화가 모두 Lv.1인 새 게임의 진화 기여 합계는 4입니다. 쿠키 크기 행은 `enabled: false`, `visible: false`인 호환·렌더 기준용 데이터로만 남으며 강화 화면에서 숨기고 새로 구매할 수 없습니다.
+클릭 힘은 명시된 Lv.8의 55 이후 레벨마다 +50, 비용은 ×1.25로 증가합니다. 자동 생산의 +25보다 정확히 두 배 큰 순간 성장을 제공하며, 크리티컬·조각 보상도 최종 클릭 힘을 기준으로 계산합니다.
+
+강화 화면에 보이는 클릭 힘(`clickPower`), 일반·슈퍼 크리티컬, 마그마·전기 조각, 자동 생산, 쿠키 성 체력 7종은 모두 `countsTowardCookieEvolution: true`입니다. 일곱 기여 강화가 모두 Lv.1인 새 게임의 진화 기여 합계는 7이며, 기존 저장도 이미 올린 슈퍼·두 조각 레벨 전체가 다음 실행부터 자동 합산됩니다. 쿠키 크기(`cookieSize`)만 `false`이며 `enabled: false`, `visible: false`인 호환·렌더 기준용 데이터로 남아 강화 화면에서 숨기고 새로 구매할 수 없습니다.
 
 업그레이드 화면은 `visible`인 항목만 대상으로 현재 쿠키 잔액으로 바로 살 수 있는 항목을 첫 그룹, 다음 단계는 있지만 쿠키가 부족한 항목을 두 번째 그룹, `next`가 없는 강화 완료 항목을 마지막 그룹에 둡니다. 잔액이나 레벨이 바뀔 때 selector가 다시 정렬하며 같은 그룹 안에서는 이 JSON 배열 순서를 그대로 유지합니다.
 
 ### `cookie-critical.json`
 
 - `upgradeId`: `cookie-upgrades.json`에서 확률 진행을 읽을 강화 ID. 현재 `cookieCritical`
-- `probabilityScale`: 정수 난수와 확률 값을 대응시키는 전체 단위. 0.025%p를 정수로 정확히 표현하기 위해 현재 100,000
-- `maximumChanceUnits`: 실제 발동 확률 상한. 현재 50,000으로 정확히 50%
+- `probabilityScale`: 정수 난수와 확률 값을 대응시키는 전체 단위. 전기 조각의 0.0125%p를 정수로 정확히 표현하기 위해 네 희귀 보상 공통 200,000
+- `maximumChanceUnits`: 실제 발동 확률 상한. 현재 100,000으로 정확히 50%
 - `baseRewardMultiplier`: Lv.1 크리티컬 획득 배수. 현재 10배
 - `rewardMultiplierIncreasePerLevel`: Lv.1 이후 한 단계마다 더할 획득 배수. 현재 +1배
 - `displayMaximumFractionDigits`: 한국어 UI에서 확률을 표시할 최대 소수 자릿수
 
-`cookie-upgrades.json`의 `levels[].value`와 무한 강화 규칙의 `valueIncreasePerLevel`은 확률 단위로 해석합니다. Lv.1 값 1,000은 1%, 이후 한 단계당 250은 0.25%p입니다. 계산된 확률 값은 50%에서 제한하지만 강화 단계와 배수는 제한하지 않습니다. 따라서 Lv.1은 1%·10배, Lv.2는 1.25%·11배이며 확률 상한에 도달한 뒤에도 레벨마다 배수가 계속 증가합니다. 클릭마다 0~1 난수 한 번을 정수 단위로 변환해 판정하고, 발동하면 최종 클릭 힘에 해당 배수를 곱합니다. 극단 단계의 결과는 공통 안전 정수 포화 정책을 따릅니다.
+`cookie-upgrades.json`의 `levels[].value`와 무한 강화 규칙의 `valueIncreasePerLevel`은 확률 단위로 해석합니다. Lv.1 값 2,000은 1%, 이후 한 단계당 500은 0.25%p입니다. 계산된 확률 값은 50%에서 제한하지만 강화 단계와 배수는 제한하지 않습니다. 따라서 Lv.1은 1%·10배, Lv.2는 1.25%·11배이며 확률 상한에 도달한 뒤에도 레벨마다 배수가 계속 증가합니다. 클릭마다 0~1 난수 한 번을 정수 단위로 변환해 판정하고, 발동하면 최종 클릭 힘에 해당 배수를 곱합니다. 극단 단계의 결과는 공통 안전 정수 포화 정책을 따릅니다.
 
 ### `cookie-super-critical.json`
 
-필드는 `cookie-critical.json`과 같고 현재 `upgradeId`는 `cookieSuperCritical`입니다. Lv.1은 값 100으로 정확히 0.1%·100배이며, 이후 모든 레벨은 확률이 25단위(0.025%p), 배수가 10배씩 증가합니다. 확률은 10,000단위인 10%에서 멈추고 배수와 강화 레벨은 계속 성장합니다. 저장에는 확률값이 아니라 강화 레벨이 있으므로 기존 사용자도 현재 레벨을 기준으로 새 공식을 즉시 소급 적용받습니다. 예를 들어 Lv.20은 `0.1% + 19×0.025%p = 0.575%`입니다. 두 크리티컬은 같은 100,000 눈금을 사용하고 최대 확률 합이 100%를 넘으면 설정 검증이 실패합니다. 클릭 판정은 한 난수에서 슈퍼 구간을 먼저, 그 다음 일반 크리티컬 구간을 배치해 중복 지급하지 않습니다.
+필드는 `cookie-critical.json`과 같고 현재 `upgradeId`는 `cookieSuperCritical`입니다. Lv.1은 값 200으로 정확히 0.1%·100배이며, 이후 모든 레벨은 확률이 50단위(0.025%p), 배수가 10배씩 증가합니다. 확률은 20,000단위인 10%에서 멈추고 배수와 강화 레벨은 계속 성장합니다. 저장에는 확률값이 아니라 강화 레벨이 있으므로 기존 사용자도 현재 레벨을 기준으로 새 공식을 즉시 소급 적용받습니다. 예를 들어 Lv.20은 `0.1% + 19×0.025%p = 0.575%`입니다. 두 크리티컬은 같은 200,000 눈금을 사용하고 최대 확률 합이 100%를 넘으면 설정 검증이 실패합니다. 클릭 판정은 한 난수에서 슈퍼 구간을 먼저, 그 다음 일반 크리티컬 구간을 배치해 중복 지급하지 않습니다.
+
+### `cookie-fragments.json`
+
+- `probabilityScale`: 조각 발견 확률의 정수 눈금. 네 희귀 보상 공통 200,000
+- `lifetimeMs`: 조각이 등장 동작을 마친 뒤 획득 가능한 시간. 현재 정확히 5,000ms
+- `types[]`: 조각 ID, 연결 강화 ID, 한국어 이름, 기본·레벨당 보상 배수, 확률 상한, 전용 이미지·색상
+- `spawnEffect.*`: 좌우 교대 출현, 최초 크기의 50%인 56px 조각, 체감 터치 범위를 유지하는 40px 여백, 튀어나오는 거리·회전·쿠키 부스러기, 오라, 남은 시간 막대
+- `claimEffect.*`: 화면 기준 크기, 마그마 화산·하강 용암·불씨와 전기 7갈래 다중 낙뢰·파편의 개수·색·수명·흔들림
+- `audio.*`: Mixkit 화염·강한 근거리 천둥의 상대 음량, 화염·천둥 반복 횟수·간격
+
+한 번의 독립 난수를 테이블 순서의 겹치지 않는 구간으로 나눠 동시에 두 조각이 나오지 않습니다. Lv.1은 마그마 400단위인 0.2%·50배, 전기 100단위인 0.05%·200배입니다. 마그마는 강화마다 +100단위(0.05%p)·+5배, 전기는 +25단위(0.0125%p)·+20배입니다. 네 희귀 보상 모두 `레벨당 확률 증가 ÷ 기본 확률 = 25%`, `레벨당 배수 증가 ÷ 기본 배수 = 10%`이며 교차 테이블 검증이 이 비율과 모든 명시 레벨 값을 강제합니다. 마그마 확률은 Lv.97의 5%, 전기는 Lv.117의 1.5%에서 멈추지만 보상 배수와 강화는 이후에도 무한히 증가합니다. 보상은 수령 시점의 현재 클릭 힘에 조각 배수만 곱하고 크리티컬 배수와 중복 곱하지 않습니다. 저장에는 강화 레벨이 있으므로 기존 사용자도 현재 단계에 해당하는 확률과 새 배수를 즉시 소급 적용받습니다.
+
+마그마 획득음은 `Big fire spell burning`을 180ms 간격으로 두 겹, 전기 획득음은 `Strong close thunder explosion`을 3개 플레이어로 220ms 간격 재생합니다. 같은 종류의 특수 보상이 다시 나오면 그 종류의 시각·오디오만 교체하고, 다른 종류는 최대 4종까지 함께 합성됩니다. 전역 사운드 OFF나 화면 전환은 모든 플레이어와 예약 재생을 취소합니다.
+
+### `cookie-pity.json`
+
+- `enabled`: 네 희귀 보상의 연속 실패 천장 활성화. 현재 `true`
+- `criticalPriority`: 두 크리티컬이 같은 클릭에서 확정일 때의 우선순위. 현재 슈퍼 → 일반
+- `fragmentPriority`: 두 조각이 같은 클릭에서 확정일 때의 우선순위. 현재 전기 → 마그마
+
+화면에 보이는 확률은 각 클릭의 기본 확률입니다. 별도의 실패 횟수를 4종에 각각 두고 `ceil(확률 눈금 ÷ 현재 확률 단위)`를 최대 시도 횟수로 사용합니다. 예를 들어 일반 크리티컬이 10%면 9회 연속 실패 뒤 10번째를 확정합니다. 자연 슈퍼 발동은 일반과 슈퍼 실패 횟수를 모두 초기화하며, 두 조각 천장이 겹치면 희귀한 전기를 먼저 주고 마그마 천장은 다음 클릭까지 유지합니다. 카운터는 저장 스키마 v13의 `cookiePityMisses`에 저장되므로 재실행해도 리셋되지 않습니다. 계산은 클릭당 정수 비교와 덧셈만 수행하는 O(1)입니다.
 
 ### `cookie-input.json`
 
@@ -110,12 +136,12 @@
 게임 보상 수치는 포함하지 않고 쿠키 클릭의 소리와 화면 연출만 제어합니다.
 
 - `audio.minimumClickIntervalMs`: 빠른 연속 입력에서 기본 깨짐음이 겹치는 최소 간격. 현재 40ms
-- `audio.minimumFullCriticalIntervalMs`: 큰 충격음·반짝임과 전체 크리티컬 이펙트를 다시 허용하는 최소 간격. 현재 1,650ms
+- `audio.minimumFullCriticalIntervalMs`: 전체·축약 시각 연출 등급을 결정하는 일반 크리티컬 기준 간격. 현재 1,650ms
 - `audio.criticalLayerDurationMs`: 충격음과 지연 반짝임의 꼬리가 끝나는 최대 길이. 현재 1,620ms이며 전체 크리티컬 최소 간격은 이 값보다 짧을 수 없습니다.
 - `audio.criticalSparkleDelayMs`: 충격음 뒤 반짝임 레이어 지연. 현재 70ms
 - `audio.voicePlaybackRates`, `voiceVolumeMultipliers`: Freesound `Crunch` 원본을 번갈아 재생하는 세 보이스의 속도와 상대 음량
 - `audio.criticalImpactVolumeMultiplier`, `criticalSparkleVolumeMultiplier`: Mixkit 충격·반짝임 레이어의 상대 음량
-- `audio.minimumFullSuperCriticalIntervalMs`, `superCriticalLayerDurationMs`: 슈퍼 전용 전체 음향의 최소 간격과 꼬리 길이. 현재 7,000ms·6,800ms
+- `audio.minimumFullSuperCriticalIntervalMs`, `superCriticalLayerDurationMs`: 슈퍼 전체·축약 시각 등급 기준 간격과 전용 음향 꼬리 길이. 현재 7,000ms·6,800ms
 - `audio.superCriticalImpactVolumeMultiplier`, `superCriticalShockwaveVolumeMultiplier`, `superCriticalShockwaveDelayMs`: 슈퍼 전용 Mixkit 첫 충격과 `콰광` 전기 폭발의 음량·지연
 - `floatingGain.*`: `+획득량` 텍스트의 동시 표시 상한, 수명, 상승 거리와 크기 키프레임
 - `criticalEffect.durationMs`, `compactDurationMs`, `sizePixels`: 전체·축약 효과의 수명과 기준 크기
@@ -123,10 +149,11 @@
 - `criticalEffect.flash*`, `slash*`: 각진 순간 섬광과 두 방향 교차 참격의 크기·색상·키프레임
 - `criticalEffect.lightning*`, `fragment*`: 여러 갈래로 꺾이는 번개와 회전 쿠키 파편의 개수·거리·색상
 - `superCriticalEffect.column*`, `slash*`, `ghostSlash*`: 수직 낙뢰 기둥과 X자·수평 다색 참격 레이어
-- `superCriticalEffect.lightning*`, `shard*`, `shake*`: 10갈래 번개, 각진 다색 파편 폭발과 쿠키 무대 흔들림
+- `superCriticalEffect.lightning*`, `shard*`, `shake*`: 14갈래 번개, 24개 각진 다색 파편 폭발과 쿠키 무대 흔들림
+- `superCriticalEffect.rift*`: 화면 상단에서 아래로 찢어지는 9분절 천공 균열의 위치·굵기·글로우·색상·키프레임
 - `superCriticalEffect.label*`: 슈퍼 크리티컬 문구의 크기·위치·그림자·스케일
 
-크리티컬 판정은 두 크리티컬 수치 테이블만 사용하고, 판정 결과가 `cookie-feedback.json`의 `normal`, 일반 전체/축약, 슈퍼 전체/축약 표시 정책을 선택합니다. 연속 발동은 보상 배수를 그대로 지급하면서 긴 음향·시각 레이어만 생략한 축약 효과로 표시합니다. 보이스 배열 불일치, 오디오 꼬리보다 짧은 전체 연출 간격, 범위 밖 음량·진행률, 잘못된 키프레임 순서는 설정 검증에서 거부합니다.
+크리티컬 판정은 수치 테이블과 천장 테이블만 사용하고, 판정 결과가 `cookie-feedback.json`의 `normal`, 일반 전체/축약, 슈퍼 전체/축약 표시 정책을 선택합니다. 시각 수명은 일반 930ms < 마그마 1,500ms < 슈퍼 1,800ms < 전기 1,950ms입니다. 사운드 레이어 강도도 일반 `0.72+0.42` < 마그마 `0.92×2` < 슈퍼 `0.98+1.0` < 전기 `1.0×3`으로 정렬됩니다. `feedbackPowerRank` 1~4와 기본 확률 역순·수명 오름차순·음향 강도 오름차순을 교차 테이블 검증으로 강제합니다. 다른 종류는 시각·음향을 함께 합성하고 같은 종류만 새 연출로 교체합니다. 보이스 배열 불일치, 오디오 꼬리보다 짧은 전체 연출 간격, 범위 밖 음량·진행률, 잘못된 키프레임 순서는 설정 검증에서 거부합니다.
 
 ### `discs.json`과 무한 강화
 
@@ -219,7 +246,7 @@
 - `autoProductionMultiplier`: 자동 생산량 배율
 - `healthMultiplier`: 전투의 쿠키 성 최대 HP 배율
 
-현재 50종의 요구 조건은 3, 9, 15, …, 297로 6레벨 간격입니다. 진화 기여 강화는 클릭 힘·쿠키 크리티컬·자동 생산·쿠키 성 체력 4종이며 새 게임의 기본 합계는 4입니다. 조건을 만족한 가장 높은 쿠키가 자동 활성화됩니다. 별도 구매나 수동 장착은 없고 능력 배율은 누적하지 않으며 현재 쿠키 행 하나만 적용합니다. 새 쿠키를 추가할 때 요구 총레벨과 배율은 앞 단계보다 크게 설정하고 `CookieImage`의 이미지 키 매핑도 함께 추가합니다.
+현재 50종의 요구 조건은 3, 9, 15, …, 297로 6레벨 간격입니다. 진화 기여 강화는 강화 화면에 보이는 쿠키 관련 7종 전체이며 새 게임의 기본 합계는 7입니다. 조건을 만족한 가장 높은 쿠키가 자동 활성화됩니다. 별도 구매나 수동 장착은 없고 능력 배율은 누적하지 않으며 현재 쿠키 행 하나만 적용합니다. 새 쿠키를 추가할 때 요구 총레벨과 배율은 앞 단계보다 크게 설정하고 `CookieImage`의 이미지 키 매핑도 함께 추가합니다.
 
 21~50단계 확장 쿠키는 클릭·자동 생산·쿠키 성 체력에 같은 행의 공통 배율을 적용합니다. 31단계 이후에도 직전 단계 대비 약 10%씩 증가해 성장 체감은 유지하되 갑작스러운 배율 급등은 피합니다.
 
@@ -417,7 +444,7 @@
 - `cookieEvolutionLegacyUpgrade.id`, `baseLevel`, `maximumLevel`: v7 저장에서 읽을 고정 레거시 강화 ID와 유효 레벨 범위
 - `botIdAliases`, `discIdAliases`, `monsterIdAliases`: 제거·변경된 ID를 현재 테이블 ID로 옮기는 대응표
 
-현재 `currentSaveVersion`은 11입니다. 슈퍼 크리티컬 단계가 없는 이전 저장은 Lv.1, 자동 전투 설정이 없는 저장은 OFF로 복구합니다. v7 이하 저장은 고정 레거시 ID `cookieSize`의 정규화된 현재 레벨에서 기본 레벨 1을 뺀 값을 `legacyCookieEvolutionBonusLevels`에 한 번 기록합니다. 이 규칙은 현재 강화 테이블과 분리되어 향후 숨김 행을 제거하거나 다른 강화의 진화 기여도를 바꿔도 v7 직행 업데이트 결과가 변하지 않습니다.
+현재 `currentSaveVersion`은 13입니다. 슈퍼 크리티컬·마그마 조각·전기 조각 단계가 없는 이전 저장은 각각 Lv.1, 자동 전투 설정이 없는 저장은 OFF로 복구합니다. v12 이하에 없던 `cookiePityMisses` 4종은 0으로 시작하고, 손상된 음수·소수·비유한값은 음이 아닌 안전 정수로 정규화합니다. v7 이하 저장은 고정 레거시 ID `cookieSize`의 정규화된 현재 레벨에서 기본 레벨 1을 뺀 값을 `legacyCookieEvolutionBonusLevels`에 한 번 기록합니다. 이 규칙은 현재 강화 테이블과 분리되어 향후 숨김 행을 제거하거나 다른 강화의 진화 기여도를 바꿔도 v7 직행 업데이트 결과가 변하지 않습니다.
 
 v8 이하 저장은 각 난이도의 `difficultyWinCounts`를 먼저 `0..winsToUnlockNextDifficulty`로 정규화한 뒤 합산하고 `battleMedalsPerLegacyWin`을 곱해 `battleMedals`를 만듭니다. 현재 값은 완료 승리 1회당 훈장 1개이므로 과거에 보상 없이 진행한 모든 완료 스테이지가 정확히 소급됩니다. v9 이상 저장은 저장된 `battleMedals`를 정규화해 사용하고 승리 수에서 다시 계산하지 않으므로 재실행해도 중복 지급되지 않습니다. 새 게임은 0개에서 시작합니다.
 

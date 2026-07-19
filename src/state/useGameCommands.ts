@@ -1,15 +1,19 @@
 import { useMemo } from 'react';
 import { completeBattleTransition } from '../domain/battleCompletion';
-import { calculateCookieClickReward } from '../domain/cookieClick';
+import { calculateCookieClickTransition } from '../domain/cookieClick';
+import { calculateCookieFragmentReward } from '../domain/cookieFragments';
 import type {
   BattleRewardResult,
   CookieClickResult,
+  CookieFragmentKind,
+  CookieFragmentRewardResult,
   SoundVolumeLevel,
 } from '../types/game';
 import type { GameStateReference, ProjectedGameDispatch } from './gameRuntime';
 
 export interface GameCommands {
   clickCookie: () => CookieClickResult;
+  claimCookieFragment: (kind: CookieFragmentKind) => CookieFragmentRewardResult;
   buyUpgrade: (upgradeId: string) => boolean;
   buyDisc: (discId: string) => boolean;
   upgradeDisc: (discId: string) => boolean;
@@ -34,7 +38,20 @@ export function createGameCommands(
 ): GameCommands {
   return {
     clickCookie: () => {
-      const result = calculateCookieClickReward(stateRef.current, randomSource());
+      const transition = calculateCookieClickTransition(
+        stateRef.current,
+        randomSource(),
+        randomSource(),
+      );
+      dispatchProjectedAction({
+        type: 'CLICK_COOKIE',
+        result: transition.result,
+        pityMisses: transition.pityMisses,
+      });
+      return transition.result;
+    },
+    claimCookieFragment: (kind) => {
+      const result = calculateCookieFragmentReward(stateRef.current, kind);
       dispatchProjectedAction({ type: 'GAIN_COOKIES', amount: result.amount });
       return result;
     },

@@ -1,5 +1,4 @@
 import {
-  AUDIO_SETTINGS,
   BOTS,
   COOKIE_UPGRADE_RULES,
   COOKIE_UPGRADES,
@@ -10,14 +9,16 @@ import {
   SAVE_MIGRATIONS,
 } from '../config';
 import { getBattleStageId } from '../domain/gameSelectors';
+import { normalizeSoundVolumeLevel } from '../domain/audioSettings';
 import { normalizeBattleSpeedMultiplier } from '../domain/battleSpeedSettings';
 import { settleOfflineProduction } from '../domain/offlineProduction';
+import { normalizeCookiePityMisses } from '../domain/cookiePity';
 import {
   clampSafeInteger,
   MAX_GAME_INTEGER,
   saturatingAdd,
 } from '../domain/safeNumbers';
-import { GameState, SoundVolumeLevel } from '../types/game';
+import { GameState } from '../types/game';
 import { initialGameState } from './gameInitialState';
 import { resolveCookieEvolutionBonusLevels } from './saveMigrations/cookieEvolutionMigration';
 import { resolveBattleMedals } from './saveMigrations/battleMedalMigration';
@@ -60,16 +61,6 @@ function normalizeStoredBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === 'boolean' ? value : fallback;
 }
 
-export function normalizeSoundVolumeLevel(level?: number): SoundVolumeLevel {
-  const requested = normalizeStoredInteger(level, {
-    fallback: AUDIO_SETTINGS.defaultLevel,
-    minimum: 1,
-    maximum: 5,
-  });
-  return AUDIO_SETTINGS.levels.find((item) => item.level === requested)?.level
-    ?? AUDIO_SETTINGS.defaultLevel;
-}
-
 function normalizeDifficultyWins(saved: Partial<GameState>): Record<string, number> {
   const counts = Object.fromEntries(DIFFICULTIES.map((difficulty) => [difficulty.id, 0]));
   const legacyClearedIds = storedStringArray(saved.clearedDifficultyIds);
@@ -90,6 +81,7 @@ function normalizeUpgradeLevels(savedLevels?: Record<string, number>): Record<st
     const savedLevel = normalizeStoredInteger(savedLevels?.[upgrade.id], {
       fallback: initialLevel,
       minimum: initialLevel,
+      maximum: upgrade.maximumLevel,
     });
     const valid = COOKIE_UPGRADE_RULES[upgrade.id] !== undefined
       || upgrade.levels.some((level) => level.level === savedLevel);
@@ -266,6 +258,7 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
       saved.autoBattleEnabled,
       initialGameState.autoBattleEnabled,
     ),
+    cookiePityMisses: normalizeCookiePityMisses(saved.cookiePityMisses),
     lastSavedAt: normalizeStoredInteger(saved.lastSavedAt, { fallback: 0 }),
   };
 }

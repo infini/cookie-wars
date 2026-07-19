@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 import { AUDIO_SETTINGS, BATTLE_AUDIO } from '../config';
 import { useGame } from '../state/GameContext';
-import { CookieClickKind, CookieFeedbackTier } from '../types/game';
+import { CookieClickKind, CookieFeedbackTier, CookieFragmentKind } from '../types/game';
 import {
   BATTLE_ACTION_SOUND_NAMES,
   BattleActionSoundName,
@@ -31,6 +31,7 @@ export type SoundName =
 interface FeedbackContextValue {
   play: (name: SoundName) => void;
   playCookieClick: (kind: CookieClickKind) => CookieFeedbackTier;
+  playCookieFragment: (kind: CookieFragmentKind) => void;
   stopCookieSounds: () => void;
   startBattleMusic: () => void;
   stopBattleSounds: () => void;
@@ -90,7 +91,7 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     ],
   );
   const allPlayers = useMemo(() => Object.values(players), [players]);
-  const { playCookieClick, stopCookieSounds } = useCookieAudioFeedback({
+  const { playCookieClick, playCookieFragment, stopCookieSounds } = useCookieAudioFeedback({
     soundEnabled: state.soundEnabled,
     soundVolumeLevel: state.soundVolumeLevel,
   });
@@ -181,6 +182,7 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     () => ({
       play,
       playCookieClick,
+      playCookieFragment,
       stopCookieSounds,
       startBattleMusic,
       stopBattleSounds,
@@ -188,7 +190,10 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
       success,
       error,
     }),
-    [play, playCookieClick, startBattleMusic, stopBattleSounds, stopCookieSounds, tap, success, error],
+    [
+      error, play, playCookieClick, playCookieFragment, startBattleMusic,
+      stopBattleSounds, stopCookieSounds, success, tap,
+    ],
   );
   return <FeedbackContext.Provider value={value}>{children}</FeedbackContext.Provider>;
 }

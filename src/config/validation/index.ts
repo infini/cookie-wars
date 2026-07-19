@@ -26,6 +26,8 @@ import {
   validateDiscs,
 } from './economy';
 import { validateCookieFeedback } from './feedback';
+import { validateCookieFragments } from './cookieFragments';
+import { validateCookiePity } from './cookiePity';
 import { ConfigValidationError } from './primitives';
 import { validateReferences } from './references';
 import { validateBattleRewards } from './rewards';
@@ -49,7 +51,9 @@ export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig 
   validateAudioSettings(input.AUDIO_SETTINGS);
   validateBattleAuto(input.BATTLE_AUTO);
   validateCookieInput(input.COOKIE_INPUT);
-  validateCookieFeedback(input.COOKIE_FEEDBACK);
+  validateCookiePity(input.COOKIE_PITY);
+  const cookieFeedback = validateCookieFeedback(input.COOKIE_FEEDBACK);
+  const cookieFragments = validateCookieFragments(input.COOKIE_FRAGMENTS);
   validateBattleAudio(input.BATTLE_AUDIO);
   validateBattleFeedback(input.BATTLE_FEEDBACK);
   const maps = validateBattleMaps(input.BATTLE_MAPS);
@@ -97,6 +101,8 @@ export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig 
     botAnimations,
     cookieCritical,
     cookieSuperCritical,
+    cookieFragments,
+    cookieFeedback,
   });
 
   return input as ValidatedGameConfig;

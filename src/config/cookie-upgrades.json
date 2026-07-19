@@ -23,12 +23,12 @@
     "unit": "크리티컬",
     "countsTowardCookieEvolution": true,
     "levels": [
-      { "level": 1, "value": 1000, "cost": 0 },
-      { "level": 2, "value": 1250, "cost": 60 },
-      { "level": 3, "value": 1500, "cost": 210 },
-      { "level": 4, "value": 1750, "cost": 650 },
-      { "level": 5, "value": 2000, "cost": 1900 },
-      { "level": 6, "value": 2250, "cost": 5200 }
+      { "level": 1, "value": 2000, "cost": 0 },
+      { "level": 2, "value": 2500, "cost": 60 },
+      { "level": 3, "value": 3000, "cost": 210 },
+      { "level": 4, "value": 3500, "cost": 650 },
+      { "level": 5, "value": 4000, "cost": 1900 },
+      { "level": 6, "value": 4500, "cost": 5200 }
     ]
   },
   {
@@ -36,14 +36,44 @@
     "name": "쿠키 슈퍼 크리티컬",
     "description": "희귀한 슈퍼 크리티컬 확률과 획득 배수가 함께 올라요. 확률은 최대 10%, 배수는 계속 성장해요.",
     "unit": "슈퍼 크리티컬",
-    "countsTowardCookieEvolution": false,
+    "countsTowardCookieEvolution": true,
+    "levels": [
+      { "level": 1, "value": 200, "cost": 0 },
+      { "level": 2, "value": 250, "cost": 600 },
+      { "level": 3, "value": 300, "cost": 2200 },
+      { "level": 4, "value": 350, "cost": 7000 },
+      { "level": 5, "value": 400, "cost": 21000 },
+      { "level": 6, "value": 450, "cost": 60000 }
+    ]
+  },
+  {
+    "id": "magmaFragmentChance",
+    "name": "마그마 조각 발견",
+    "description": "마그마 쿠키 조각의 발견 확률과 획득 배수가 함께 올라요.",
+    "unit": "발견 확률",
+    "countsTowardCookieEvolution": true,
+    "levels": [
+      { "level": 1, "value": 400, "cost": 0 },
+      { "level": 2, "value": 500, "cost": 300 },
+      { "level": 3, "value": 600, "cost": 950 },
+      { "level": 4, "value": 700, "cost": 2800 },
+      { "level": 5, "value": 800, "cost": 7800 },
+      { "level": 6, "value": 900, "cost": 19500 }
+    ]
+  },
+  {
+    "id": "electricFragmentChance",
+    "name": "전기 조각 발견",
+    "description": "전기 쿠키 조각의 발견 확률과 획득 배수가 함께 올라요.",
+    "unit": "발견 확률",
+    "countsTowardCookieEvolution": true,
     "levels": [
       { "level": 1, "value": 100, "cost": 0 },
-      { "level": 2, "value": 125, "cost": 600 },
-      { "level": 3, "value": 150, "cost": 2200 },
-      { "level": 4, "value": 175, "cost": 7000 },
-      { "level": 5, "value": 200, "cost": 21000 },
-      { "level": 6, "value": 225, "cost": 60000 }
+      { "level": 2, "value": 125, "cost": 1000 },
+      { "level": 3, "value": 150, "cost": 3500 },
+      { "level": 4, "value": 175, "cost": 11000 },
+      { "level": 5, "value": 200, "cost": 32000 },
+      { "level": 6, "value": 225, "cost": 85000 }
     ]
   },
   {

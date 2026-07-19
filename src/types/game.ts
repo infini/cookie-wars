@@ -13,6 +13,22 @@ export type {
   FloatingGainFeedbackConfig,
 } from './cookieFeedback';
 export type {
+  CookieFragmentAudioConfig,
+  CookieFragmentClaimEffectConfig,
+  CookieFragmentKind,
+  CookieFragmentSpawnEffectConfig,
+  CookieFragmentStats,
+  CookieFragmentTypeConfig,
+  CookieFragmentsConfig,
+} from './cookieFragments';
+export type {
+  CookiePityConfig,
+  CookiePityChanceUnits,
+  CookiePityKind,
+  CookiePityMisses,
+  CriticalPityKind,
+} from './cookiePity';
+export type {
   BattleFeedbackConfig,
   BattleUiConfig,
   GiantDiscConfig,
@@ -47,6 +63,7 @@ export type {
   BattleRewardResult,
   CookieClickKind,
   CookieClickResult,
+  CookieFragmentRewardResult,
   CookieStats,
   GameState,
 } from './gameState';

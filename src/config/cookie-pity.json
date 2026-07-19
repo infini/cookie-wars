@@ -1,0 +1,5 @@
+{
+  "enabled": true,
+  "criticalPriority": ["superCritical", "critical"],
+  "fragmentPriority": ["electric", "magma"]
+}

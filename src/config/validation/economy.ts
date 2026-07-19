@@ -52,7 +52,17 @@ export function validateCookieUpgrades(value: unknown): UnknownRecord[] {
     validateOptionalBoolean(upgrade, 'visible', itemPath);
     validateOptionalNumber(upgrade, 'renderBaseSizePixels', itemPath, { min: 0 });
     validateOptionalNumber(upgrade, 'renderMaximumSizePixels', itemPath, { min: 0 });
-    validateLevelRows(upgrade.levels, `${itemPath}.levels`, ['value', 'cost']);
+    validateOptionalNumber(upgrade, 'maximumLevel', itemPath, { integer: true, min: 1 });
+    const levels = validateLevelRows(upgrade.levels, `${itemPath}.levels`, ['value', 'cost']);
+    if (
+      upgrade.maximumLevel !== undefined
+      && (upgrade.maximumLevel as number) < (levels[levels.length - 1].level as number)
+    ) {
+      throw new ConfigValidationError(
+        `${itemPath}.maximumLevel`,
+        '마지막 명시 레벨 이상이어야 합니다.',
+      );
+    }
   });
   if (!upgrades.some((upgrade) => upgrade.countsTowardCookieEvolution === true)) {
     throw new ConfigValidationError(
@@ -87,20 +97,23 @@ function validateCriticalConfig(value: unknown, path: string): UnknownRecord {
   validateStringFields(config, path, ['upgradeId']);
   validateNumberFields(config, path, [
     'probabilityScale', 'maximumChanceUnits', 'baseRewardMultiplier',
-    'rewardMultiplierIncreasePerLevel', 'displayMaximumFractionDigits',
+    'rewardMultiplierIncreasePerLevel', 'feedbackPowerRank',
+    'displayMaximumFractionDigits',
   ], { min: 0 });
   validatePositiveNumberFields(config, path, [
     'probabilityScale', 'baseRewardMultiplier',
   ]);
   [
     'probabilityScale', 'maximumChanceUnits', 'baseRewardMultiplier',
-    'rewardMultiplierIncreasePerLevel', 'displayMaximumFractionDigits',
+    'rewardMultiplierIncreasePerLevel', 'feedbackPowerRank',
+    'displayMaximumFractionDigits',
   ].forEach((field) => numberField(config, field, path, { integer: true, min: 0 }));
   numberField(config, 'displayMaximumFractionDigits', path, {
     integer: true,
     min: 0,
     max: 4,
   });
+  numberField(config, 'feedbackPowerRank', path, { integer: true, min: 1, max: 4 });
   if ((config.maximumChanceUnits as number) > (config.probabilityScale as number)) {
     throw new ConfigValidationError(
       `${path}.maximumChanceUnits`,

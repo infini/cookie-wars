@@ -1,7 +1,5 @@
 import React, { useCallback, useRef } from 'react';
 import { Animated, StyleSheet } from 'react-native';
-import { CookieCriticalEffect } from '../../components/CookieCriticalEffect';
-import { CookieSuperCriticalEffect } from '../../components/CookieSuperCriticalEffect';
 import { COOKIE_FEEDBACK } from '../../config';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
@@ -69,17 +67,6 @@ function FloatingGain({ id, amount, kind, onDone }: FloatingGainProps) {
   );
 }
 
-function recentIds(
-  gains: CookieGainItem[],
-  tier: CookieFeedbackTier,
-  limit: number,
-): Set<number> {
-  return new Set(gains
-    .filter((gain) => gain.feedbackTier === tier)
-    .slice(-limit)
-    .map((gain) => gain.id));
-}
-
 export function CookieGainFeedback({
   gains,
   onDone,
@@ -87,36 +74,8 @@ export function CookieGainFeedback({
   gains: CookieGainItem[];
   onDone: (id: number) => void;
 }) {
-  const fullCriticalIds = recentIds(
-    gains,
-    'criticalFull',
-    COOKIE_FEEDBACK.criticalEffect.maximumConcurrentFullEffects,
-  );
-  const compactCriticalIds = recentIds(
-    gains,
-    'criticalCompact',
-    COOKIE_FEEDBACK.criticalEffect.maximumConcurrentCompactEffects,
-  );
-  const fullSuperIds = recentIds(
-    gains,
-    'superCriticalFull',
-    COOKIE_FEEDBACK.superCriticalEffect.maximumConcurrentFullEffects,
-  );
-  const compactSuperIds = recentIds(
-    gains,
-    'superCriticalCompact',
-    COOKIE_FEEDBACK.superCriticalEffect.maximumConcurrentCompactEffects,
-  );
   const remove = useCallback((id: number) => onDone(id), [onDone]);
-  return gains.map((gain) => (
-    <React.Fragment key={gain.id}>
-      {fullCriticalIds.has(gain.id) ? <CookieCriticalEffect mode="criticalFull" /> : null}
-      {compactCriticalIds.has(gain.id) ? <CookieCriticalEffect mode="criticalCompact" /> : null}
-      {fullSuperIds.has(gain.id) ? <CookieSuperCriticalEffect mode="superCriticalFull" /> : null}
-      {compactSuperIds.has(gain.id) ? <CookieSuperCriticalEffect mode="superCriticalCompact" /> : null}
-      <FloatingGain {...gain} onDone={remove} />
-    </React.Fragment>
-  ));
+  return gains.map((gain) => <FloatingGain key={gain.id} {...gain} onDone={remove} />);
 }
 
 const styles = StyleSheet.create({

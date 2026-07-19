@@ -86,7 +86,7 @@ function validateFloatingGain(config: UnknownRecord, path: string): UnknownRecor
   return gain;
 }
 
-export function validateCookieFeedback(value: unknown): void {
+export function validateCookieFeedback(value: unknown): UnknownRecord {
   const path = 'COOKIE_FEEDBACK';
   const config = record(value, path);
   const audio = validateCookieAudio(config, path);
@@ -103,4 +103,5 @@ export function validateCookieFeedback(value: unknown): void {
     gain.durationMs as number,
     audio.superCriticalShockwaveDelayMs as number,
   );
+  return config;
 }

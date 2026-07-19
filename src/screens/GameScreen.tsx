@@ -7,36 +7,82 @@ import { colors, gradients } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import { formatNumber } from '../utils/format';
 import { CookieImage } from '../components/CookieImage';
+import { CookieFragmentCollectible } from '../components/CookieFragmentCollectible';
 import { GameButton } from '../components/GameButton';
 import { StatChip } from '../components/StatChip';
 import { COOKIE_FEEDBACK, COOKIE_INPUT, getCookie } from '../config';
-import {
-  getBattleMedalBonuses,
-  getCookieEvolutionProgress,
-} from '../domain/gameSelectors';
+import { getBattleMedalBonuses, getCookieEvolutionProgress } from '../domain/gameSelectors';
 import { formatCriticalChancePercent } from '../domain/cookieCritical';
 import { formatSuperCriticalChancePercent } from '../domain/cookieSuperCritical';
+import {
+  formatCookieFragmentChancePercent,
+  getCookieFragmentStats,
+} from '../domain/cookieFragments';
+import type { CookieFragmentRewardResult } from '../types/game';
 import { CookieGainFeedback, CookieGainItem } from './game/CookieGainFeedback';
+import {
+  CookieSpecialFeedback,
+  CookieSpecialFeedbackItem,
+} from './game/CookieSpecialFeedback';
 import { useImmediateCookiePress } from './game/useImmediateCookiePress';
+import { useCookieFragmentCollection } from './game/useCookieFragmentCollection';
 
 export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
-  const { state, stats, clickCookie } = useGame();
+  const { state, stats, clickCookie, claimCookieFragment } = useGame();
   const feedback = useFeedback();
   const scale = useRef(new Animated.Value(1)).current;
   const stageShake = useRef(new Animated.Value(0)).current;
   const nextGainId = useRef(0);
+  const nextSpecialId = useRef(0);
   const [gains, setGains] = useState<CookieGainItem[]>([]);
+  const [specialFeedbacks, setSpecialFeedbacks] = useState<CookieSpecialFeedbackItem[]>([]);
   const removeGain = useCallback((id: number) => {
     setGains((current) => current.filter((item) => item.id !== id));
   }, []);
   const activeCookie = getCookie(stats.activeCookieId);
   const evolution = getCookieEvolutionProgress(state);
   const medalBonuses = getBattleMedalBonuses(state);
+  const magmaFragment = getCookieFragmentStats(state, 'magma');
+  const electricFragment = getCookieFragmentStats(state, 'electric');
   const uniformMedalBonus = medalBonuses.clickPowerBonusPercent
     === medalBonuses.autoProductionBonusPercent
     && medalBonuses.clickPowerBonusPercent
       === medalBonuses.castleHealthBonusPercent;
 
+  const showSpecialFeedback = useCallback((item: Omit<CookieSpecialFeedbackItem, 'id'>) => {
+    const next = { ...item, id: nextSpecialId.current++ };
+    setSpecialFeedbacks((current) => [
+      ...current.filter((active) => active.kind !== next.kind),
+      next,
+    ]);
+    if (item.kind === 'superCritical' && item.feedbackTier === 'superCriticalFull') {
+      stageShake.stopAnimation();
+      stageShake.setValue(0);
+      Animated.timing(stageShake, {
+        toValue: 1,
+        duration: COOKIE_FEEDBACK.superCriticalEffect.durationMs,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [stageShake]);
+  const handleFragmentReward = useCallback((reward: CookieFragmentRewardResult) => {
+    feedback.playCookieFragment(reward.kind);
+    feedback.success();
+    showSpecialFeedback({
+      kind: reward.kind,
+      amount: reward.amount,
+      multiplier: reward.multiplier,
+    });
+  }, [feedback, showSpecialFeedback]);
+  const {
+    activeFragment,
+    spawnFragment,
+    expireFragment,
+    claimFragment,
+  } = useCookieFragmentCollection({
+    claimReward: claimCookieFragment,
+    onReward: handleFragmentReward,
+  });
   const handleCookiePress = useCallback(() => {
     const result = clickCookie();
     const feedbackTier = feedback.playCookieClick(result.kind);
@@ -47,24 +93,31 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
     const id = nextGainId.current++;
     setGains((current) => {
       const previousLimit = COOKIE_FEEDBACK.floatingGain.maximumConcurrent - 1;
-      const previous = previousLimit > 0 ? current.slice(-previousLimit) : [];
+      const source = result.kind === 'normal'
+        ? current
+        : current.filter((item) => item.kind !== result.kind);
+      const previous = previousLimit > 0 ? source.slice(-previousLimit) : [];
       return [...previous, { id, ...result, feedbackTier }];
     });
+    if (result.kind !== 'normal') {
+      showSpecialFeedback({
+        kind: result.kind,
+        amount: result.amount,
+        feedbackTier,
+      });
+    }
+    if (result.spawnedFragmentKind) {
+      spawnFragment(result.spawnedFragmentKind);
+    }
     scale.stopAnimation();
     Animated.sequence([
       Animated.spring(scale, { toValue: 0.89, speed: 40, bounciness: 2, useNativeDriver: true }),
       Animated.spring(scale, { toValue: 1, speed: 25, bounciness: 12, useNativeDriver: true }),
     ]).start();
-    if (feedbackTier === 'superCriticalFull') {
-      stageShake.stopAnimation();
-      stageShake.setValue(0);
-      Animated.timing(stageShake, {
-        toValue: 1,
-        duration: COOKIE_FEEDBACK.superCriticalEffect.durationMs,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [clickCookie, feedback, scale, stageShake]);
+  }, [clickCookie, feedback, scale, showSpecialFeedback, spawnFragment]);
+  const handleSpecialDone = useCallback((id: number) => {
+    setSpecialFeedbacks((current) => current.filter((item) => item.id !== id));
+  }, []);
   const cookiePressHandlers = useImmediateCookiePress(handleCookiePress);
   const [stageTranslateX, stageTranslateY] = useMemo(() => {
     const superEffect = COOKIE_FEEDBACK.superCriticalEffect;
@@ -127,7 +180,7 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
         accessibilityLabel={evolution.next
           ? `쿠키 얻기, 한 번에 ${formatNumber(stats.clickPower)}개, 크리티컬 확률 ${formatCriticalChancePercent(stats.criticalChanceUnits)}퍼센트, 슈퍼 크리티컬 확률 ${formatSuperCriticalChancePercent(stats.superCriticalChanceUnits)}퍼센트, 다음 쿠키 ${evolution.next.name}, 현재 진화 ${evolution.totalUpgradeLevels}레벨, 필요 ${evolution.next.requiredTotalUpgradeLevels}레벨, ${evolution.remainingLevels}번 더 강화하면 진화합니다`
           : `쿠키 얻기, 한 번에 ${formatNumber(stats.clickPower)}개, 크리티컬 확률 ${formatCriticalChancePercent(stats.criticalChanceUnits)}퍼센트, 슈퍼 크리티컬 확률 ${formatSuperCriticalChancePercent(stats.superCriticalChanceUnits)}퍼센트, 현재 진화 ${evolution.totalUpgradeLevels}레벨, 최고 쿠키 진화를 완료했습니다`}
-        accessibilityHint="화면 가운데 아무 곳이나 두 번 탭하면 쿠키를 얻어요. 진화 레벨은 쿠키 강화에서 클릭 힘, 쿠키 크리티컬, 자동 생산, 쿠키 성 체력을 강화하면 올라요."
+        accessibilityHint="화면 가운데 아무 곳이나 두 번 탭하면 쿠키를 얻어요. 강화 화면에 보이는 일곱 가지 강화는 모두 쿠키 진화 레벨을 올려요."
         {...cookiePressHandlers}
         android_disableSound
         hitSlop={COOKIE_INPUT.hitSlopPixels}
@@ -167,6 +220,7 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
             <View style={styles.ringOuter} />
             <View style={styles.ringInner} />
             <CookieGainFeedback gains={gains} onDone={removeGain} />
+            <CookieSpecialFeedback items={specialFeedbacks} onDone={handleSpecialDone} />
             <Animated.View style={{ transform: [{ scale }] }}>
               <LinearGradient colors={gradients.cookieButton} style={styles.cookieButton}>
                 <CookieImage
@@ -186,7 +240,23 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
         <Text style={styles.superCriticalInfo}>
           ✨ 슈퍼 {formatSuperCriticalChancePercent(stats.superCriticalChanceUnits)}% · 획득 ×{formatNumber(stats.superCriticalRewardMultiplier)}
         </Text>
+        <Text style={styles.fragmentInfo}>
+          🔥 조각 {formatCookieFragmentChancePercent(magmaFragment.chanceUnits, 'magma')}% · ×{formatNumber(magmaFragment.rewardMultiplier)}
+          {'  '}⚡ {formatCookieFragmentChancePercent(electricFragment.chanceUnits, 'electric')}% · ×{formatNumber(electricFragment.rewardMultiplier)}
+        </Text>
       </Pressable>
+
+      {activeFragment ? (
+        <CookieFragmentCollectible
+          key={activeFragment.id}
+          {...activeFragment}
+          rewardMultiplier={activeFragment.kind === 'magma'
+            ? magmaFragment.rewardMultiplier
+            : electricFragment.rewardMultiplier}
+          onClaim={claimFragment}
+          onExpire={expireFragment}
+        />
+      ) : null}
 
       <GameButton title="⚔ 전투하러 가기" onPress={onGoBattle} variant="red" style={styles.battleButton} />
     </View>
@@ -223,5 +293,6 @@ const styles = StyleSheet.create({
   autoText: { fontFamily: fonts.bold, fontSize: 13, color: colors.muted, marginTop: 2 },
   criticalInfo: { fontFamily: fonts.extraBold, fontSize: 12, color: colors.red, marginTop: 2 },
   superCriticalInfo: { fontFamily: fonts.extraBold, fontSize: 11, color: colors.purple, marginTop: 1 },
+  fragmentInfo: { fontFamily: fonts.extraBold, fontSize: 10, color: colors.cookieDark, marginTop: 1 },
   battleButton: { marginHorizontal: 10, marginBottom: 2 },
 });
