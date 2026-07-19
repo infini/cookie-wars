@@ -14,6 +14,7 @@ import { DifficultyScreen } from './src/screens/DifficultyScreen';
 import { DiscScreen } from './src/screens/DiscScreen';
 import { GameScreen } from './src/screens/GameScreen';
 import { MonsterScreen } from './src/screens/MonsterScreen';
+import { MiniGameScreen } from './src/screens/MiniGameScreen';
 import { UpgradeScreen } from './src/screens/UpgradeScreen';
 import { getCookie } from './src/config';
 import {
@@ -67,6 +68,7 @@ function GameShell() {
   const renderScreen = () => {
     switch (activeTab) {
       case 'game': return <GameScreen />;
+      case 'miniGame': return <MiniGameScreen />;
       case 'battle': return <BattleScreen onReturnToGame={() => changeTab('game', false)} />;
       case 'cookie': return <CookieScreen />;
       case 'upgrade': return <UpgradeScreen />;

@@ -58,7 +58,7 @@ export function BotScreen() {
           <View style={styles.info}>
             <View style={styles.nameRow}>
               <Text style={styles.botName}>{offer.config.name}</Text>
-              <Text style={[styles.count, { color: offer.config.accentColor }]}>× {offer.count}</Text>
+              <Text style={[styles.count, { color: offer.config.accentColor }]}>× {formatNumber(offer.count)}</Text>
             </View>
             <Text style={styles.description}>{offer.config.description}</Text>
             <View style={styles.stats}>

@@ -1,12 +1,21 @@
+const COMPACT_KOREAN_UNITS = [
+  { value: 1_000, suffix: '천' },
+  { value: 10_000, suffix: '만' },
+  { value: 100_000_000, suffix: '억' },
+  { value: 1_000_000_000_000, suffix: '조' },
+] as const;
+
+function trimSingleDecimal(value: number): string {
+  return value.toFixed(1).replace(/\.0$/, '');
+}
+
 export function formatNumber(value: number): string {
   const safeValue = Math.max(0, Math.floor(value));
-  if (safeValue >= 100_000_000) {
-    const amount = safeValue / 100_000_000;
-    return `${Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(1)}억`;
-  }
-  if (safeValue >= 10_000) {
-    const amount = safeValue / 10_000;
-    return `${Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(1)}만`;
+  const unit = [...COMPACT_KOREAN_UNITS]
+    .reverse()
+    .find((candidate) => safeValue >= candidate.value);
+  if (unit) {
+    return `${trimSingleDecimal(safeValue / unit.value)}${unit.suffix}`;
   }
   return safeValue.toLocaleString('ko-KR');
 }

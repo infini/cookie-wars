@@ -15,9 +15,10 @@ import {
 describe('대분류·소분류 메뉴 모델', () => {
   const cloneNavigation = (): any => JSON.parse(JSON.stringify(NAVIGATION));
 
-  test('하단 대분류는 게임·전투·강화·정보 네 개만 이 순서로 표시한다', () => {
+  test('하단 대분류는 게임·대결·전투·강화·정보 순서로 표시한다', () => {
     expect(MAIN_MENU_ITEMS.map(({ id, label }) => ({ id, label }))).toEqual([
       { id: 'game', label: '게임' },
+      { id: 'miniGame', label: '대결' },
       { id: 'battle', label: '전투' },
       { id: 'growth', label: '강화' },
       { id: 'info', label: '정보' },
@@ -39,8 +40,9 @@ describe('대분류·소분류 메뉴 모델', () => {
       ]);
   });
 
-  test('게임과 전투는 자식이 하나라 소메뉴를 렌더하지 않는다', () => {
+  test('게임과 대결과 전투는 자식이 하나라 소메뉴를 렌더하지 않는다', () => {
     expect(getSubmenuItemsForLeaf('game')).toEqual([]);
+    expect(getSubmenuItemsForLeaf('miniGame')).toEqual([]);
     expect(getSubmenuItemsForLeaf('battle')).toEqual([]);
   });
 
@@ -70,6 +72,7 @@ describe('대분류·소분류 메뉴 모델', () => {
     expect(getScreenTitle('upgrade')).toBe('쿠키 강화');
     expect(getScreenTitle('disc')).toBe('원반 강화');
     expect(getScreenTitle('cookie')).toBe('쿠키와 전투 훈장');
+    expect(getScreenTitle('miniGame')).toBe('A·B 쿠키 대결');
     expect(getMainMenuForLeaf('difficulty').id).toBe('info');
   });
 
@@ -87,7 +90,7 @@ describe('대분류·소분류 메뉴 모델', () => {
     const wrongParent = cloneNavigation();
     wrongParent.leaves.find((leaf: any) => leaf.id === 'disc').mainMenuId = 'info';
     expect(() => validateNavigationConfig(wrongParent)).toThrow(
-      'NAVIGATION.leaves[3].mainMenuId',
+      'NAVIGATION.leaves[4].mainMenuId',
     );
   });
 
@@ -99,7 +102,7 @@ describe('대분류·소분류 메뉴 모델', () => {
     const duplicateOwner = cloneNavigation();
     duplicateOwner.mainMenus.find((menu: any) => menu.id === 'info').leafIds.push('disc');
     expect(() => validateNavigationConfig(duplicateOwner)).toThrow(
-      'NAVIGATION.mainMenus[3].leafIds[3]',
+      'NAVIGATION.mainMenus[4].leafIds[3]',
     );
   });
 });

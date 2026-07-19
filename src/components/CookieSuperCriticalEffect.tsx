@@ -1,6 +1,6 @@
 import React from 'react';
 import type { CookieFeedbackTier } from '../types/game';
-import { CookieAnimatedSpecialEffect } from './cookieFeedback/CookieAnimatedSpecialEffect';
+import { CookieLineBurstEffect } from './cookieFeedback/CookieLineBurstEffect';
 
 type SuperCriticalEffectMode = Extract<
   CookieFeedbackTier,
@@ -10,7 +10,7 @@ type SuperCriticalEffectMode = Extract<
 export const CookieSuperCriticalEffect = React.memo(
   function CookieSuperCriticalEffect({ mode }: { mode: SuperCriticalEffectMode }) {
     return (
-      <CookieAnimatedSpecialEffect
+      <CookieLineBurstEffect
         kind="superCritical"
         compact={mode === 'superCriticalCompact'}
       />

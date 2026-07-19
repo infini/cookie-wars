@@ -5,6 +5,7 @@ import type { BattleStatus } from '../../engine/useBattleEngine';
 import { BattleHealthBar } from '../../components/battle/BattleHealthBar';
 import { CookieCastle } from '../../components/CookieCastle';
 import { colors } from '../../theme/colors';
+import { formatNumber } from '../../utils/format';
 import { styles } from './battleScreenStyles';
 
 interface GiantDiscButtonProps {
@@ -49,7 +50,7 @@ export function GiantDiscButton({
       <MaterialCommunityIcons name="disc" size={28} color={colors.white} />
       <View>
         <Text style={styles.giantDiscButtonTitle}>거대 원반</Text>
-        <Text style={[styles.giantDiscButtonCount, { color: GIANT_DISC.buttonCountColor }]}>보유 {giantDiscCount}개 · {GIANT_DISC.damageMultiplier}배</Text>
+        <Text style={[styles.giantDiscButtonCount, { color: GIANT_DISC.buttonCountColor }]}>보유 {formatNumber(giantDiscCount)}개 · {formatNumber(GIANT_DISC.damageMultiplier)}배</Text>
       </View>
     </Pressable>
   );

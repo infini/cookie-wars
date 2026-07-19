@@ -164,12 +164,12 @@ export function GameScreen() {
     <View style={styles.root}>
       <View style={styles.statsRow}>
         <StatChip icon="cookie" label="현재 쿠키" value={formatNumber(state.cookies)} />
-        <StatChip icon="arrow-up-bold" label="진화 레벨" value={`Lv.${stats.cookieLevel}`} tint={colors.purple} />
+        <StatChip icon="arrow-up-bold" label="진화 레벨" value={`Lv.${formatNumber(stats.cookieLevel)}`} tint={colors.purple} />
       </View>
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`쿠키 얻기, 전투 훈장 ${formatNumber(medalBonuses.battleMedals)}개, 클릭 시 ${formatNumber(stats.clickPower)}개, 자동 생산 초당 ${formatNumber(stats.autoProduction)}개, 크리티컬 확률 ${formatCriticalChancePercent(stats.criticalChanceUnits)}퍼센트, 슈퍼 크리티컬 확률 ${formatSuperCriticalChancePercent(stats.superCriticalChanceUnits)}퍼센트, ${evolution.next ? `다음 진화까지 ${evolution.remainingLevels}번 강화` : '최고 쿠키 진화 완료'}`}
+        accessibilityLabel={`쿠키 얻기, 전투 훈장 ${formatNumber(medalBonuses.battleMedals)}개, 클릭 시 ${formatNumber(stats.clickPower)}개, 자동 생산 초당 ${formatNumber(stats.autoProduction)}개, 크리티컬 확률 ${formatCriticalChancePercent(stats.criticalChanceUnits)}퍼센트, 슈퍼 크리티컬 확률 ${formatSuperCriticalChancePercent(stats.superCriticalChanceUnits)}퍼센트, ${evolution.next ? `다음 진화까지 ${formatNumber(evolution.remainingLevels)}번 강화` : '최고 쿠키 진화 완료'}`}
         accessibilityHint="쿠키 영역을 두 번 탭하면 쿠키를 얻어요."
         {...cookiePressHandlers}
         android_disableSound
@@ -180,7 +180,7 @@ export function GameScreen() {
         <View style={styles.evolutionSummary}>
           <Text style={styles.evolutionRemaining}>
             {evolution.next
-              ? `다음 진화까지 ${evolution.remainingLevels}번 강화`
+              ? `다음 진화까지 ${formatNumber(evolution.remainingLevels)}번 강화`
               : '최고 쿠키 진화 완료!'}
           </Text>
           <View style={styles.evolutionProgressTrack}>
@@ -199,7 +199,6 @@ export function GameScreen() {
             <View style={styles.ringOuter} />
             <View style={styles.ringInner} />
             <CookieGainFeedback gains={gains} onDone={removeGain} />
-            <CookieSpecialFeedback items={specialFeedbacks} onDone={handleSpecialDone} />
             <Animated.View style={{ transform: [{ scale }] }}>
               <LinearGradient colors={gradients.cookieButton} style={styles.cookieButton}>
                 <CookieImage
@@ -208,6 +207,7 @@ export function GameScreen() {
                 />
               </LinearGradient>
             </Animated.View>
+            <CookieSpecialFeedback items={specialFeedbacks} onDone={handleSpecialDone} />
           </View>
         </Animated.View>
         <View style={styles.infoGroup}>

@@ -70,9 +70,9 @@ Create a premium production-ready 2D mobile game VFX sprite: a single dramatic v
 
 ## 외부 애니메이션 희귀 보상 VFX
 
-1.0.22 런타임은 직접 제작한 고정 이미지·절차적 도형 대신 OpenGameArt의 CC0 atlas를 사용합니다. Sinestesia의 4×4 노란 타격은 크리티컬 16프레임, 8×8 화염 폭발은 마그마 64개 원본 프레임입니다. Esteban Díaz/Inguz Media의 8×8 금색·청록 충격은 슈퍼 크리티컬로 합성하고, 청록 충격과 Calinou 번개 9개를 세 구간에 배치해 전기 64개 원본 프레임을 만듭니다.
+현재 런타임의 일반·슈퍼 크리티컬은 `cookie-special-effects.json`에 정의한 서로 다른 밀도의 선형 섬광을 native driver로 재생합니다. 마그마는 OpenGameArt에서 CC0로 배포된 CodeManu의 60프레임 지면 분출 GIF를 사용합니다. 전기는 Esteban Díaz/Inguz Media의 8×8 청록 충격과 Calinou 번개 세 갈래를 동시에 세 구간 배치해 64프레임으로 만듭니다.
 
-`scripts/process_external_cookie_feedback_vfx.py`는 전체 시퀀스의 합집합 알파 경계를 계산해 같은 정사각 crop을 모든 프레임에 적용한 뒤 384·512·576·640px animated WebP 6개를 생성합니다. 이 방식은 atlas의 큰 투명 여백 때문에 실제 효과가 작아지는 문제와 프레임별 crop 흔들림을 함께 막습니다. 최종 파일은 `assets/images/vfx/cookie-feedback/`에 있고 Android Fresco가 네이티브로 재생합니다. 원본 URL·라이선스 선택·다운로드 SHA-256은 `assets/licenses/OPENGAMEART_COOKIE_VFX_SOURCE.txt`를 기준으로 합니다.
+`scripts/process_external_cookie_feedback_vfx.py`는 전체 시퀀스의 합집합 알파 경계를 계산해 같은 정사각 crop을 모든 프레임에 적용한 뒤 512px 마그마와 640px 전기 animated WebP 두 개를 생성합니다. 이 방식은 원본의 큰 투명 여백 때문에 실제 효과가 작아지는 문제와 프레임별 crop 흔들림을 함께 막습니다. 최종 파일은 `assets/images/vfx/cookie-feedback/`에 있고 Android Fresco가 네이티브로 재생합니다. 원본 URL·라이선스 선택·다운로드 SHA-256은 `assets/licenses/OPENGAMEART_COOKIE_VFX_SOURCE.txt`를 기준으로 합니다.
 
 ### 메인 HUD 희귀 아이콘
 

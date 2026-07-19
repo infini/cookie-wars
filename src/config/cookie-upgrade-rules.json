@@ -1,6 +1,6 @@
 {
   "clickPower": {
-    "valueIncreasePerLevel": 50,
+    "valueIncreasePerLevel": 100,
     "costGrowthMultiplier": 1.25
   },
   "cookieCritical": {

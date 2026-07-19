@@ -13,10 +13,19 @@ export type {
 } from './cookieFeedback';
 export type {
   CookieFragmentRewardEffectConfig,
+  CookieLineBurstEffectConfig,
+  CookieLineBurstKind,
   CookieSpecialEffectConfig,
   CookieSpecialEffectKind,
   CookieSpecialEffectsConfig,
 } from './cookieSpecialEffects';
+export type {
+  MiniGameConfig,
+  MiniGamePhase,
+  MiniGamePlayer,
+  MiniGameScores,
+  MiniGameWinner,
+} from './miniGame';
 export type {
   CookieFragmentAudioConfig,
   CookieFragmentKind,

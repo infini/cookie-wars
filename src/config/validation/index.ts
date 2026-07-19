@@ -30,6 +30,7 @@ import { validateCookieFeedback } from './feedback';
 import { validateCookieFragments } from './cookieFragments';
 import { validateCookiePity } from './cookiePity';
 import { validateCookieSpecialEffects } from './cookieSpecialEffects';
+import { validateMiniGame } from './miniGame';
 import {
   validateDifficultyExpansion,
   validateDifficultyExpansionReferences,
@@ -54,6 +55,7 @@ export { ConfigValidationError };
 export type { GameConfigInput, ValidatedGameConfig };
 
 export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig {
+  validateMiniGame(input.MINI_GAME);
   validateAudioSettings(input.AUDIO_SETTINGS);
   validateBattleAuto(input.BATTLE_AUTO);
   validateCookieInput(input.COOKIE_INPUT);

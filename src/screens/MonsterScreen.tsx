@@ -7,6 +7,7 @@ import { colors } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import { MonsterSprite } from '../components/MonsterSprite';
 import { Panel } from '../components/Panel';
+import { formatNumber } from '../utils/format';
 
 export function MonsterScreen() {
   const { state, acknowledgeMonsters } = useGame();
@@ -36,8 +37,8 @@ export function MonsterScreen() {
                 <>
                   <Text style={styles.rank}>{monster.rank}</Text>
                   <View style={styles.statRow}>
-                    <Text style={styles.stat}>❤️ 체력 {monster.baseHp}</Text>
-                    <Text style={styles.stat}>⚔️ 공격 {monster.baseAttack}</Text>
+                    <Text style={styles.stat}>❤️ 체력 {formatNumber(monster.baseHp)}</Text>
+                    <Text style={styles.stat}>⚔️ 공격 {formatNumber(monster.baseAttack)}</Text>
                   </View>
                   <Text style={styles.description}>{monster.description}</Text>
                 </>

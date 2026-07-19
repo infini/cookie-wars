@@ -53,6 +53,7 @@ export const CookieFragmentClaimEffect = React.memo(
         style={[
           styles.layer,
           {
+            zIndex: effect.zIndex,
             transform: [{
               translateX: progress.interpolate({
                 inputRange: [0, REWARD.peakProgress, fadeStartProgress, 1],

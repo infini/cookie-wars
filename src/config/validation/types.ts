@@ -32,6 +32,7 @@ import {
   EnemyWaveConfig,
   GiantDiscConfig,
   MonsterConfig,
+  MiniGameConfig,
   ProgressionConfig,
   SaveMigrationsConfig,
   UpgradeConfig,
@@ -72,6 +73,7 @@ export interface GameConfigInput {
   ENEMY_WAVES: unknown;
   GIANT_DISC: unknown;
   MONSTERS: unknown;
+  MINI_GAME: unknown;
   PROGRESSION: unknown;
   SAVE_MIGRATIONS: unknown;
 }
@@ -111,6 +113,7 @@ export interface ValidatedGameConfig {
   ENEMY_WAVES: EnemyWaveConfig[];
   GIANT_DISC: GiantDiscConfig;
   MONSTERS: MonsterConfig[];
+  MINI_GAME: MiniGameConfig;
   PROGRESSION: ProgressionConfig;
   SAVE_MIGRATIONS: SaveMigrationsConfig;
 }

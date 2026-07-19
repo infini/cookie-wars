@@ -4,6 +4,7 @@ import type { BattleStatus } from '../../engine/useBattleEngine';
 import type { BattleRewardResult } from '../../types/game';
 import { DiscImage } from '../../components/DiscImage';
 import { GameButton } from '../../components/GameButton';
+import { formatNumber } from '../../utils/format';
 import { styles } from './battleScreenStyles';
 
 interface BattleResultModalProps {
@@ -50,7 +51,7 @@ export function BattleResultModal({
               accessibilityLabel={rewardPending
                 ? '보상 확인 중'
                 : hasReward
-                  ? `최초 승리 보상, 거대 원반 ${rewardResult?.giantDiscReward ?? 0}개, 전투 훈장 ${rewardResult?.battleMedalReward ?? 0}개, 클릭 힘 영구 ${clickGrowthBonusPercent}퍼센트 증가, 자동 생산 영구 ${autoGrowthBonusPercent}퍼센트 증가, 쿠키 성 체력 영구 ${healthGrowthBonusPercent}퍼센트 증가`
+                  ? `최초 승리 보상, 거대 원반 ${formatNumber(rewardResult?.giantDiscReward ?? 0)}개, 전투 훈장 ${formatNumber(rewardResult?.battleMedalReward ?? 0)}개, 클릭 힘 영구 ${formatNumber(clickGrowthBonusPercent)}퍼센트 증가, 자동 생산 영구 ${formatNumber(autoGrowthBonusPercent)}퍼센트 증가, 쿠키 성 체력 영구 ${formatNumber(healthGrowthBonusPercent)}퍼센트 증가`
                   : '이미 받은 보상, 추가 보상 없음'}
               style={[styles.rewardBox, rewardResult && !hasReward && styles.replayBox]}
             >
@@ -68,15 +69,15 @@ export function BattleResultModal({
                 ) : hasReward ? (
                   <>
                     {rewardResult && rewardResult.giantDiscReward > 0 ? (
-                      <Text style={styles.rewardValue}>거대 원반 +{rewardResult.giantDiscReward}</Text>
+                      <Text style={styles.rewardValue}>거대 원반 +{formatNumber(rewardResult.giantDiscReward)}</Text>
                     ) : null}
                     {rewardResult && rewardResult.battleMedalReward > 0 ? (
                       <>
-                        <Text style={styles.medalRewardValue}>전투 훈장 +{rewardResult.battleMedalReward}</Text>
+                        <Text style={styles.medalRewardValue}>전투 훈장 +{formatNumber(rewardResult.battleMedalReward)}</Text>
                         <Text style={styles.growthRewardText}>
                           {uniformGrowthBonus
-                            ? `클릭·자동 생산·성 체력 영구 +${clickGrowthBonusPercent}%`
-                            : `클릭 +${clickGrowthBonusPercent}% · 자동 +${autoGrowthBonusPercent}% · 성 +${healthGrowthBonusPercent}%`}
+                            ? `클릭·자동 생산·성 체력 영구 +${formatNumber(clickGrowthBonusPercent)}%`
+                            : `클릭 +${formatNumber(clickGrowthBonusPercent)}% · 자동 +${formatNumber(autoGrowthBonusPercent)}% · 성 +${formatNumber(healthGrowthBonusPercent)}%`}
                         </Text>
                       </>
                     ) : null}

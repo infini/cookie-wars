@@ -11,6 +11,7 @@ import { closestEnemy } from '../../engine/battleModel';
 import type { BattleEnemy, BattleStatus } from '../../engine/battleTypes';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
+import { formatNumber } from '../../utils/format';
 import { BotAnimationSprite } from './BotAnimationSprite';
 import { getPerspectiveScale } from './battleUnitLayout';
 
@@ -77,7 +78,7 @@ export const BattleBotFormation = React.memo(function BattleBotFormation({
             ]}
           >
             <Text style={styles.botName} numberOfLines={1}>
-              {bot.config.name}{bot.count > 1 ? ` ×${bot.count}` : ''}
+              {bot.config.name}{bot.count > 1 ? ` ×${formatNumber(bot.count)}` : ''}
             </Text>
             <View style={{ width: renderSize, height: renderSize }}>
               <View

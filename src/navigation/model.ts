@@ -9,9 +9,9 @@ import type {
 } from './types';
 import type { TabId } from '../types/game';
 
-export const MAIN_MENU_IDS: MainMenuId[] = ['game', 'battle', 'growth', 'info'];
+export const MAIN_MENU_IDS: MainMenuId[] = ['game', 'miniGame', 'battle', 'growth', 'info'];
 export const NAVIGATION_LEAF_IDS: TabId[] = [
-  'game', 'battle', 'upgrade', 'disc', 'bot', 'cookie', 'difficulty', 'monster',
+  'game', 'miniGame', 'battle', 'upgrade', 'disc', 'bot', 'cookie', 'difficulty', 'monster',
 ];
 const NAVIGATION_BADGE_KEYS: NavigationBadgeKey[] = ['newMonster'];
 

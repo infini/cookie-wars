@@ -39,10 +39,15 @@ describe('데이터 테이블 이미지 레지스트리', () => {
     expect(hasCookieRareStatImage('superCritical')).toBe(true);
   });
 
-  test('네 특별 보상이 외부 CC0 애니메이션 WebP에 연결된다', () => {
-    COOKIE_SPECIAL_EFFECTS.effects.forEach((effect) => {
-      expect(hasCookieFeedbackVfxSource(effect.id)).toBe(true);
+  test('마그마·전기 조각이 외부 애니메이션 WebP에 연결된다', () => {
+    COOKIE_FRAGMENTS.types.forEach((fragment) => {
+      expect(hasCookieFeedbackVfxSource(fragment.id)).toBe(true);
     });
+  });
+
+  test('일반·슈퍼 크리티컬은 데이터 기반 선형 연출을 가진다', () => {
+    expect(COOKIE_SPECIAL_EFFECTS.lineBursts.map((effect) => effect.id))
+      .toEqual(['critical', 'superCritical']);
   });
 
   test('모든 보스 애니메이션 키가 실제 정적 WebP에 연결된다', () => {

@@ -8,6 +8,13 @@
       "leafIds": ["game"]
     },
     {
+      "id": "miniGame",
+      "label": "대결",
+      "icon": "account-group",
+      "defaultLeafId": "miniGame",
+      "leafIds": ["miniGame"]
+    },
+    {
       "id": "battle",
       "label": "전투",
       "icon": "sword-cross",
@@ -36,6 +43,13 @@
       "label": "게임",
       "icon": "gesture-tap-button",
       "title": "쿠키 모으기"
+    },
+    {
+      "id": "miniGame",
+      "mainMenuId": "miniGame",
+      "label": "쿠키 대결",
+      "icon": "account-group",
+      "title": "A·B 쿠키 대결"
     },
     {
       "id": "battle",

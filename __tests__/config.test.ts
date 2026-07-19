@@ -33,6 +33,7 @@ import {
   ENEMY_WAVES,
   GIANT_DISC,
   MONSTERS,
+  MINI_GAME,
   PROGRESSION,
   SAVE_MIGRATIONS,
   getBattleMapForDifficulty,
@@ -228,11 +229,11 @@ describe('데이터 테이블', () => {
       'electricFragmentChance',
       'magmaFragmentChance',
     ]);
-    expect(COOKIE_UPGRADE_RULES.clickPower.valueIncreasePerLevel).toBe(50);
+    expect(COOKIE_UPGRADE_RULES.clickPower.valueIncreasePerLevel).toBe(100);
     expect(
       COOKIE_UPGRADES.find((upgrade) => upgrade.id === 'clickPower')
         ?.levels.map((level) => level.value),
-    ).toEqual([50, 100, 150, 200, 250, 300, 350, 400]);
+    ).toEqual([100, 200, 300, 400, 500, 600, 700, 800]);
     const cookieSize = COOKIE_UPGRADES.find((upgrade) => upgrade.id === 'cookieSize');
     expect(cookieSize).toMatchObject({
       enabled: false,
@@ -378,13 +379,28 @@ describe('데이터 테이블', () => {
     expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.durationMs))
       .toEqual([1_100, 1_500, 1_800, 2_200]);
     expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.minimumSizePixels))
-      .toEqual([250, 330, 528, 676]);
+      .toEqual([360, 400, 528, 676]);
     expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.offsetXScreenRatio))
       .toEqual([0, -0.08, 0.09, 0]);
     expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.offsetYScreenRatio))
       .toEqual([0, -0.06, -0.07, 0.08]);
     expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.sourceFrameCount))
-      .toEqual([16, 64, 64, 64]);
+      .toEqual([0, 60, 0, 64]);
+    expect(COOKIE_SPECIAL_EFFECTS.effects.map((effect) => effect.zIndex))
+      .toEqual([21, 22, 23, 24]);
+    expect(COOKIE_SPECIAL_EFFECTS.lineBursts.map((effect) => effect.id))
+      .toEqual(['critical', 'superCritical']);
+    expect(COOKIE_SPECIAL_EFFECTS.lineBursts[1].radialLineCount)
+      .toBeGreaterThan(COOKIE_SPECIAL_EFFECTS.lineBursts[0].radialLineCount);
+    expect(MINI_GAME).toMatchObject({
+      minimumDurationSeconds: 10,
+      maximumDurationSeconds: 60,
+      defaultDurationSeconds: 30,
+      durationStepSeconds: 10,
+      countdownSeconds: 3,
+      releaseSpringSpeed: 45,
+      releaseSpringBounciness: 5,
+    });
     expect(COOKIE_FEEDBACK.superCriticalShake.firstProgress)
       .toBeLessThan(COOKIE_FEEDBACK.superCriticalShake.endProgress);
     expect(BOSS_BALANCE.playerPowerBaseSurvivalSeconds).toBeGreaterThan(0);
@@ -973,6 +989,23 @@ describe('데이터 테이블 런타임 검증', () => {
           .find((effect: any) => effect.id === 'superCritical').durationMs;
     expect(() => validateGameConfig(invalidDuration)).toThrow(
       'COOKIE_SPECIAL_EFFECTS.effects.superCritical.durationMs',
+    );
+  });
+
+  test('슈퍼 크리티컬 선형 연출은 일반 크리티컬보다 강해야 한다', () => {
+    const invalid = cloneConfig();
+    invalid.COOKIE_SPECIAL_EFFECTS.lineBursts[1].radialLineCount =
+      invalid.COOKIE_SPECIAL_EFFECTS.lineBursts[0].radialLineCount;
+    expect(() => validateGameConfig(invalid)).toThrow(
+      'COOKIE_SPECIAL_EFFECTS.lineBursts.superCritical.radialLineCount',
+    );
+  });
+
+  test('미니게임 시간은 10초 단위 범위 안에서만 정의한다', () => {
+    const invalid = cloneConfig();
+    invalid.MINI_GAME.defaultDurationSeconds = 25;
+    expect(() => validateGameConfig(invalid)).toThrow(
+      'MINI_GAME.durationStepSeconds',
     );
   });
 

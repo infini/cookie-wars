@@ -1,6 +1,6 @@
 import type { TabId } from '../types/game';
 
-export type MainMenuId = 'game' | 'battle' | 'growth' | 'info';
+export type MainMenuId = 'game' | 'miniGame' | 'battle' | 'growth' | 'info';
 export type NavigationBadgeKey = 'newMonster';
 
 export interface MainMenuConfig {

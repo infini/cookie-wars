@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { COOKIE_FRAGMENTS, getCookieFragment } from '../config';
 import type { CookieFragmentKind } from '../types/game';
+import { formatNumber } from '../utils/format';
 import { CookieFragmentImage } from './CookieFragmentImage';
 
 const FX = COOKIE_FRAGMENTS.spawnEffect;
@@ -141,7 +142,7 @@ export function CookieFragmentCollectible({
         />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${config.name}, ${COOKIE_FRAGMENTS.lifetimeMs / 1000}초 안에 눌러서 쿠키 ${rewardMultiplier}배 받기`}
+          accessibilityLabel={`${config.name}, ${COOKIE_FRAGMENTS.lifetimeMs / 1000}초 안에 눌러서 쿠키 ${formatNumber(rewardMultiplier)}배 받기`}
           hitSlop={FX.hitSlopPixels}
           onPress={handlePress}
           style={styles.pressable}

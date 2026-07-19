@@ -101,7 +101,7 @@ export function UpgradeScreen() {
                 <Text style={styles.upgradeName}>{upgrade.name}</Text>
                 <Text style={styles.description}>{upgrade.description}</Text>
               </View>
-              <View style={styles.levelBadge}><Text style={styles.levelText}>Lv.{current.level}</Text></View>
+              <View style={styles.levelBadge}><Text style={styles.levelText}>Lv.{formatNumber(current.level)}</Text></View>
             </View>
             <View style={styles.values}>
               <View style={styles.valueBox}>

@@ -59,7 +59,7 @@ export function CookieScreen() {
             <InfoRow icon="bomb" label="쿠키 크리티컬" value={`${formatCriticalChancePercent(stats.criticalChanceUnits)}% · ×${formatNumber(stats.criticalRewardMultiplier)}`} />
             <InfoRow icon="star-four-points-circle" label="슈퍼 크리티컬" value={`${formatSuperCriticalChancePercent(stats.superCriticalChanceUnits)}% · ×${formatNumber(stats.superCriticalRewardMultiplier)}`} />
             <InfoRow icon="clock-fast" label="자동 획득" value={`${formatNumber(stats.autoProduction)}개/초`} />
-            <InfoRow icon="star-circle" label="진화 레벨" value={`Lv.${stats.totalUpgradeLevels}`} />
+            <InfoRow icon="star-circle" label="진화 레벨" value={`Lv.${formatNumber(stats.totalUpgradeLevels)}`} />
             <InfoRow icon="creation" label="현재 쿠키 보너스" value={`×${evolution.active.clickMultiplier.toFixed(2)}`} />
           </Panel>
           <Panel style={styles.medalPanel}>
@@ -97,8 +97,8 @@ export function CookieScreen() {
                 <Text style={styles.futureTitle}>{evolution.next ? `다음 쿠키 · ${evolution.next.name}` : '최고 쿠키 진화 완료!'}</Text>
                 <Text style={styles.futureDescription}>
                   {evolution.next
-                    ? `현재 진화 Lv.${evolution.totalUpgradeLevels} / 필요 Lv.${evolution.next.requiredTotalUpgradeLevels} · ${evolution.remainingLevels}번 남음`
-                    : `현재 진화 Lv.${evolution.totalUpgradeLevels} · 모든 쿠키 진화를 완료했어요!`}
+                    ? `현재 진화 Lv.${formatNumber(evolution.totalUpgradeLevels)} / 필요 Lv.${formatNumber(evolution.next.requiredTotalUpgradeLevels)} · ${formatNumber(evolution.remainingLevels)}번 남음`
+                    : `현재 진화 Lv.${formatNumber(evolution.totalUpgradeLevels)} · 모든 쿠키 진화를 완료했어요!`}
                 </Text>
               </View>
             </View>
@@ -123,7 +123,7 @@ export function CookieScreen() {
                 <Text style={styles.cardName}>{cookie.name}</Text>
                 <View style={[styles.stateBadge, active && styles.activeBadge]}>
                   <Text style={[styles.stateText, active && styles.activeStateText]}>
-                    {active ? '현재 쿠키' : unlocked ? '진화 완료' : `진화 Lv.${cookie.requiredTotalUpgradeLevels}`}
+                    {active ? '현재 쿠키' : unlocked ? '진화 완료' : `진화 Lv.${formatNumber(cookie.requiredTotalUpgradeLevels)}`}
                   </Text>
                 </View>
               </View>

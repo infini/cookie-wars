@@ -32,6 +32,7 @@ import enemyDiscData from './enemy-discs.json';
 import enemyWaveData from './enemy-waves.json';
 import giantDiscData from './giant-disc.json';
 import monsterData from './monsters.json';
+import miniGameData from './mini-game.json';
 import progressionData from './progression.json';
 import saveMigrationData from './save-migrations.json';
 import {
@@ -39,6 +40,7 @@ import {
   BotConfig,
   CookieConfig,
   CookieFragmentKind,
+  CookieLineBurstKind,
   CookieSpecialEffectKind,
   CookieFragmentTypeConfig,
   DifficultyConfig,
@@ -87,6 +89,7 @@ export const CONFIG_TABLES = validateGameConfig({
   ENEMY_WAVES: enemyWaveData,
   GIANT_DISC: giantDiscData,
   MONSTERS: monsterData,
+  MINI_GAME: miniGameData,
   PROGRESSION: progressionData,
   SAVE_MIGRATIONS: saveMigrationData,
 });
@@ -126,6 +129,7 @@ export const {
   ENEMY_WAVES,
   GIANT_DISC,
   MONSTERS,
+  MINI_GAME,
   PROGRESSION,
   SAVE_MIGRATIONS,
 } = CONFIG_TABLES;
@@ -145,6 +149,9 @@ const cookieFragmentById = new Map(
 );
 const cookieSpecialEffectById = new Map(
   COOKIE_SPECIAL_EFFECTS.effects.map((item) => [item.id, item]),
+);
+const cookieLineBurstById = new Map(
+  COOKIE_SPECIAL_EFFECTS.lineBursts.map((item) => [item.id, item]),
 );
 const enemyDiscByLevel = new Map(ENEMY_DISCS.map((item) => [item.level, item]));
 const bossAnimationByMonsterId = new Map(
@@ -214,6 +221,14 @@ export function getCookieSpecialEffect(kind: CookieSpecialEffectKind) {
   return requireConfig(
     cookieSpecialEffectById.get(kind),
     'COOKIE_SPECIAL_EFFECTS.effects.id',
+    kind,
+  );
+}
+
+export function getCookieLineBurst(kind: CookieLineBurstKind) {
+  return requireConfig(
+    cookieLineBurstById.get(kind),
+    'COOKIE_SPECIAL_EFFECTS.lineBursts.id',
     kind,
   );
 }

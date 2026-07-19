@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""외부 CC0 스프라이트 시트를 Android용 애니메이션 WebP로 변환한다."""
+"""외부 CC0 마그마·번개 프레임을 Android용 애니메이션 WebP로 변환한다."""
 
 from __future__ import annotations
 
@@ -12,10 +12,7 @@ from PIL import Image, ImageChops
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--critical-atlas", type=Path, required=True)
-    parser.add_argument("--magma-atlas", type=Path, required=True)
-    parser.add_argument("--super-gold-atlas", type=Path, required=True)
-    parser.add_argument("--super-cyan-atlas", type=Path, required=True)
+    parser.add_argument("--magma-animation", type=Path, required=True)
     parser.add_argument("--electric-atlas", type=Path, required=True)
     parser.add_argument("--lightning-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -38,6 +35,17 @@ def split_atlas(path: Path, columns: int, rows: int) -> list[Image.Image]:
         for row in range(rows)
         for column in range(columns)
     ]
+
+
+def load_animation_frames(path: Path) -> list[Image.Image]:
+    with Image.open(path) as source:
+        frames = []
+        for frame_index in range(source.n_frames):
+            source.seek(frame_index)
+            frames.append(source.convert("RGBA"))
+    if not frames:
+        raise ValueError(f"애니메이션 프레임을 찾을 수 없습니다: {path}")
+    return frames
 
 
 def fit_frame(frame: Image.Image, size: int, scale: float = 1.0) -> Image.Image:
@@ -129,22 +137,6 @@ def save_speed_variants(
         )
 
 
-def compose_super_effect(
-    gold_frames: list[Image.Image],
-    cyan_frames: list[Image.Image],
-    size: int,
-) -> list[Image.Image]:
-    fitted_gold = fit_sequence(gold_frames, size, 0.94)
-    fitted_cyan = fit_sequence(cyan_frames, size, 0.78)
-    output: list[Image.Image] = []
-    for index, gold in enumerate(fitted_gold):
-        canvas = gold.copy()
-        cyan = fitted_cyan[index]
-        canvas.alpha_composite(cyan)
-        output.append(canvas)
-    return output
-
-
 def load_lightning_frames(path: Path) -> list[Image.Image]:
     files = sorted(path.glob("lightning-bolt-*.webp"))
     if not files:
@@ -165,7 +157,7 @@ def lightning_layer(
     strike_width = round(size * 0.34)
     strike_height = round(size * 0.88)
     strike_positions = (-0.1, 0.28, 0.66, -0.1, 0.28, 0.66, -0.1, 0.28, 0.66)
-    strike_delays = (0, 2, 4, 20, 22, 24, 40, 42, 44)
+    strike_delays = (0, 0, 0, 20, 20, 20, 40, 40, 40)
     for position, delay in zip(strike_positions, strike_delays):
         local_index = frame_index - delay
         if local_index < 0 or local_index >= len(lightning_frames):
@@ -194,28 +186,9 @@ def compose_electric_effect(
 
 def main() -> None:
     args = parse_args()
-    critical = fit_sequence(split_atlas(args.critical_atlas, 4, 4), 384)
-    save_speed_variants(critical, args.output_dir, "critical", 1_100, 650, args.quality)
-    del critical
-    gc.collect()
-
-    magma = fit_sequence(split_atlas(args.magma_atlas, 8, 8), 512)
+    magma = fit_sequence(load_animation_frames(args.magma_animation), 512, 0.96)
     save_speed_variants(magma, args.output_dir, "magma", 1_500, None, args.quality)
     del magma
-    gc.collect()
-
-    gold = split_atlas(args.super_gold_atlas, 8, 8)
-    cyan = split_atlas(args.super_cyan_atlas, 8, 8)
-    super_effect = compose_super_effect(gold, cyan, 576)
-    save_speed_variants(
-        super_effect,
-        args.output_dir,
-        "super-critical",
-        1_800,
-        720,
-        args.quality,
-    )
-    del gold, cyan, super_effect
     gc.collect()
 
     electric = split_atlas(args.electric_atlas, 8, 8)

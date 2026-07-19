@@ -33,7 +33,7 @@ export function DiscScreen() {
           <Text style={styles.eyebrow}>쿠키 원반 상점 · {discOffers.length}종</Text>
           <Text style={styles.title}>장착 원반</Text>
           <Text style={styles.selectedDiscName}>
-            {selectedDisc.owned ? `${selectedDisc.config.name} Lv.${selectedDisc.current.level}` : '아직 원반이 없어요'}
+            {selectedDisc.owned ? `${selectedDisc.config.name} Lv.${formatNumber(selectedDisc.current.level)}` : '아직 원반이 없어요'}
           </Text>
           <Text style={styles.description}>구매한 원반은 영구 보유하며, 하나를 골라 모든 쿠키봇과 쿠키 성이 사용해요.</Text>
         </View>
@@ -53,21 +53,21 @@ export function DiscScreen() {
             </View>
             <View style={[styles.level, disc.selected && styles.selectedLevel]}>
               <Text style={[styles.levelText, disc.selected && styles.selectedLevelText]}>
-                {disc.selected ? '장착 중' : `Lv.${current.level}`}
+                {disc.selected ? '장착 중' : `Lv.${formatNumber(current.level)}`}
               </Text>
             </View>
           </View>
           <View style={styles.statGrid}>
-            <View style={styles.stat}><Text style={styles.statLabel}>공격력</Text><Text style={styles.statValue}>{current.damage}</Text></View>
-            <View style={styles.stat}><Text style={styles.statLabel}>크기</Text><Text style={styles.statValue}>{current.size}</Text></View>
-            <View style={styles.stat}><Text style={styles.statLabel}>속도</Text><Text style={styles.statValue}>{current.speed}</Text></View>
+            <View style={styles.stat}><Text style={styles.statLabel}>공격력</Text><Text style={styles.statValue}>{formatNumber(current.damage)}</Text></View>
+            <View style={styles.stat}><Text style={styles.statLabel}>크기</Text><Text style={styles.statValue}>{formatNumber(current.size)}</Text></View>
+            <View style={styles.stat}><Text style={styles.statLabel}>속도</Text><Text style={styles.statValue}>{formatNumber(current.speed)}</Text></View>
             <View style={styles.stat}><Text style={styles.statLabel}>쿨타임</Text><Text style={styles.statValue}>{formatSeconds(current.cooldownMs)}</Text></View>
           </View>
           {disc.owned ? (
             <View style={styles.nextLine}>
               <Text style={styles.nextText}>
                 {next
-                  ? `다음: 공격력 ${next.damage} · 쿨타임 ${formatSeconds(next.cooldownMs)}`
+                  ? `다음: 공격력 ${formatNumber(next.damage)} · 쿨타임 ${formatSeconds(next.cooldownMs)}`
                   : '모든 강화 완료!'}
               </Text>
             </View>

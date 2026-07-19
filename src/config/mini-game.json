@@ -1,0 +1,13 @@
+{
+  "minimumDurationSeconds": 10,
+  "maximumDurationSeconds": 60,
+  "defaultDurationSeconds": 30,
+  "durationStepSeconds": 10,
+  "countdownSeconds": 3,
+  "timerRefreshIntervalMs": 50,
+  "cookieSizePixels": 210,
+  "pressedCookieScale": 0.88,
+  "pressInDurationMs": 34,
+  "releaseSpringSpeed": 45,
+  "releaseSpringBounciness": 5
+}

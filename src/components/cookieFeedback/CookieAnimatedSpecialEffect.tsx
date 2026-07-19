@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image, StyleSheet, useWindowDimensions } from 'react-native';
 import { getCookieSpecialEffect } from '../../config';
-import type { CookieSpecialEffectConfig, CookieSpecialEffectKind } from '../../types/game';
+import type { CookieFragmentKind, CookieSpecialEffectConfig } from '../../types/game';
 import { getCookieFeedbackVfxSource } from './externalCookieFeedbackVfx';
 
 export interface CookieSpecialEffectLayout {
@@ -31,7 +31,7 @@ export const CookieAnimatedSpecialEffect = React.memo(
     kind,
     compact = false,
   }: {
-    kind: CookieSpecialEffectKind;
+    kind: CookieFragmentKind;
     compact?: boolean;
   }) {
     const viewport = useWindowDimensions();
