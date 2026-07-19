@@ -109,6 +109,111 @@
       "hammerWindupImageKey": "boss-extreme-god-void-emperor-hammer-windup",
       "hammerImpactImageKey": "boss-extreme-god-void-emperor-hammer-impact",
       "hammerRecoveryImageKey": "boss-extreme-god-void-emperor-hammer-recovery"
+    },
+    {
+      "id": "boss-easy-titan-crystal-giant",
+      "walkImageKeys": ["boss-easy-titan-crystal-giant-walk-1", "boss-easy-titan-crystal-giant-walk-2", "boss-easy-titan-crystal-giant-walk-3"],
+      "hammerWindupImageKey": "boss-easy-titan-crystal-giant-hammer-windup",
+      "hammerImpactImageKey": "boss-easy-titan-crystal-giant-hammer-impact",
+      "hammerRecoveryImageKey": "boss-easy-titan-crystal-giant-hammer-recovery"
+    },
+    {
+      "id": "boss-medium-titan-spore-colossus",
+      "walkImageKeys": ["boss-medium-titan-spore-colossus-walk-1", "boss-medium-titan-spore-colossus-walk-2", "boss-medium-titan-spore-colossus-walk-3"],
+      "hammerWindupImageKey": "boss-medium-titan-spore-colossus-hammer-windup",
+      "hammerImpactImageKey": "boss-medium-titan-spore-colossus-hammer-impact",
+      "hammerRecoveryImageKey": "boss-medium-titan-spore-colossus-hammer-recovery"
+    },
+    {
+      "id": "boss-hard-titan-steam-juggernaut",
+      "walkImageKeys": ["boss-hard-titan-steam-juggernaut-walk-1", "boss-hard-titan-steam-juggernaut-walk-2", "boss-hard-titan-steam-juggernaut-walk-3"],
+      "hammerWindupImageKey": "boss-hard-titan-steam-juggernaut-hammer-windup",
+      "hammerImpactImageKey": "boss-hard-titan-steam-juggernaut-hammer-impact",
+      "hammerRecoveryImageKey": "boss-hard-titan-steam-juggernaut-hammer-recovery"
+    },
+    {
+      "id": "boss-insane-titan-coral-leviathan",
+      "walkImageKeys": ["boss-insane-titan-coral-leviathan-walk-1", "boss-insane-titan-coral-leviathan-walk-2", "boss-insane-titan-coral-leviathan-walk-3"],
+      "hammerWindupImageKey": "boss-insane-titan-coral-leviathan-hammer-windup",
+      "hammerImpactImageKey": "boss-insane-titan-coral-leviathan-hammer-impact",
+      "hammerRecoveryImageKey": "boss-insane-titan-coral-leviathan-hammer-recovery"
+    },
+    {
+      "id": "boss-extreme-titan-meteor-core",
+      "walkImageKeys": ["boss-extreme-titan-meteor-core-walk-1", "boss-extreme-titan-meteor-core-walk-2", "boss-extreme-titan-meteor-core-walk-3"],
+      "hammerWindupImageKey": "boss-extreme-titan-meteor-core-hammer-windup",
+      "hammerImpactImageKey": "boss-extreme-titan-meteor-core-hammer-impact",
+      "hammerRecoveryImageKey": "boss-extreme-titan-meteor-core-hammer-recovery"
+    },
+    {
+      "id": "boss-easy-creator-clockwork-artisan",
+      "walkImageKeys": ["boss-easy-creator-clockwork-artisan-walk-1", "boss-easy-creator-clockwork-artisan-walk-2", "boss-easy-creator-clockwork-artisan-walk-3"],
+      "hammerWindupImageKey": "boss-easy-creator-clockwork-artisan-hammer-windup",
+      "hammerImpactImageKey": "boss-easy-creator-clockwork-artisan-hammer-impact",
+      "hammerRecoveryImageKey": "boss-easy-creator-clockwork-artisan-hammer-recovery"
+    },
+    {
+      "id": "boss-medium-creator-rune-archivist",
+      "walkImageKeys": ["boss-medium-creator-rune-archivist-walk-1", "boss-medium-creator-rune-archivist-walk-2", "boss-medium-creator-rune-archivist-walk-3"],
+      "hammerWindupImageKey": "boss-medium-creator-rune-archivist-hammer-windup",
+      "hammerImpactImageKey": "boss-medium-creator-rune-archivist-hammer-impact",
+      "hammerRecoveryImageKey": "boss-medium-creator-rune-archivist-hammer-recovery"
+    },
+    {
+      "id": "boss-hard-creator-mask-sculptor",
+      "walkImageKeys": ["boss-hard-creator-mask-sculptor-walk-1", "boss-hard-creator-mask-sculptor-walk-2", "boss-hard-creator-mask-sculptor-walk-3"],
+      "hammerWindupImageKey": "boss-hard-creator-mask-sculptor-hammer-windup",
+      "hammerImpactImageKey": "boss-hard-creator-mask-sculptor-hammer-impact",
+      "hammerRecoveryImageKey": "boss-hard-creator-mask-sculptor-hammer-recovery"
+    },
+    {
+      "id": "boss-insane-creator-life-alchemist",
+      "walkImageKeys": ["boss-insane-creator-life-alchemist-walk-1", "boss-insane-creator-life-alchemist-walk-2", "boss-insane-creator-life-alchemist-walk-3"],
+      "hammerWindupImageKey": "boss-insane-creator-life-alchemist-hammer-windup",
+      "hammerImpactImageKey": "boss-insane-creator-life-alchemist-hammer-impact",
+      "hammerRecoveryImageKey": "boss-insane-creator-life-alchemist-hammer-recovery"
+    },
+    {
+      "id": "boss-extreme-creator-nebula-architect",
+      "walkImageKeys": ["boss-extreme-creator-nebula-architect-walk-1", "boss-extreme-creator-nebula-architect-walk-2", "boss-extreme-creator-nebula-architect-walk-3"],
+      "hammerWindupImageKey": "boss-extreme-creator-nebula-architect-hammer-windup",
+      "hammerImpactImageKey": "boss-extreme-creator-nebula-architect-hammer-impact",
+      "hammerRecoveryImageKey": "boss-extreme-creator-nebula-architect-hammer-recovery"
+    },
+    {
+      "id": "boss-easy-infinity-mirror-knight",
+      "walkImageKeys": ["boss-easy-infinity-mirror-knight-walk-1", "boss-easy-infinity-mirror-knight-walk-2", "boss-easy-infinity-mirror-knight-walk-3"],
+      "hammerWindupImageKey": "boss-easy-infinity-mirror-knight-hammer-windup",
+      "hammerImpactImageKey": "boss-easy-infinity-mirror-knight-hammer-impact",
+      "hammerRecoveryImageKey": "boss-easy-infinity-mirror-knight-hammer-recovery"
+    },
+    {
+      "id": "boss-medium-infinity-fractal-colossus",
+      "walkImageKeys": ["boss-medium-infinity-fractal-colossus-walk-1", "boss-medium-infinity-fractal-colossus-walk-2", "boss-medium-infinity-fractal-colossus-walk-3"],
+      "hammerWindupImageKey": "boss-medium-infinity-fractal-colossus-hammer-windup",
+      "hammerImpactImageKey": "boss-medium-infinity-fractal-colossus-hammer-impact",
+      "hammerRecoveryImageKey": "boss-medium-infinity-fractal-colossus-hammer-recovery"
+    },
+    {
+      "id": "boss-hard-infinity-gravity-sovereign",
+      "walkImageKeys": ["boss-hard-infinity-gravity-sovereign-walk-1", "boss-hard-infinity-gravity-sovereign-walk-2", "boss-hard-infinity-gravity-sovereign-walk-3"],
+      "hammerWindupImageKey": "boss-hard-infinity-gravity-sovereign-hammer-windup",
+      "hammerImpactImageKey": "boss-hard-infinity-gravity-sovereign-hammer-impact",
+      "hammerRecoveryImageKey": "boss-hard-infinity-gravity-sovereign-hammer-recovery"
+    },
+    {
+      "id": "boss-insane-infinity-eternity-emperor",
+      "walkImageKeys": ["boss-insane-infinity-eternity-emperor-walk-1", "boss-insane-infinity-eternity-emperor-walk-2", "boss-insane-infinity-eternity-emperor-walk-3"],
+      "hammerWindupImageKey": "boss-insane-infinity-eternity-emperor-hammer-windup",
+      "hammerImpactImageKey": "boss-insane-infinity-eternity-emperor-hammer-impact",
+      "hammerRecoveryImageKey": "boss-insane-infinity-eternity-emperor-hammer-recovery"
+    },
+    {
+      "id": "boss-extreme-infinity-multiverse-lord",
+      "walkImageKeys": ["boss-extreme-infinity-multiverse-lord-walk-1", "boss-extreme-infinity-multiverse-lord-walk-2", "boss-extreme-infinity-multiverse-lord-walk-3"],
+      "hammerWindupImageKey": "boss-extreme-infinity-multiverse-lord-hammer-windup",
+      "hammerImpactImageKey": "boss-extreme-infinity-multiverse-lord-hammer-impact",
+      "hammerRecoveryImageKey": "boss-extreme-infinity-multiverse-lord-hammer-recovery"
     }
   ]
 }

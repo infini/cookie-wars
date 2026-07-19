@@ -20,6 +20,7 @@ import { BattleResultModal } from './battle/BattleResultModal';
 import { getBattleScreenPresentation } from './battle/battlePresentation';
 import { styles } from './battle/battleScreenStyles';
 import { useBattleScreenSession } from './battle/useBattleScreenSession';
+import { useBattleKeepAwake } from './battle/useBattleKeepAwake';
 
 export { getHealthColor } from '../components/battle/BattleHealthBar';
 
@@ -47,6 +48,7 @@ export function BattleScreen({ onReturnToGame }: BattleScreenProps) {
     toggleAutoBattle,
     hasWeapon,
   } = useBattleScreenSession(onReturnToGame);
+  useBattleKeepAwake(engine.state.status);
   const giantDiscRenderSize = Math.round(screenWidth * GIANT_DISC.renderWidthRatio);
   const presentation = getBattleScreenPresentation({
     now: engine.state.now,

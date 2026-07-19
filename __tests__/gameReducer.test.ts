@@ -4,6 +4,7 @@ import {
   BOTS,
   COOKIE_UPGRADES,
   DIFFICULTIES,
+  DIFFICULTY_EXPANSION,
   DISC_UPGRADE_RULES,
   DISCS,
   MONSTERS,
@@ -499,6 +500,29 @@ describe('게임 저장 상태', () => {
     expect(state.difficultyWinCounts[DIFFICULTIES[0].id]).toBe(20);
   });
 
+  test('기존 15개를 모두 완료한 저장은 첫 신규 난이도로 바로 이어진다', () => {
+    const legacyDifficulties = DIFFICULTIES.slice(
+      0,
+      DIFFICULTY_EXPANSION.legacyDifficultyCount,
+    );
+    const legacyFinal = legacyDifficulties[legacyDifficulties.length - 1];
+    const restored = mergeSavedGame({
+      saveVersion: SAVE_MIGRATIONS.difficultyExpansionMigrationVersion - 1,
+      selectedDifficultyId: legacyDifficulties[0].id,
+      difficultyWinCounts: Object.fromEntries(legacyDifficulties.map((difficulty) => [
+        difficulty.id,
+        PROGRESSION.winsToUnlockNextDifficulty,
+      ])),
+      battleMedals: legacyDifficulties.length * PROGRESSION.winsToUnlockNextDifficulty,
+    });
+
+    expect(restored.highestUnlockedDifficultyIndex)
+      .toBe(DIFFICULTY_EXPANSION.legacyDifficultyCount);
+    expect(restored.selectedDifficultyId)
+      .toBe(DIFFICULTIES[DIFFICULTY_EXPANSION.legacyDifficultyCount].id);
+    expect(restored.difficultyWinCounts[restored.selectedDifficultyId]).toBe(0);
+  });
+
   test('원반은 충분한 쿠키가 있을 때 영구 구매된다', () => {
     const disc = DISCS[0];
     const funded = { ...initialGameState, cookies: disc.purchaseCost };
@@ -903,10 +927,10 @@ describe('게임 저장 상태', () => {
       'clickPower',
       'cookieCritical',
       'cookieHealth',
-      'cookieSuperCritical',
-      'magmaFragmentChance',
-      'electricFragmentChance',
       'autoProduction',
+      'magmaFragmentChance',
+      'cookieSuperCritical',
+      'electricFragmentChance',
     ]);
     expect(sorted.slice(0, 3).every((item) => item.affordable)).toBe(true);
     expect(sorted[3].affordable).toBe(false);

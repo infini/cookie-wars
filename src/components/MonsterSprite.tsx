@@ -22,12 +22,31 @@ const monsterImages: Record<string, ImageSourcePropType> = {
   'boss-hard-god-time-colossus': require('../../assets/images/enemies/boss-hard-god-time-colossus.webp'),
   'boss-insane-god-thunder-titan': require('../../assets/images/enemies/boss-insane-god-thunder-titan.webp'),
   'boss-extreme-god-void-emperor': require('../../assets/images/enemies/boss-extreme-god-void-emperor.webp'),
+  'boss-easy-titan-crystal-giant': require('../../assets/images/enemies/boss-easy-titan-crystal-giant.webp'),
+  'boss-medium-titan-spore-colossus': require('../../assets/images/enemies/boss-medium-titan-spore-colossus.webp'),
+  'boss-hard-titan-steam-juggernaut': require('../../assets/images/enemies/boss-hard-titan-steam-juggernaut.webp'),
+  'boss-insane-titan-coral-leviathan': require('../../assets/images/enemies/boss-insane-titan-coral-leviathan.webp'),
+  'boss-extreme-titan-meteor-core': require('../../assets/images/enemies/boss-extreme-titan-meteor-core.webp'),
+  'boss-easy-creator-clockwork-artisan': require('../../assets/images/enemies/boss-easy-creator-clockwork-artisan.webp'),
+  'boss-medium-creator-rune-archivist': require('../../assets/images/enemies/boss-medium-creator-rune-archivist.webp'),
+  'boss-hard-creator-mask-sculptor': require('../../assets/images/enemies/boss-hard-creator-mask-sculptor.webp'),
+  'boss-insane-creator-life-alchemist': require('../../assets/images/enemies/boss-insane-creator-life-alchemist.webp'),
+  'boss-extreme-creator-nebula-architect': require('../../assets/images/enemies/boss-extreme-creator-nebula-architect.webp'),
+  'boss-easy-infinity-mirror-knight': require('../../assets/images/enemies/boss-easy-infinity-mirror-knight.webp'),
+  'boss-medium-infinity-fractal-colossus': require('../../assets/images/enemies/boss-medium-infinity-fractal-colossus.webp'),
+  'boss-hard-infinity-gravity-sovereign': require('../../assets/images/enemies/boss-hard-infinity-gravity-sovereign.webp'),
+  'boss-insane-infinity-eternity-emperor': require('../../assets/images/enemies/boss-insane-infinity-eternity-emperor.webp'),
+  'boss-extreme-infinity-multiverse-lord': require('../../assets/images/enemies/boss-extreme-infinity-multiverse-lord.webp'),
 };
 
 interface MonsterSpriteProps {
   imageKey: string;
   size?: number;
   grounded?: boolean;
+}
+
+export function hasMonsterImage(imageKey: string): boolean {
+  return monsterImages[imageKey] !== undefined;
 }
 
 export const MonsterSprite = React.memo(function MonsterSprite({

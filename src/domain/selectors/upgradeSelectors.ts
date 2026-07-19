@@ -116,6 +116,8 @@ export function getSortedUpgradeProgress(state: GameState): UpgradeProgress[] {
         return 2;
       };
       return priority(left.progress) - priority(right.progress)
+        || (left.progress.next?.cost ?? Number.MAX_SAFE_INTEGER)
+          - (right.progress.next?.cost ?? Number.MAX_SAFE_INTEGER)
         || left.tableIndex - right.tableIndex;
     })
     .map((item) => item.progress);

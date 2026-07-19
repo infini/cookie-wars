@@ -17,6 +17,21 @@ export interface DifficultyConfig {
   enemyDiscLevel: number;
 }
 
+export interface DifficultyExpansionConfig {
+  legacyDifficultyCount: number;
+  extensionDifficultyCount: number;
+  powerMultiplierPerDifficulty: number;
+  moveSpeedMultiplierPerDifficulty: number;
+  maximumMoveSpeed: number;
+  enemyDiscDamageMultiplierPerDifficulty: number;
+  enemyDiscSizeIncreasePerDifficulty: number;
+  maximumEnemyDiscSize: number;
+  enemyDiscSpeedMultiplierPerDifficulty: number;
+  maximumEnemyDiscSpeed: number;
+  enemyDiscCooldownMultiplierPerDifficulty: number;
+  minimumEnemyDiscCooldownMs: number;
+}
+
 export interface BossBalanceConfig {
   playerPowerBaseSurvivalSeconds: number;
   hpMultiplierReference: number;

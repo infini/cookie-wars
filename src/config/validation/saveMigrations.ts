@@ -23,6 +23,11 @@ export function validateSaveMigrations(value: unknown): UnknownRecord {
     min: 1,
     max: currentSaveVersion,
   });
+  numberField(config, 'difficultyExpansionMigrationVersion', path, {
+    integer: true,
+    min: 1,
+    max: currentSaveVersion,
+  });
   numberField(config, 'battleMedalsPerLegacyWin', path, {
     integer: true,
     min: 1,

@@ -33,7 +33,7 @@ describe('대분류·소분류 메뉴 모델', () => {
       ]);
     expect(getSubmenuItemsForLeaf('cookie').map(({ id, label }) => ({ id, label })))
       .toEqual([
-        { id: 'cookie', label: '쿠키 도감' },
+        { id: 'cookie', label: '쿠키·훈장' },
         { id: 'difficulty', label: '난이도' },
         { id: 'monster', label: '몬스터' },
       ]);
@@ -69,7 +69,7 @@ describe('대분류·소분류 메뉴 모델', () => {
   test('화면 제목과 부모 대분류도 같은 메뉴 데이터에서 제공한다', () => {
     expect(getScreenTitle('upgrade')).toBe('쿠키 강화');
     expect(getScreenTitle('disc')).toBe('원반 강화');
-    expect(getScreenTitle('cookie')).toBe('쿠키 도감');
+    expect(getScreenTitle('cookie')).toBe('쿠키와 전투 훈장');
     expect(getMainMenuForLeaf('difficulty').id).toBe('info');
   });
 

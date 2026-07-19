@@ -41,6 +41,7 @@ export type {
   BossAnimationConfig,
   BossSpecialAttackConfig,
   BotAnimationConfig,
+  DifficultyExpansionConfig,
   DifficultyConfig,
   EnemyDiscConfig,
   EnemyWaveConfig,
@@ -49,6 +50,7 @@ export type {
 export type {
   BotConfig,
   CookieConfig,
+  CookieExpansionConfig,
   CookieCriticalConfig,
   CookieSuperCriticalConfig,
   CookieUpgradeRulesConfig,

@@ -74,8 +74,8 @@ export const CookieFragmentClaimEffect = React.memo(
           startScale={FX.flashStartScale}
           endScale={FX.flashEndScale}
           rotationDegrees={kind === 'magma'
-            ? FX.magmaEmberAngleOffsetDegrees
-            : FX.electricShardAngleOffsetDegrees}
+            ? FX.magmaFlashRotationDegrees
+            : FX.electricFlashRotationDegrees}
           peakProgress={FX.flashPeakProgress}
           fadeStartProgress={FX.flashFadeProgress}
         />

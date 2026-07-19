@@ -22,6 +22,7 @@ import { GameState } from '../types/game';
 import { initialGameState } from './gameInitialState';
 import { resolveCookieEvolutionBonusLevels } from './saveMigrations/cookieEvolutionMigration';
 import { resolveBattleMedals } from './saveMigrations/battleMedalMigration';
+import { resolveSelectedDifficultyAfterExpansion } from './saveMigrations/difficultyExpansionMigration';
 import { isFutureSaveVersion } from './saveMigrations/saveVersion';
 
 interface LegacyDiscSave {
@@ -179,12 +180,12 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     normalizedDifficultyWinCounts: difficultyWinCounts,
   });
   const highestUnlockedDifficultyIndex = unlockedDifficultyIndex(difficultyWinCounts);
-  const selectedIndex = DIFFICULTIES.findIndex(
-    (difficulty) => difficulty.id === saved.selectedDifficultyId,
-  );
-  const selectedDifficultyId = selectedIndex >= 0 && selectedIndex <= highestUnlockedDifficultyIndex
-    ? DIFFICULTIES[selectedIndex].id
-    : DIFFICULTIES[highestUnlockedDifficultyIndex].id;
+  const selectedDifficultyId = resolveSelectedDifficultyAfterExpansion({
+    savedVersion: saved.saveVersion,
+    savedDifficultyId: saved.selectedDifficultyId,
+    highestUnlockedDifficultyIndex,
+    difficultyWinCounts,
+  });
   const knownDiscIds = new Set(DISCS.map((disc) => disc.id));
   const ownedDiscIds = unique(
     storedStringArray(saved.ownedDiscIds).map((id) => SAVE_MIGRATIONS.discIdAliases[id] ?? id)

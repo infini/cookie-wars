@@ -1,10 +1,11 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { BATTLE_REWARDS, COOKIES } from '../config';
+import { BATTLE_REWARDS, COOKIES, DIFFICULTIES } from '../config';
 import {
   getBattleMedalBonuses,
   getCookieEvolutionProgress,
+  getDifficultyProgress,
 } from '../domain/gameSelectors';
 import { useGame } from '../state/GameContext';
 import { colors } from '../theme/colors';
@@ -29,6 +30,12 @@ export function CookieScreen() {
   const { state, stats } = useGame();
   const evolution = getCookieEvolutionProgress(state);
   const medalBonuses = getBattleMedalBonuses(state);
+  const nextMedalBattle = DIFFICULTIES
+    .map((difficulty) => ({
+      difficulty,
+      progress: getDifficultyProgress(state, difficulty.id),
+    }))
+    .find(({ progress }) => !progress.completed);
   return (
     <FlatList
       data={COOKIES}
@@ -60,12 +67,28 @@ export function CookieScreen() {
               <MaterialCommunityIcons name="medal" size={31} color={colors.purple} />
               <View style={styles.medalTextGroup}>
                 <Text style={styles.medalTitle}>전투 훈장 {formatNumber(medalBonuses.battleMedals)}개</Text>
-                <Text style={styles.medalDescription}>각 스테이지를 처음 이기면 훈장 {BATTLE_REWARDS.battleMedalsPerStageClear}개를 얻어요.</Text>
+                <Text style={styles.medalDescription}>
+                  {nextMedalBattle
+                    ? `다음 획득: ${nextMedalBattle.difficulty.name} ${nextMedalBattle.progress.currentBattleNumber}번째 전투 최초 승리`
+                    : '모든 전투 훈장을 획득했어요!'}
+                </Text>
               </View>
             </View>
-            <Text style={styles.medalBonus}>
-              클릭 +{formatNumber(medalBonuses.clickPowerBonusPercent)}% · 자동 생산 +{formatNumber(medalBonuses.autoProductionBonusPercent)}% · 성 체력 +{formatNumber(medalBonuses.castleHealthBonusPercent)}%
-            </Text>
+            <Text style={styles.medalSectionTitle}>현재 영구 효과</Text>
+            <InfoRow icon="gesture-tap" label="클릭 힘" value={`+${formatNumber(medalBonuses.clickPowerBonusPercent)}% · ×${medalBonuses.clickPowerMultiplier.toFixed(2)}`} />
+            <InfoRow icon="clock-fast" label="자동 생산" value={`+${formatNumber(medalBonuses.autoProductionBonusPercent)}% · ×${medalBonuses.autoProductionMultiplier.toFixed(2)}`} />
+            <InfoRow icon="castle" label="쿠키 성 최대 체력" value={`+${formatNumber(medalBonuses.castleHealthBonusPercent)}% · ×${medalBonuses.castleHealthMultiplier.toFixed(2)}`} />
+            <View style={styles.medalFormulaBox}>
+              <Text style={styles.medalFormula}>
+                최종 능력치 = 강화 능력 × 쿠키 진화 배율 × 전투 훈장 배율
+              </Text>
+              <Text style={styles.medalExplanation}>
+                훈장 1개마다 클릭 +{BATTLE_REWARDS.clickPowerBonusPercentPerMedal}%, 자동 생산 +{BATTLE_REWARDS.autoProductionBonusPercentPerMedal}%, 성 체력 +{BATTLE_REWARDS.castleHealthBonusPercentPerMedal}%예요. 크리티컬·슈퍼 크리티컬·마그마·전기 조각도 최종 클릭 힘으로 보상을 계산해요.
+              </Text>
+              <Text style={styles.medalRewardRule}>
+                미완료 스테이지 최초 승리마다 +{BATTLE_REWARDS.battleMedalsPerStageClear}개 · 완료한 전투 재도전은 추가 지급 없음
+              </Text>
+            </View>
           </Panel>
           <Panel style={styles.evolutionPanel}>
             <View style={styles.evolutionHeader}>
@@ -80,7 +103,7 @@ export function CookieScreen() {
               </View>
             </View>
             <Text style={styles.levelRule}>
-              클릭 힘·쿠키 크리티컬·자동 생산·쿠키 성 체력을 강화할 때마다 진화 레벨이 올라요.
+              강화 화면의 쿠키 관련 7종을 강화할 때마다 진화 레벨이 올라요.
             </Text>
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: `${evolution.progressRatio * 100}%` }]} />
@@ -133,7 +156,11 @@ const styles = StyleSheet.create({
   medalTextGroup: { flex: 1, marginLeft: 12 },
   medalTitle: { fontFamily: fonts.display, fontSize: 19, color: colors.purple },
   medalDescription: { fontFamily: fonts.medium, fontSize: 11, lineHeight: 16, color: colors.muted, marginTop: 2 },
-  medalBonus: { fontFamily: fonts.extraBold, fontSize: 12, lineHeight: 18, color: colors.cookieDark, marginTop: 10, textAlign: 'center' },
+  medalSectionTitle: { fontFamily: fonts.extraBold, fontSize: 13, color: colors.cookieDark, marginTop: 12, marginBottom: 2 },
+  medalFormulaBox: { marginTop: 10, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.68)', padding: 11, gap: 5 },
+  medalFormula: { fontFamily: fonts.extraBold, fontSize: 11, lineHeight: 17, color: colors.purple, textAlign: 'center' },
+  medalExplanation: { fontFamily: fonts.medium, fontSize: 10, lineHeight: 16, color: colors.ink },
+  medalRewardRule: { fontFamily: fonts.bold, fontSize: 9, lineHeight: 14, color: colors.greenDark },
   evolutionHeader: { flexDirection: 'row', alignItems: 'center' },
   futureText: { flex: 1, marginLeft: 13 },
   futureTitle: { fontFamily: fonts.display, fontSize: 19, color: colors.purple },

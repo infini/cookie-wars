@@ -20,6 +20,7 @@ import {
   validateCookieUpgradeRules,
   validateCookieUpgrades,
   validateCookieCritical,
+  validateCookieExpansion,
   validateCookieSuperCritical,
   validateCookies,
   validateDiscUpgradeRules,
@@ -28,6 +29,10 @@ import {
 import { validateCookieFeedback } from './feedback';
 import { validateCookieFragments } from './cookieFragments';
 import { validateCookiePity } from './cookiePity';
+import {
+  validateDifficultyExpansion,
+  validateDifficultyExpansionReferences,
+} from './difficultyExpansion';
 import { ConfigValidationError } from './primitives';
 import { validateReferences } from './references';
 import { validateBattleRewards } from './rewards';
@@ -76,8 +81,10 @@ export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig 
   const upgrades = validateCookieUpgrades(input.COOKIE_UPGRADES);
   const cookieCritical = validateCookieCritical(input.COOKIE_CRITICAL);
   const cookieSuperCritical = validateCookieSuperCritical(input.COOKIE_SUPER_CRITICAL);
-  validateCookies(input.COOKIES);
+  const cookies = validateCookies(input.COOKIES);
+  validateCookieExpansion(input.COOKIE_EXPANSION, cookies);
   const difficulties = validateDifficulties(input.DIFFICULTIES);
+  const difficultyExpansion = validateDifficultyExpansion(input.DIFFICULTY_EXPANSION);
   validateDiscUpgradeRules(input.DISC_UPGRADE_RULES);
   const discs = validateDiscs(input.DISCS);
   const enemyDiscs = validateEnemyDiscs(input.ENEMY_DISCS);
@@ -103,6 +110,13 @@ export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig 
     cookieSuperCritical,
     cookieFragments,
     cookieFeedback,
+  });
+  validateDifficultyExpansionReferences({
+    expansion: difficultyExpansion,
+    difficulties,
+    enemyDiscs,
+    battleStageRulesValue: input.BATTLE_STAGE_RULES,
+    progressionValue: input.PROGRESSION,
   });
 
   return input as ValidatedGameConfig;

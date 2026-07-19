@@ -13,5 +13,20 @@
   { "id": "medium-god-boss-duel", "name": "프리즘 수정 세라프 결투", "monsterPatternIds": ["boss-medium-god-crystal-seraph"], "bossMonsterId": "boss-medium-god-crystal-seraph", "bossEveryEnemies": 1 },
   { "id": "hard-god-boss-duel", "name": "시간의 태엽 거상 결투", "monsterPatternIds": ["boss-hard-god-time-colossus"], "bossMonsterId": "boss-hard-god-time-colossus", "bossEveryEnemies": 1 },
   { "id": "insane-god-boss-duel", "name": "천둥 타이탄 결투", "monsterPatternIds": ["boss-insane-god-thunder-titan"], "bossMonsterId": "boss-insane-god-thunder-titan", "bossEveryEnemies": 1 },
-  { "id": "extreme-god-boss-duel", "name": "신성 공허 황제 결투", "monsterPatternIds": ["boss-extreme-god-void-emperor"], "bossMonsterId": "boss-extreme-god-void-emperor", "bossEveryEnemies": 1 }
+  { "id": "extreme-god-boss-duel", "name": "신성 공허 황제 결투", "monsterPatternIds": ["boss-extreme-god-void-emperor"], "bossMonsterId": "boss-extreme-god-void-emperor", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-easy-boss-duel", "name": "수정 광산 거인 결투", "monsterPatternIds": ["boss-easy-titan-crystal-giant"], "bossMonsterId": "boss-easy-titan-crystal-giant", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-normal-boss-duel", "name": "포자 숲 거상 결투", "monsterPatternIds": ["boss-medium-titan-spore-colossus"], "bossMonsterId": "boss-medium-titan-spore-colossus", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-hard-boss-duel", "name": "증기 철갑 타이탄 결투", "monsterPatternIds": ["boss-hard-titan-steam-juggernaut"], "bossMonsterId": "boss-hard-titan-steam-juggernaut", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-harder-boss-duel", "name": "심해 산호 거인 결투", "monsterPatternIds": ["boss-insane-titan-coral-leviathan"], "bossMonsterId": "boss-insane-titan-coral-leviathan", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-insane-boss-duel", "name": "운석핵 파괴자 결투", "monsterPatternIds": ["boss-extreme-titan-meteor-core"], "bossMonsterId": "boss-extreme-titan-meteor-core", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-easy-demon-boss-duel", "name": "태엽 장난감 장인 결투", "monsterPatternIds": ["boss-easy-creator-clockwork-artisan"], "bossMonsterId": "boss-easy-creator-clockwork-artisan", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-medium-demon-boss-duel", "name": "룬 기록 창조자 결투", "monsterPatternIds": ["boss-medium-creator-rune-archivist"], "bossMonsterId": "boss-medium-creator-rune-archivist", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-hard-demon-boss-duel", "name": "그림자 가면 조형사 결투", "monsterPatternIds": ["boss-hard-creator-mask-sculptor"], "bossMonsterId": "boss-hard-creator-mask-sculptor", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-insane-demon-boss-duel", "name": "생명 연금 창조자 결투", "monsterPatternIds": ["boss-insane-creator-life-alchemist"], "bossMonsterId": "boss-insane-creator-life-alchemist", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-extreme-demon-boss-duel", "name": "성운 세계 설계자 결투", "monsterPatternIds": ["boss-extreme-creator-nebula-architect"], "bossMonsterId": "boss-extreme-creator-nebula-architect", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-easy-god-boss-duel", "name": "무한 거울 기사 결투", "monsterPatternIds": ["boss-easy-infinity-mirror-knight"], "bossMonsterId": "boss-easy-infinity-mirror-knight", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-medium-god-boss-duel", "name": "프랙탈 수정 거상 결투", "monsterPatternIds": ["boss-medium-infinity-fractal-colossus"], "bossMonsterId": "boss-medium-infinity-fractal-colossus", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-hard-god-boss-duel", "name": "역중력 지배자 결투", "monsterPatternIds": ["boss-hard-infinity-gravity-sovereign"], "bossMonsterId": "boss-hard-infinity-gravity-sovereign", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-insane-god-boss-duel", "name": "영겁 시계 황제 결투", "monsterPatternIds": ["boss-insane-infinity-eternity-emperor"], "bossMonsterId": "boss-insane-infinity-eternity-emperor", "bossEveryEnemies": 1 },
+  { "id": "blood-moon-extreme-god-boss-duel", "name": "다중우주 군주 결투", "monsterPatternIds": ["boss-extreme-infinity-multiverse-lord"], "bossMonsterId": "boss-extreme-infinity-multiverse-lord", "bossEveryEnemies": 1 }
 ]

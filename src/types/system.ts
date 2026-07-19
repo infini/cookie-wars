@@ -28,6 +28,7 @@ export interface SaveMigrationsConfig {
   currentSaveVersion: number;
   cookieEvolutionBonusMigrationVersion: number;
   battleMedalMigrationVersion: number;
+  difficultyExpansionMigrationVersion: number;
   battleMedalsPerLegacyWin: number;
   cookieEvolutionLegacyUpgrade: {
     id: string;

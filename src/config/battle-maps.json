@@ -13,5 +13,20 @@
   { "id": "crystal-star-temple", "difficultyId": "medium-god", "name": "별수정 신전", "imageKey": "medium-god-crystal-temple" },
   { "id": "time-observatory", "difficultyId": "hard-god", "name": "태고의 시간 천문대", "imageKey": "hard-god-time-observatory" },
   { "id": "thunder-titan-realm", "difficultyId": "insane-god", "name": "천둥 타이탄 영역", "imageKey": "insane-god-thunder-titan" },
-  { "id": "divine-void-throne", "difficultyId": "extreme-god", "name": "신성 공허 왕좌", "imageKey": "extreme-god-divine-void" }
+  { "id": "divine-void-throne", "difficultyId": "extreme-god", "name": "신성 공허 왕좌", "imageKey": "extreme-god-divine-void" },
+  { "id": "crystal-geode-mine", "difficultyId": "blood-moon-easy", "name": "수정 정동 광산", "imageKey": "easy-titan-crystal-mine" },
+  { "id": "primeval-mushroom-forest", "difficultyId": "blood-moon-normal", "name": "태고의 버섯 숲", "imageKey": "medium-titan-mushroom-forest" },
+  { "id": "brass-steam-foundry", "difficultyId": "blood-moon-hard", "name": "황동 증기 주조소", "imageKey": "hard-titan-steam-foundry" },
+  { "id": "sunken-coral-city", "difficultyId": "blood-moon-harder", "name": "침몰한 산호 도시", "imageKey": "insane-titan-coral-city" },
+  { "id": "alien-meteor-crater", "difficultyId": "blood-moon-insane", "name": "외계 운석 분화구", "imageKey": "extreme-titan-meteor-crater" },
+  { "id": "clockwork-toy-workshop", "difficultyId": "blood-moon-easy-demon", "name": "태엽 장난감 공방", "imageKey": "easy-creator-toy-workshop" },
+  { "id": "infinite-magic-library", "difficultyId": "blood-moon-medium-demon", "name": "무한 마법 도서관", "imageKey": "medium-creator-magic-library" },
+  { "id": "shadow-mask-theater", "difficultyId": "blood-moon-hard-demon", "name": "그림자 가면 극장", "imageKey": "hard-creator-shadow-theater" },
+  { "id": "life-alchemy-greenhouse", "difficultyId": "blood-moon-insane-demon", "name": "생명 연금 온실", "imageKey": "insane-creator-alchemy-greenhouse" },
+  { "id": "nebula-creation-studio", "difficultyId": "blood-moon-extreme-demon", "name": "성운 창조 설계실", "imageKey": "extreme-creator-nebula-studio" },
+  { "id": "infinite-mirror-labyrinth", "difficultyId": "blood-moon-easy-god", "name": "무한 거울 미궁", "imageKey": "easy-infinity-mirror-labyrinth" },
+  { "id": "fractal-crystal-canyon", "difficultyId": "blood-moon-medium-god", "name": "프랙탈 수정 협곡", "imageKey": "medium-infinity-fractal-canyon" },
+  { "id": "gravity-inverted-city", "difficultyId": "blood-moon-hard-god", "name": "역중력 반전 도시", "imageKey": "hard-infinity-inverted-city" },
+  { "id": "eternal-clock-loop", "difficultyId": "blood-moon-insane-god", "name": "영겁의 시계 고리", "imageKey": "insane-infinity-eternal-clock" },
+  { "id": "ultimate-multiverse-rift", "difficultyId": "blood-moon-extreme-god", "name": "궁극의 다중우주 균열", "imageKey": "extreme-infinity-multiverse-rift" }
 ]

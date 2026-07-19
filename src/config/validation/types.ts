@@ -15,6 +15,7 @@ import {
   BotAnimationConfig,
   BotConfig,
   CookieConfig,
+  CookieExpansionConfig,
   CookieCriticalConfig,
   CookieFeedbackConfig,
   CookieFragmentsConfig,
@@ -22,6 +23,7 @@ import {
   CookiePityConfig,
   CookieSuperCriticalConfig,
   CookieUpgradeRulesConfig,
+  DifficultyExpansionConfig,
   DifficultyConfig,
   DiscConfig,
   DiscUpgradeRulesConfig,
@@ -53,6 +55,7 @@ export interface GameConfigInput {
   COOKIE_UPGRADE_RULES: unknown;
   COOKIE_UPGRADES: unknown;
   COOKIE_CRITICAL: unknown;
+  COOKIE_EXPANSION: unknown;
   COOKIE_FEEDBACK: unknown;
   COOKIE_FRAGMENTS: unknown;
   COOKIE_INPUT: unknown;
@@ -60,6 +63,7 @@ export interface GameConfigInput {
   COOKIE_SUPER_CRITICAL: unknown;
   COOKIES: unknown;
   DIFFICULTIES: unknown;
+  DIFFICULTY_EXPANSION: unknown;
   DISC_UPGRADE_RULES: unknown;
   DISCS: unknown;
   ENEMY_DISCS: unknown;
@@ -89,6 +93,7 @@ export interface ValidatedGameConfig {
   COOKIE_UPGRADE_RULES: CookieUpgradeRulesConfig;
   COOKIE_UPGRADES: UpgradeConfig[];
   COOKIE_CRITICAL: CookieCriticalConfig;
+  COOKIE_EXPANSION: CookieExpansionConfig;
   COOKIE_FEEDBACK: CookieFeedbackConfig;
   COOKIE_FRAGMENTS: CookieFragmentsConfig;
   COOKIE_INPUT: CookieInputConfig;
@@ -96,6 +101,7 @@ export interface ValidatedGameConfig {
   COOKIE_SUPER_CRITICAL: CookieSuperCriticalConfig;
   COOKIES: CookieConfig[];
   DIFFICULTIES: DifficultyConfig[];
+  DIFFICULTY_EXPANSION: DifficultyExpansionConfig;
   DISC_UPGRADE_RULES: DiscUpgradeRulesConfig;
   DISCS: DiscConfig[];
   ENEMY_DISCS: EnemyDiscConfig[];

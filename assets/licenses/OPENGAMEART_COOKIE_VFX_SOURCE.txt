@@ -1,0 +1,21 @@
+Cookie Wars external cookie-fragment VFX provenance
+
+1. Fire Explosion
+- Author: Felis Chaus
+- Source page: https://opengameart.org/content/fire-explosion
+- Source file: https://opengameart.org/sites/default/files/explosion_13.png
+- License: CC0 1.0
+- Downloaded source SHA-256: b92bb06108ebbf946753c34d2dd6c25d02d0e50f1fdf87bd4fe4a0fee6d25a60
+- Runtime conversion: 1600x1600 RGBA 4x4 atlas -> 16 transparent 400x400 WebP frames
+
+2. Lightning animation
+- Author: Calinou
+- Source page: https://opengameart.org/content/lightning-animation
+- Source archive: https://opengameart.org/sites/default/files/lightning_1.zip
+- License: CC0 1.0
+- Downloaded archive SHA-256: ff46352030228abae20deb44ad43ddf085244dd55ac1067e9ffc20b61a1485b7
+- Runtime conversion: 11 RGB 1024x512 PNG files; black luminance becomes alpha,
+  each frame rotates vertically and is stored as transparent WebP.
+
+All files are bundled locally. The app performs no runtime network download.
+The reproducible converter is scripts/process_external_cookie_vfx.py.

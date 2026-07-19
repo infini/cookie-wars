@@ -16,6 +16,7 @@ import botAnimationData from './bot-animation.json';
 import cookieUpgradeData from './cookie-upgrades.json';
 import cookieUpgradeRuleData from './cookie-upgrade-rules.json';
 import cookieCriticalData from './cookie-critical.json';
+import cookieExpansionData from './cookie-expansion.json';
 import cookieFeedbackData from './cookie-feedback.json';
 import cookieFragmentData from './cookie-fragments.json';
 import cookieInputData from './cookie-input.json';
@@ -23,6 +24,7 @@ import cookiePityData from './cookie-pity.json';
 import cookieSuperCriticalData from './cookie-super-critical.json';
 import cookieData from './cookies.json';
 import difficultyData from './difficulties.json';
+import difficultyExpansionData from './difficulty-expansion.json';
 import discData from './discs.json';
 import discUpgradeRuleData from './disc-upgrade-rules.json';
 import enemyDiscData from './enemy-discs.json';
@@ -67,6 +69,7 @@ export const CONFIG_TABLES = validateGameConfig({
   COOKIE_UPGRADE_RULES: cookieUpgradeRuleData,
   COOKIE_UPGRADES: cookieUpgradeData,
   COOKIE_CRITICAL: cookieCriticalData,
+  COOKIE_EXPANSION: cookieExpansionData,
   COOKIE_FEEDBACK: cookieFeedbackData,
   COOKIE_FRAGMENTS: cookieFragmentData,
   COOKIE_INPUT: cookieInputData,
@@ -74,6 +77,7 @@ export const CONFIG_TABLES = validateGameConfig({
   COOKIE_SUPER_CRITICAL: cookieSuperCriticalData,
   COOKIES: cookieData,
   DIFFICULTIES: difficultyData,
+  DIFFICULTY_EXPANSION: difficultyExpansionData,
   DISC_UPGRADE_RULES: discUpgradeRuleData,
   DISCS: discData,
   ENEMY_DISCS: enemyDiscData,
@@ -103,6 +107,7 @@ export const {
   COOKIE_UPGRADE_RULES,
   COOKIE_UPGRADES,
   COOKIE_CRITICAL,
+  COOKIE_EXPANSION,
   COOKIE_FEEDBACK,
   COOKIE_FRAGMENTS,
   COOKIE_INPUT,
@@ -110,6 +115,7 @@ export const {
   COOKIE_SUPER_CRITICAL,
   COOKIES,
   DIFFICULTIES,
+  DIFFICULTY_EXPANSION,
   DISC_UPGRADE_RULES,
   DISCS,
   ENEMY_DISCS,

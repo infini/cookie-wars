@@ -13,6 +13,7 @@ import {
   BOT_ANIMATION,
   BOTS,
   COOKIE_CRITICAL,
+  COOKIE_EXPANSION,
   COOKIE_FEEDBACK,
   COOKIE_FRAGMENTS,
   COOKIE_INPUT,
@@ -24,6 +25,7 @@ import {
   CONFIG_TABLES,
   ConfigValidationError,
   DIFFICULTIES,
+  DIFFICULTY_EXPANSION,
   DISC_UPGRADE_RULES,
   DISCS,
   ENEMY_DISCS,
@@ -43,7 +45,7 @@ import {
 import { getBattleDifficulty } from '../src/domain/gameSelectors';
 
 describe('데이터 테이블', () => {
-  test('요청한 15개 난이도 순서를 유지한다', () => {
+  test('기존 15개 뒤에 신규 15개 난이도를 순서대로 확장한다', () => {
     expect(DIFFICULTIES.map((difficulty) => difficulty.name)).toEqual([
       'easy',
       'normal',
@@ -60,7 +62,44 @@ describe('데이터 테이블', () => {
       'hard god',
       'insane god',
       'extreme god',
+      'blood moon easy',
+      'blood moon normal',
+      'blood moon hard',
+      'blood moon harder',
+      'blood moon insane',
+      'blood moon easy demon',
+      'blood moon medium demon',
+      'blood moon hard demon',
+      'blood moon insane demon',
+      'blood moon extreme demon',
+      'blood moon easy god',
+      'blood moon medium god',
+      'blood moon hard god',
+      'blood moon insane god',
+      'blood moon extreme god',
     ]);
+  });
+
+  test('신규 난이도는 직전 난이도 20번째 전투보다 전투력이 20% 높게 시작한다', () => {
+    const legacyCount = DIFFICULTY_EXPANSION.legacyDifficultyCount;
+    expect(DIFFICULTY_EXPANSION.extensionDifficultyCount).toBe(legacyCount);
+    expect(DIFFICULTIES).toHaveLength(legacyCount * 2);
+    expect(DIFFICULTY_EXPANSION.powerMultiplierPerDifficulty).toBe(1.2);
+    DIFFICULTIES.slice(legacyCount).forEach((difficulty, extensionIndex) => {
+      const previous = DIFFICULTIES[legacyCount + extensionIndex - 1];
+      const previousFinalBattle = getBattleDifficulty(previous, 19);
+      expect(difficulty.hpMultiplier).toBeCloseTo(
+        previousFinalBattle.hpMultiplier * DIFFICULTY_EXPANSION.powerMultiplierPerDifficulty,
+        5,
+      );
+      expect(difficulty.attackMultiplier).toBeCloseTo(
+        previousFinalBattle.attackMultiplier * DIFFICULTY_EXPANSION.powerMultiplierPerDifficulty,
+        5,
+      );
+      expect(difficulty.moveSpeed).toBeLessThanOrEqual(
+        DIFFICULTY_EXPANSION.maximumMoveSpeed,
+      );
+    });
   });
 
   test('난이도가 올라도 보스는 한 마리이고 원반과 능력치만 오른다', () => {
@@ -74,7 +113,7 @@ describe('데이터 테이블', () => {
     });
     expect('reward' in DIFFICULTIES[0]).toBe(false);
     expect(DIFFICULTIES[0].enemyCount).toBe(1);
-    expect(ENEMY_DISCS).toHaveLength(15);
+    expect(ENEMY_DISCS).toHaveLength(DIFFICULTIES.length);
   });
 
   test('각 난이도는 고유한 보스 웨이브를 참조한다', () => {
@@ -117,9 +156,10 @@ describe('데이터 테이블', () => {
   test('진행·음량·상점 값은 데이터 테이블에서 제공한다', () => {
     expect(PROGRESSION.winsToUnlockNextDifficulty).toBe(20);
     expect(PROGRESSION.giantDiscRewardPerFirstClear).toBe(1);
-    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(13);
+    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(14);
     expect(SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion).toBe(8);
     expect(SAVE_MIGRATIONS.battleMedalMigrationVersion).toBe(9);
+    expect(SAVE_MIGRATIONS.difficultyExpansionMigrationVersion).toBe(14);
     expect(SAVE_MIGRATIONS.battleMedalsPerLegacyWin).toBe(1);
     expect(BATTLE_REWARDS).toEqual({
       battleMedalsPerStageClear: 1,
@@ -161,6 +201,10 @@ describe('데이터 테이블', () => {
       'magmaFragmentChance',
     ]);
     expect(COOKIE_UPGRADE_RULES.clickPower.valueIncreasePerLevel).toBe(50);
+    expect(
+      COOKIE_UPGRADES.find((upgrade) => upgrade.id === 'clickPower')
+        ?.levels.map((level) => level.value),
+    ).toEqual([50, 100, 150, 200, 250, 300, 350, 400]);
     const cookieSize = COOKIE_UPGRADES.find((upgrade) => upgrade.id === 'cookieSize');
     expect(cookieSize).toMatchObject({
       enabled: false,
@@ -186,9 +230,18 @@ describe('데이터 테이블', () => {
       (upgrade) => typeof upgrade.countsTowardCookieEvolution === 'boolean',
     )).toBe(true);
     expect(Math.max(...cookieSize!.levels.map((level) => level.value))).toBeGreaterThan(0);
-    expect(COOKIES).toHaveLength(50);
-    expect(COOKIES.map((cookie) => cookie.requiredTotalUpgradeLevels)).toEqual(
+    expect(COOKIES).toHaveLength(80);
+    expect(COOKIES.slice(0, COOKIE_EXPANSION.legacyCookieCount)
+      .map((cookie) => cookie.requiredTotalUpgradeLevels)).toEqual(
       Array.from({ length: 50 }, (_, index) => 3 + index * 6),
+    );
+    expect(COOKIES.slice(COOKIE_EXPANSION.legacyCookieCount)
+      .map((cookie) => cookie.requiredTotalUpgradeLevels)).toEqual(
+      Array.from(
+        { length: COOKIE_EXPANSION.extensionCookieCount },
+        (_, index) => COOKIE_EXPANSION.firstRequiredTotalUpgradeLevels
+          + index * COOKIE_EXPANSION.requiredLevelStep,
+      ),
     );
     COOKIES.slice(1).forEach((cookie, index) => {
       expect(cookie.requiredTotalUpgradeLevels).toBeGreaterThan(
@@ -203,7 +256,9 @@ describe('데이터 테이블', () => {
     expect(COOKIES[10].name).toBe('별사탕 쿠키');
     expect(COOKIES[29].name).toBe('무한 우주 쿠키');
     expect(COOKIES[30].name).toBe('혜성 꼬리 쿠키');
-    expect(COOKIES[COOKIES.length - 1].name).toBe('쿠키왕국 심장 쿠키');
+    expect(COOKIES[49].name).toBe('쿠키왕국 심장 쿠키');
+    expect(COOKIES[50].name).toBe('수정 용의 알 쿠키');
+    expect(COOKIES[COOKIES.length - 1].name).toBe('쿠키 우주핵 쿠키');
     expect(COOKIE_CRITICAL.probabilityScale).toBe(200_000);
     expect(COOKIE_CRITICAL.maximumChanceUnits).toBe(100_000);
     expect(COOKIE_CRITICAL.baseRewardMultiplier).toBe(10);
@@ -235,6 +290,12 @@ describe('데이터 테이블', () => {
     expect(COOKIE_FRAGMENTS.spawnEffect).toMatchObject({
       spriteSizePixels: 56,
       hitSlopPixels: 40,
+    });
+    expect(COOKIE_FRAGMENTS.claimEffect).toMatchObject({
+      magmaEruptionFrameCount: 16,
+      electricBoltCount: 7,
+      screenWidthRatio: 1,
+      screenHeightRatio: 0.62,
     });
     expect(BATTLE_AUTO.nextBattleDelayMs).toBeGreaterThan(0);
     expect(COOKIE_INPUT.pressRetentionOffsetPixels)
@@ -346,7 +407,7 @@ describe('데이터 테이블', () => {
     expect(final.enemyDiscLevel).toBe(first.enemyDiscLevel);
   });
 
-  test('다음 난이도의 첫 전투는 이전 난이도의 20번째 전투보다 항상 강하다', () => {
+  test('다음 난이도의 첫 전투는 이동속도 상한 뒤에도 전투력이 계속 강해진다', () => {
     DIFFICULTIES.slice(1).forEach((nextBase, index) => {
       const previousFinal = getBattleDifficulty(
         DIFFICULTIES[index],
@@ -355,7 +416,9 @@ describe('데이터 테이블', () => {
       const nextFirst = getBattleDifficulty(nextBase, 0);
       expect(nextFirst.hpMultiplier).toBeGreaterThan(previousFinal.hpMultiplier);
       expect(nextFirst.attackMultiplier).toBeGreaterThan(previousFinal.attackMultiplier);
-      expect(nextFirst.moveSpeed).toBeGreaterThan(previousFinal.moveSpeed);
+      if (nextFirst.moveSpeed < previousFinal.moveSpeed) {
+        expect(nextFirst.moveSpeed).toBe(DIFFICULTY_EXPANSION.maximumMoveSpeed);
+      }
       expect(nextFirst.enemyDiscLevel).toBeGreaterThan(previousFinal.enemyDiscLevel);
     });
   });
@@ -363,6 +426,34 @@ describe('데이터 테이블', () => {
 
 describe('데이터 테이블 런타임 검증', () => {
   const cloneConfig = (): any => JSON.parse(JSON.stringify(CONFIG_TABLES));
+  const syncExpandedDifficultyPower = (config: any) => {
+    const legacyCount = config.DIFFICULTY_EXPANSION.legacyDifficultyCount;
+    const completedWins = config.PROGRESSION.winsToUnlockNextDifficulty - 1;
+    const baseline = config.DIFFICULTIES[0];
+    const hpStageIncrease = baseline.hpMultiplier
+      * completedWins
+      * config.BATTLE_STAGE_RULES.hpMultiplierPerWin;
+    const attackStageIncrease = baseline.attackMultiplier
+      * completedWins
+      * config.BATTLE_STAGE_RULES.attackMultiplierPerWin;
+    const moveStageIncrease = baseline.moveSpeed
+      * completedWins
+      * config.BATTLE_STAGE_RULES.moveSpeedMultiplierPerWin;
+    config.DIFFICULTIES.slice(legacyCount).forEach((difficulty: any, offset: number) => {
+      const previous = config.DIFFICULTIES[legacyCount + offset - 1];
+      difficulty.hpMultiplier = (
+        previous.hpMultiplier + hpStageIncrease
+      ) * config.DIFFICULTY_EXPANSION.powerMultiplierPerDifficulty;
+      difficulty.attackMultiplier = (
+        previous.attackMultiplier + attackStageIncrease
+      ) * config.DIFFICULTY_EXPANSION.powerMultiplierPerDifficulty;
+      difficulty.moveSpeed = Math.min(
+        config.DIFFICULTY_EXPANSION.maximumMoveSpeed,
+        (previous.moveSpeed + moveStageIncrease)
+          * config.DIFFICULTY_EXPANSION.moveSpeedMultiplierPerDifficulty,
+      );
+    });
+  };
   const requiredPositiveFields: Array<[string, (config: any) => void]> = [
     ['BATTLE_RULES.tickMs', (config) => { config.BATTLE_RULES.tickMs = 0; }],
     ['BATTLE_RULES.enemyMoveDivisor', (config) => {
@@ -508,6 +599,50 @@ describe('데이터 테이블 런타임 검증', () => {
     expect(() => validateGameConfig(cloneConfig())).not.toThrow();
   });
 
+  test('신규 난이도 수와 20% 경계 성장식을 테이블 검증으로 고정한다', () => {
+    const wrongCount = cloneConfig();
+    wrongCount.DIFFICULTY_EXPANSION.extensionDifficultyCount -= 1;
+    expect(() => validateGameConfig(wrongCount)).toThrow(
+      'DIFFICULTY_EXPANSION.extensionDifficultyCount',
+    );
+
+    const wrongPower = cloneConfig();
+    wrongPower.DIFFICULTIES[DIFFICULTY_EXPANSION.legacyDifficultyCount].hpMultiplier += 0.1;
+    expect(() => validateGameConfig(wrongPower)).toThrow(
+      `DIFFICULTIES[${DIFFICULTY_EXPANSION.legacyDifficultyCount}].hpMultiplier`,
+    );
+
+    const wrongDiscDamage = cloneConfig();
+    wrongDiscDamage.ENEMY_DISCS[DIFFICULTY_EXPANSION.legacyDifficultyCount].damage += 1;
+    expect(() => validateGameConfig(wrongDiscDamage)).toThrow(
+      `ENEMY_DISCS[${DIFFICULTY_EXPANSION.legacyDifficultyCount}].damage`,
+    );
+  });
+
+  test('30종 쿠키 확장 수·해금 간격·능력 배율을 테이블 검증으로 고정한다', () => {
+    const wrongCount = cloneConfig();
+    wrongCount.COOKIE_EXPANSION.extensionCookieCount -= 1;
+    expect(() => validateGameConfig(wrongCount)).toThrow(
+      'COOKIE_EXPANSION.extensionCookieCount',
+    );
+
+    const wrongRequiredLevel = cloneConfig();
+    wrongRequiredLevel.COOKIES[COOKIE_EXPANSION.legacyCookieCount]
+      .requiredTotalUpgradeLevels += 1;
+    expect(() => validateGameConfig(wrongRequiredLevel)).toThrow(
+      `COOKIES[${COOKIE_EXPANSION.legacyCookieCount}].requiredTotalUpgradeLevels`,
+    );
+
+    const wrongMultiplier = cloneConfig();
+    const firstExtension = wrongMultiplier.COOKIES[COOKIE_EXPANSION.legacyCookieCount];
+    firstExtension.clickMultiplier += 0.01;
+    firstExtension.autoProductionMultiplier += 0.01;
+    firstExtension.healthMultiplier += 0.01;
+    expect(() => validateGameConfig(wrongMultiplier)).toThrow(
+      `COOKIES[${COOKIE_EXPANSION.legacyCookieCount}].clickMultiplier`,
+    );
+  });
+
   test('필수 필드 누락과 잘못된 중첩 타입은 정확한 경로로 실패한다', () => {
     const missing = cloneConfig();
     delete missing.BOTS[0].name;
@@ -557,6 +692,13 @@ describe('데이터 테이블 런타임 검증', () => {
       SAVE_MIGRATIONS.currentSaveVersion + 1;
     expect(() => validateGameConfig(medalMigrationAfterCurrentVersion)).toThrow(
       'SAVE_MIGRATIONS.battleMedalMigrationVersion',
+    );
+
+    const difficultyMigrationAfterCurrentVersion = cloneConfig();
+    difficultyMigrationAfterCurrentVersion.SAVE_MIGRATIONS.difficultyExpansionMigrationVersion =
+      SAVE_MIGRATIONS.currentSaveVersion + 1;
+    expect(() => validateGameConfig(difficultyMigrationAfterCurrentVersion)).toThrow(
+      'SAVE_MIGRATIONS.difficultyExpansionMigrationVersion',
     );
 
     const invalidLegacyMedalReward = cloneConfig();
@@ -698,6 +840,7 @@ describe('데이터 테이블 런타임 검증', () => {
     valid.DIFFICULTIES[0].hpMultiplier = 0.125;
     valid.DIFFICULTIES[0].attackMultiplier = 0.375;
     valid.DIFFICULTIES[0].moveSpeed = 0.625;
+    syncExpandedDifficultyPower(valid);
     valid.MONSTERS[0].moveSpeedMultiplier = 0.875;
     valid.MONSTERS[0].discDamageMultiplier = 1.625;
     valid.MONSTERS[0].sizeMultiplier = 0.9375;
@@ -837,6 +980,7 @@ describe('데이터 테이블 런타임 검증', () => {
     valid.BATTLE_STAGE_RULES.maximumExtraEnemies = 0;
     valid.BATTLE_RULES.enemyFirstShotDelayMs = 0;
     valid.AUDIO_SETTINGS.previewDelayMs = 0;
+    syncExpandedDifficultyPower(valid);
     expect(() => validateGameConfig(valid)).not.toThrow();
   });
 

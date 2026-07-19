@@ -1,0 +1,14 @@
+{
+  "legacyDifficultyCount": 15,
+  "extensionDifficultyCount": 15,
+  "powerMultiplierPerDifficulty": 1.2,
+  "moveSpeedMultiplierPerDifficulty": 1.01,
+  "maximumMoveSpeed": 18,
+  "enemyDiscDamageMultiplierPerDifficulty": 1.2,
+  "enemyDiscSizeIncreasePerDifficulty": 1,
+  "maximumEnemyDiscSize": 48,
+  "enemyDiscSpeedMultiplierPerDifficulty": 1.03,
+  "maximumEnemyDiscSpeed": 300,
+  "enemyDiscCooldownMultiplierPerDifficulty": 0.97,
+  "minimumEnemyDiscCooldownMs": 900
+}

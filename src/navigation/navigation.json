@@ -68,9 +68,9 @@
     {
       "id": "cookie",
       "mainMenuId": "info",
-      "label": "쿠키 도감",
+      "label": "쿠키·훈장",
       "icon": "cookie",
-      "title": "쿠키 도감"
+      "title": "쿠키와 전투 훈장"
     },
     {
       "id": "difficulty",

@@ -95,64 +95,43 @@ function validateClaimEffect(config: UnknownRecord, path: string): void {
   const effectPath = `${path}.claimEffect`;
   const effect = record(config.claimEffect, effectPath);
   const integerFields = [
-    'magmaDurationMs', 'electricDurationMs', 'sizePixels', 'magmaStreamCount',
-    'magmaEmberCount', 'magmaStreamMinimumWidthPixels',
-    'magmaStreamMaximumWidthPixels', 'magmaEmberMinimumSizePixels',
-    'magmaEmberMaximumSizePixels', 'magmaEmberStartDistancePixels',
-    'electricBoltCount', 'electricSegmentCount',
-    'electricSegmentLengthPixels', 'electricSegmentWidthPixels',
-    'electricTurnDegrees', 'electricZigzagPixels',
-    'electricShardCount', 'electricShardMinimumSizePixels',
-    'electricShardMaximumSizePixels', 'electricShardStartDistancePixels',
-    'electricShardEndDistancePixels', 'rewardFontSize', 'rewardShadowRadius',
-    'magmaShakeDistancePixels',
-    'electricShakeDistancePixels', 'magmaStreamWidthSequenceStep',
-    'magmaEmberSizeSequenceStep', 'electricColumnWidthMultiplier',
+    'magmaDurationMs', 'electricDurationMs', 'sizePixels',
+    'magmaFlashRotationDegrees', 'electricFlashRotationDegrees',
+    'magmaEruptionFrameCount', 'magmaEruptionFrameIntervalMs',
+    'electricBoltCount', 'electricBoltRotationDegrees',
+    'rewardFontSize', 'rewardShadowRadius', 'magmaShakeDistancePixels',
+    'electricShakeDistancePixels',
   ];
   validateNumberFields(effect, effectPath, [
     ...integerFields, 'screenWidthRatio', 'screenHeightRatio',
     'flashMaximumOpacity', 'flashStartScale', 'flashEndScale',
-    'flashPeakProgress', 'flashFadeProgress', 'magmaStreamLengthRatio',
-    'magmaFlowDistanceRatio', 'magmaHorizontalInsetRatio',
-    'magmaStreamRevealProgress', 'magmaStreamStaggerProgress',
-    'magmaEmberFallDistanceRatio', 'magmaEmberRotationTurns',
-    'magmaEmberAngleOffsetDegrees', 'magmaEmberRevealProgress',
+    'flashPeakProgress', 'flashFadeProgress',
+    'magmaEruptionSizeRatio', 'magmaEruptionLeftRatio', 'magmaEruptionTopRatio',
     'magmaVolcanoSizeRatio', 'magmaVolcanoLeftRatio', 'magmaVolcanoTopRatio',
     'magmaVolcanoStartOffsetYRatio', 'magmaVolcanoEndOffsetYRatio',
     'magmaVolcanoPeakScale', 'magmaVolcanoSettleProgress',
-    'magmaEmberHorizontalInsetRatio',
-    'electricHorizontalInsetRatio', 'electricTopRatio', 'electricRevealProgress',
-    'electricBoltStaggerProgress', 'electricSegmentStaggerProgress',
-    'electricSegmentStartScale', 'electricSegmentEndScale',
-    'electricSegmentSpacingRatio', 'electricColumnHeightRatio',
-    'electricColumnRevealProgress', 'electricColumnMaximumOpacity',
-    'electricColumnFadeOpacity', 'electricCoreWidthRatio',
-    'electricShardRotationTurns',
-    'electricShardAngleOffsetDegrees', 'electricShardRevealProgress',
+    'electricHorizontalInsetRatio', 'electricTopRatio',
+    'electricBoltWidthRatio', 'electricBoltHeightRatio', 'electricBoltStartScale',
+    'electricRevealProgress', 'electricBoltStaggerProgress',
+    'electricBoltVisibleProgress',
     'rewardTopRatio', 'rewardPeakScale', 'rewardStartScale',
     'rewardEndScale', 'fadeStartProgress',
   ], { min: 0 });
   integerFields.forEach((field) => numberField(effect, field, effectPath, {
     integer: true,
-    min: 1,
+    min: field.endsWith('RotationDegrees') ? 0 : 1,
   }));
   [
     'flashMaximumOpacity', 'flashPeakProgress', 'flashFadeProgress',
-    'rewardTopRatio', 'fadeStartProgress', 'magmaStreamLengthRatio',
-    'magmaFlowDistanceRatio', 'magmaHorizontalInsetRatio',
-    'magmaStreamRevealProgress', 'magmaStreamStaggerProgress',
-    'magmaEmberFallDistanceRatio', 'electricHorizontalInsetRatio',
-    'electricTopRatio', 'electricRevealProgress',
-    'electricBoltStaggerProgress', 'electricSegmentStaggerProgress',
-    'electricSegmentStartScale', 'magmaEmberRevealProgress',
-    'electricShardRevealProgress', 'magmaVolcanoSizeRatio',
+    'rewardTopRatio', 'fadeStartProgress', 'magmaEruptionSizeRatio',
+    'magmaEruptionLeftRatio', 'magmaEruptionTopRatio', 'magmaVolcanoSizeRatio',
     'magmaVolcanoLeftRatio', 'magmaVolcanoTopRatio',
     'magmaVolcanoStartOffsetYRatio', 'magmaVolcanoEndOffsetYRatio',
-    'magmaVolcanoSettleProgress', 'magmaEmberHorizontalInsetRatio',
-    'electricSegmentEndScale', 'electricSegmentSpacingRatio',
-    'electricColumnHeightRatio', 'electricColumnRevealProgress',
-    'electricColumnMaximumOpacity', 'electricColumnFadeOpacity',
-    'electricCoreWidthRatio',
+    'magmaVolcanoSettleProgress', 'electricHorizontalInsetRatio',
+    'electricTopRatio', 'electricBoltWidthRatio', 'electricBoltHeightRatio',
+    'electricBoltStartScale',
+    'electricRevealProgress', 'electricBoltStaggerProgress',
+    'electricBoltVisibleProgress',
   ].forEach((field) => numberField(effect, field, effectPath, { min: 0, max: 1 }));
   ['screenWidthRatio', 'screenHeightRatio'].forEach((field) => numberField(
     effect,
@@ -161,8 +140,6 @@ function validateClaimEffect(config: UnknownRecord, path: string): void {
     { min: 0.1, max: 2 },
   ));
   assertAscending(effect, effectPath, ['flashPeakProgress', 'flashFadeProgress']);
-  assertAscending(effect, effectPath, ['flashPeakProgress', 'magmaEmberRevealProgress']);
-  assertAscending(effect, effectPath, ['electricRevealProgress', 'electricShardRevealProgress']);
   assertAscending(effect, effectPath, ['flashStartScale', 'flashEndScale']);
   assertAscending(effect, effectPath, ['rewardStartScale', 'rewardPeakScale']);
   if ((effect.flashFadeProgress as number) >= (effect.fadeStartProgress as number)) {
@@ -171,53 +148,27 @@ function validateClaimEffect(config: UnknownRecord, path: string): void {
       'flashFadeProgress보다 커야 합니다.',
     );
   }
-  if ((effect.magmaEmberRevealProgress as number) >= (effect.fadeStartProgress as number)) {
-    throw new ConfigValidationError(
-      `${effectPath}.magmaEmberRevealProgress`,
-      'fadeStartProgress보다 작아야 합니다.',
-    );
-  }
-  const finalStreamStart = (effect.magmaStreamRevealProgress as number)
-    + ((effect.magmaStreamCount as number) - 1)
-      * (effect.magmaStreamStaggerProgress as number);
-  if (finalStreamStart >= (effect.fadeStartProgress as number)) {
-    throw new ConfigValidationError(
-      `${effectPath}.magmaStreamStaggerProgress`,
-      '마지막 용암 줄기도 fadeStartProgress 전에 나타나야 합니다.',
-    );
-  }
   const finalLightningStart = (effect.electricRevealProgress as number)
     + ((effect.electricBoltCount as number) - 1)
-      * (effect.electricBoltStaggerProgress as number)
-    + ((effect.electricSegmentCount as number) - 1)
-      * (effect.electricSegmentStaggerProgress as number);
-  if (finalLightningStart >= (effect.fadeStartProgress as number)) {
+      * (effect.electricBoltStaggerProgress as number);
+  if (
+    finalLightningStart + (effect.electricBoltVisibleProgress as number)
+      >= (effect.fadeStartProgress as number)
+  ) {
     throw new ConfigValidationError(
-      `${effectPath}.electricSegmentStaggerProgress`,
-      '마지막 번개도 fadeStartProgress 전에 나타나야 합니다.',
+      `${effectPath}.electricBoltVisibleProgress`,
+      '마지막 외부 번개가 fadeStartProgress 전에 끝나야 합니다.',
     );
   }
-  if ((effect.electricShardRevealProgress as number) >= (effect.fadeStartProgress as number)) {
+  if ((effect.magmaEruptionFrameCount as number) !== 16) {
     throw new ConfigValidationError(
-      `${effectPath}.electricShardRevealProgress`,
-      'fadeStartProgress보다 작아야 합니다.',
+      `${effectPath}.magmaEruptionFrameCount`,
+      '외부 폭발 atlas의 16프레임과 같아야 합니다.',
     );
   }
   validateColorArray(effect, effectPath, 'magmaColors', 2);
   validateColorArray(effect, effectPath, 'electricColors', 2);
   validateStringFields(effect, effectPath, ['rewardShadowColor']);
-  assertAscending(effect, effectPath, [
-    'magmaStreamMinimumWidthPixels', 'magmaStreamMaximumWidthPixels',
-  ]);
-  assertAscending(effect, effectPath, [
-    'magmaEmberMinimumSizePixels', 'magmaEmberMaximumSizePixels',
-  ]);
-  assertAscending(effect, effectPath, [
-    'electricShardMinimumSizePixels', 'electricShardMaximumSizePixels',
-  ]);
-  assertAscending(effect, effectPath, [
-    'electricShardStartDistancePixels', 'electricShardEndDistancePixels',
-  ]);
 }
 
 function validateAudio(config: UnknownRecord, path: string): void {

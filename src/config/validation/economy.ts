@@ -186,6 +186,62 @@ export function validateCookies(value: unknown): UnknownRecord[] {
   return cookies;
 }
 
+export function validateCookieExpansion(
+  value: unknown,
+  cookies: UnknownRecord[],
+): UnknownRecord {
+  const path = 'COOKIE_EXPANSION';
+  const config = record(value, path);
+  const legacyCount = numberField(config, 'legacyCookieCount', path, {
+    integer: true,
+    min: 1,
+  });
+  const extensionCount = numberField(config, 'extensionCookieCount', path, {
+    integer: true,
+    min: 1,
+  });
+  const firstRequiredLevels = numberField(
+    config,
+    'firstRequiredTotalUpgradeLevels',
+    path,
+    { integer: true, min: 1 },
+  );
+  const requiredLevelStep = numberField(config, 'requiredLevelStep', path, {
+    integer: true,
+    min: 1,
+  });
+  const multiplierPerCookie = numberField(config, 'multiplierPerCookie', path, {
+    min: 1.000001,
+  });
+  if (cookies.length !== legacyCount + extensionCount) {
+    throw new ConfigValidationError(
+      `${path}.extensionCookieCount`,
+      '기존 쿠키 수와 확장 쿠키 수의 합이 COOKIES 행 수와 같아야 합니다.',
+    );
+  }
+  const extension = cookies.slice(legacyCount);
+  extension.forEach((cookie, index) => {
+    const expectedLevels = firstRequiredLevels + index * requiredLevelStep;
+    if (cookie.requiredTotalUpgradeLevels !== expectedLevels) {
+      throw new ConfigValidationError(
+        `COOKIES[${legacyCount + index}].requiredTotalUpgradeLevels`,
+        'COOKIE_EXPANSION의 시작 레벨과 간격을 따라야 합니다.',
+      );
+    }
+    const previous = cookies[legacyCount + index - 1];
+    const expectedMultiplier = Math.round(
+      (previous.clickMultiplier as number) * multiplierPerCookie * 100,
+    ) / 100;
+    if (cookie.clickMultiplier !== expectedMultiplier) {
+      throw new ConfigValidationError(
+        `COOKIES[${legacyCount + index}].clickMultiplier`,
+        'COOKIE_EXPANSION의 쿠키별 배율을 소수 둘째 자리 반올림으로 따라야 합니다.',
+      );
+    }
+  });
+  return config;
+}
+
 export function validateDiscs(value: unknown): UnknownRecord[] {
   const path = 'DISCS';
   const discs = validateIdTable(value, path);

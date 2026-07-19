@@ -84,3 +84,11 @@ export interface CookieConfig {
   autoProductionMultiplier: number;
   healthMultiplier: number;
 }
+
+export interface CookieExpansionConfig {
+  legacyCookieCount: number;
+  extensionCookieCount: number;
+  firstRequiredTotalUpgradeLevels: number;
+  requiredLevelStep: number;
+  multiplierPerCookie: number;
+}
