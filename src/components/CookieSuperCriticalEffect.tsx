@@ -4,6 +4,14 @@ import { Animated, StyleSheet, View } from 'react-native';
 import { COOKIE_FEEDBACK } from '../config';
 import type { CookieFeedbackTier } from '../types/game';
 import { fonts } from '../theme/typography';
+import {
+  AngularShardBurst,
+  LightningBurst,
+} from './cookieFeedback/AngularBurstParticles';
+import {
+  ImpactFlash,
+  SlashBurst,
+} from './cookieFeedback/AngularImpactPrimitives';
 
 type SuperCriticalEffectMode = Extract<
   CookieFeedbackTier,
@@ -11,22 +19,12 @@ type SuperCriticalEffectMode = Extract<
 >;
 
 const FX = COOKIE_FEEDBACK.superCriticalEffect;
-const FULL_RAYS = Array.from({ length: FX.rayCount }, (_, index) => index);
-const COMPACT_RAYS = Array.from({ length: FX.compactRayCount }, (_, index) => index);
-const RINGS = Array.from({ length: FX.ringCount }, (_, index) => index);
-const FULL_SPARKLES = Array.from({ length: FX.sparkleCount }, (_, index) => index);
-const COMPACT_SPARKLES = Array.from(
-  { length: FX.compactSparkleCount },
-  (_, index) => index,
-);
 
 export const CookieSuperCriticalEffect = React.memo(
   function CookieSuperCriticalEffect({ mode }: { mode: SuperCriticalEffectMode }) {
     const progress = useRef(new Animated.Value(0)).current;
     const full = mode === 'superCriticalFull';
     const size = FX.sizePixels;
-    const rays = full ? FULL_RAYS : COMPACT_RAYS;
-    const sparkles = full ? FULL_SPARKLES : COMPACT_SPARKLES;
 
     useEffect(() => {
       const animation = Animated.timing(progress, {
@@ -38,17 +36,12 @@ export const CookieSuperCriticalEffect = React.memo(
       return () => animation.stop();
     }, [full, progress]);
 
-    const burstOpacity = progress.interpolate({
-      inputRange: [0, FX.corePeakProgress, FX.coreFadeStartProgress, 1],
+    const impactOpacity = progress.interpolate({
+      inputRange: [0, FX.impactPeakProgress, FX.impactFadeStartProgress, 1],
       outputRange: [0, 1, 1, 0],
     });
-    const burstScale = progress.interpolate({
-      inputRange: [0, FX.corePeakProgress, 1],
-      outputRange: [FX.coreStartScale, FX.corePeakScale, FX.coreEndScale],
-    });
-
     return (
-      <View
+      <Animated.View
         pointerEvents="none"
         style={[
           styles.effect,
@@ -61,163 +54,88 @@ export const CookieSuperCriticalEffect = React.memo(
           },
         ]}
       >
-        <Animated.View
-          style={[
-            styles.centered,
-            {
-              width: size,
-              height: size,
-              borderRadius: size / 2,
-              backgroundColor: FX.flashColor,
-              opacity: progress.interpolate({
-                inputRange: [0, FX.corePeakProgress, FX.coreFadeStartProgress, 1],
-                outputRange: [0, FX.flashMaximumOpacity, 0, 0],
-              }),
-              transform: [{
-                scale: progress.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [FX.flashStartScale, FX.flashEndScale],
-                }),
-              }],
-            },
-          ]}
+        <ImpactFlash
+          progress={progress}
+          size={size}
+          color={FX.flashColor}
+          maximumOpacity={full ? FX.flashMaximumOpacity : FX.compactFlashMaximumOpacity}
+          startScale={FX.flashStartScale}
+          endScale={FX.flashEndScale}
+          rotationDegrees={FX.flashRotationDegrees}
+          peakProgress={FX.impactPeakProgress}
+          fadeStartProgress={FX.impactFadeStartProgress}
         />
-
-        {rays.map((index) => {
-          const angle = index / rays.length * 360;
-          return (
-            <Animated.View
-              key={`ray-${index}`}
-              style={[
-                styles.ray,
-                {
-                  left: size / 2 - FX.rayWidthPixels / 2,
-                  top: size / 2 - FX.rayLengthPixels,
-                  width: FX.rayWidthPixels,
-                  height: FX.rayLengthPixels,
-                  borderRadius: FX.rayWidthPixels / 2,
-                  backgroundColor: FX.rayColor,
-                  opacity: burstOpacity,
-                  transformOrigin: `center ${FX.rayLengthPixels}px`,
-                  transform: [
-                    { rotate: `${angle}deg` },
-                    { scaleY: progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [FX.rayStartScale, FX.rayEndScale],
-                    }) },
-                    { rotate: progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0deg', `${FX.rayRotationTurns * 360}deg`],
-                    }) },
-                  ],
-                },
-              ]}
-            />
-          );
-        })}
-
-        {RINGS.slice(0, full ? RINGS.length : 1).map((index) => {
-          const start = (index + 1) * FX.ringStaggerProgress;
-          return (
-            <Animated.View
-              key={`ring-${index}`}
-              style={[
-                styles.centered,
-                {
-                  width: size,
-                  height: size,
-                  borderRadius: size / 2,
-                  borderWidth: FX.ringBorderWidth,
-                  borderColor: FX.ringColors[index % FX.ringColors.length],
-                  opacity: progress.interpolate({
-                    inputRange: [0, start, FX.ringFadeStartProgress, 1],
-                    outputRange: [0, 1, 1, 0],
-                  }),
-                  transform: [{
-                    scale: progress.interpolate({
-                      inputRange: [0, start, 1],
-                      outputRange: [FX.ringStartScale, FX.ringStartScale, FX.ringEndScale],
-                    }),
-                  }],
-                },
-              ]}
-            />
-          );
-        })}
-
         <Animated.View
           style={[
-            styles.core,
+            styles.lightningColumn,
             {
-              width: size * FX.coreSizeRatio,
-              height: size * FX.coreSizeRatio,
-              left: size * (1 - FX.coreSizeRatio) / 2,
-              top: size * (1 - FX.coreSizeRatio) / 2,
-              borderRadius: size,
-              opacity: burstOpacity,
-              transform: [{ scale: burstScale }],
+              left: (size - FX.columnWidthPixels) / 2,
+              top: (size - FX.columnLengthPixels) / 2,
+              width: FX.columnWidthPixels,
+              height: FX.columnLengthPixels,
+              opacity: impactOpacity,
+              transform: [{ scaleY: progress.interpolate({
+                inputRange: [0, FX.impactPeakProgress, 1],
+                outputRange: [FX.columnStartScale, FX.columnPeakScale, FX.columnEndScale],
+              }) }],
             },
           ]}
         >
           <LinearGradient
-            colors={[FX.coreColorStart, FX.coreColorEnd]}
+            colors={FX.columnGradientColors as [string, string, ...string[]]}
             style={styles.fill}
           />
         </Animated.View>
-
-        {sparkles.map((index) => {
-          const start = FX.sparkleStartProgress + index * FX.sparkleStaggerProgress;
-          const angle = index / sparkles.length * 360;
-          const color = FX.sparkleColors[index % FX.sparkleColors.length];
-          return (
-            <Animated.View
-              key={`sparkle-${index}`}
-              style={[
-                styles.sparkle,
-                {
-                  left: size / 2 - FX.sparkleSizePixels / 2,
-                  top: size / 2 - FX.sparkleSizePixels / 2,
-                  width: FX.sparkleSizePixels,
-                  height: FX.sparkleSizePixels,
-                  opacity: progress.interpolate({
-                    inputRange: [0, start, FX.sparkleFadeStartProgress, 1],
-                    outputRange: [0, 0, 1, 0],
-                  }),
-                  transform: [
-                    { rotate: `${angle}deg` },
-                    { translateY: progress.interpolate({
-                      inputRange: [0, start, 1],
-                      outputRange: [
-                        -FX.sparkleStartDistancePixels,
-                        -FX.sparkleStartDistancePixels,
-                        -FX.sparkleEndDistancePixels,
-                      ],
-                    }) },
-                    { scale: burstScale },
-                  ],
-                },
-              ]}
-            >
-              <View style={[
-                styles.sparkleBar,
-                {
-                  width: FX.sparkleSizePixels * FX.sparkleThicknessRatio,
-                  height: FX.sparkleSizePixels,
-                  backgroundColor: color,
-                },
-              ]} />
-              <View style={[
-                styles.sparkleBar,
-                {
-                  width: FX.sparkleSizePixels,
-                  height: FX.sparkleSizePixels * FX.sparkleThicknessRatio,
-                  backgroundColor: color,
-                },
-              ]} />
-            </Animated.View>
-          );
-        })}
-
+        <SlashBurst
+          progress={progress}
+          size={size}
+          count={full ? FX.slashCount : FX.compactSlashCount}
+          lengthPixels={FX.slashLengthPixels}
+          widthPixels={FX.slashWidthPixels}
+          angleOffsetDegrees={FX.slashAngleOffsetDegrees}
+          angleStepDegrees={FX.slashAngleStepDegrees}
+          startScale={FX.slashStartScale}
+          peakScale={FX.slashPeakScale}
+          endScale={FX.slashEndScale}
+          gradientColors={FX.slashGradientColors}
+          ghostColors={FX.ghostSlashColors}
+          ghostOffsetPixels={FX.ghostSlashOffsetPixels}
+          peakProgress={FX.impactPeakProgress}
+          fadeStartProgress={FX.slashFadeStartProgress}
+        />
+        <LightningBurst
+          progress={progress}
+          size={size}
+          branchCount={full ? FX.lightningBranchCount : FX.compactLightningBranchCount}
+          segmentCount={FX.lightningSegmentCount}
+          segmentLengthPixels={FX.lightningSegmentLengthPixels}
+          segmentWidthPixels={FX.lightningSegmentWidthPixels}
+          startDistancePixels={FX.lightningStartDistancePixels}
+          angleOffsetDegrees={FX.lightningAngleOffsetDegrees}
+          segmentTurnDegrees={FX.lightningSegmentTurnDegrees}
+          zigzagOffsetPixels={FX.lightningZigzagOffsetPixels}
+          revealProgress={FX.lightningRevealProgress}
+          branchStaggerProgress={FX.lightningBranchStaggerProgress}
+          segmentStaggerProgress={FX.lightningSegmentStaggerProgress}
+          fadeStartProgress={FX.lightningFadeStartProgress}
+          segmentStartScale={FX.lightningSegmentStartScale}
+          colors={FX.lightningColors}
+        />
+        <AngularShardBurst
+          progress={progress}
+          size={size}
+          count={full ? FX.shardCount : FX.compactShardCount}
+          startProgress={FX.shardStartProgress}
+          revealProgress={FX.shardRevealProgress}
+          fadeStartProgress={FX.shardFadeStartProgress}
+          startDistancePixels={FX.shardStartDistancePixels}
+          endDistancePixels={FX.shardEndDistancePixels}
+          minimumSizePixels={FX.shardMinimumSizePixels}
+          maximumSizePixels={FX.shardMaximumSizePixels}
+          rotationTurns={FX.shardRotationTurns}
+          angleOffsetDegrees={FX.shardAngleOffsetDegrees}
+          colors={FX.shardColors}
+        />
         <Animated.Text
           style={[
             styles.label,
@@ -227,30 +145,25 @@ export const CookieSuperCriticalEffect = React.memo(
               color: FX.labelColor,
               fontSize: FX.labelFontSize,
               textShadowColor: FX.labelShadowColor,
-              opacity: burstOpacity,
-              transform: [{ scale: burstScale }],
+              textShadowRadius: FX.labelShadowRadius,
+              opacity: impactOpacity,
+              transform: [{ scale: progress.interpolate({
+                inputRange: [0, FX.impactPeakProgress, 1],
+                outputRange: [FX.labelStartScale, FX.labelPeakScale, FX.labelEndScale],
+              }) }],
             },
           ]}
         >
           슈퍼 크리티컬!
         </Animated.Text>
-      </View>
+      </Animated.View>
     );
   },
 );
 
 const styles = StyleSheet.create({
   effect: { position: 'absolute', left: '50%', top: '50%', zIndex: 9 },
-  centered: { position: 'absolute', backgroundColor: 'transparent' },
-  core: { position: 'absolute', overflow: 'hidden' },
+  lightningColumn: { position: 'absolute', overflow: 'hidden' },
   fill: { flex: 1 },
-  ray: { position: 'absolute' },
-  sparkle: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
-  sparkleBar: { position: 'absolute', borderRadius: 8 },
-  label: {
-    position: 'absolute',
-    textAlign: 'center',
-    fontFamily: fonts.display,
-    textShadowRadius: 12,
-  },
+  label: { position: 'absolute', textAlign: 'center', fontFamily: fonts.display },
 });

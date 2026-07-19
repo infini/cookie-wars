@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFeedback } from '../services/FeedbackContext';
 import { useGame } from '../state/GameContext';
@@ -23,6 +23,7 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
   const { state, stats, clickCookie } = useGame();
   const feedback = useFeedback();
   const scale = useRef(new Animated.Value(1)).current;
+  const stageShake = useRef(new Animated.Value(0)).current;
   const nextGainId = useRef(0);
   const [gains, setGains] = useState<CookieGainItem[]>([]);
   const removeGain = useCallback((id: number) => {
@@ -54,8 +55,52 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
       Animated.spring(scale, { toValue: 0.89, speed: 40, bounciness: 2, useNativeDriver: true }),
       Animated.spring(scale, { toValue: 1, speed: 25, bounciness: 12, useNativeDriver: true }),
     ]).start();
-  }, [clickCookie, feedback, scale]);
+    if (feedbackTier === 'superCriticalFull') {
+      stageShake.stopAnimation();
+      stageShake.setValue(0);
+      Animated.timing(stageShake, {
+        toValue: 1,
+        duration: COOKIE_FEEDBACK.superCriticalEffect.durationMs,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [clickCookie, feedback, scale, stageShake]);
   const cookiePressHandlers = useImmediateCookiePress(handleCookiePress);
+  const [stageTranslateX, stageTranslateY] = useMemo(() => {
+    const superEffect = COOKIE_FEEDBACK.superCriticalEffect;
+    const inputRange = [
+      0,
+      superEffect.shakeFirstProgress,
+      superEffect.shakeSecondProgress,
+      superEffect.shakeThirdProgress,
+      superEffect.shakeEndProgress,
+      1,
+    ];
+    return [
+      stageShake.interpolate({
+        inputRange,
+        outputRange: [
+          0,
+          -superEffect.shakeDistancePixels,
+          superEffect.shakeDistancePixels,
+          -superEffect.shakeDistancePixels * superEffect.shakeReturnRatio,
+          0,
+          0,
+        ],
+      }),
+      stageShake.interpolate({
+        inputRange,
+        outputRange: [
+          0,
+          superEffect.shakeDistancePixels * superEffect.shakeReturnRatio,
+          -superEffect.shakeDistancePixels,
+          superEffect.shakeDistancePixels,
+          0,
+          0,
+        ],
+      }),
+    ];
+  }, [stageShake]);
 
   return (
     <View style={styles.root}>
@@ -115,19 +160,23 @@ export function GameScreen({ onGoBattle }: { onGoBattle: () => void }) {
               : '모든 쿠키 진화를 완료했어요!'}
           </Text>
         </View>
-        <View style={styles.cookieStage}>
-          <View style={styles.ringOuter} />
-          <View style={styles.ringInner} />
-          <CookieGainFeedback gains={gains} onDone={removeGain} />
-          <Animated.View style={{ transform: [{ scale }] }}>
-            <LinearGradient colors={gradients.cookieButton} style={styles.cookieButton}>
-              <CookieImage
-                imageKey={activeCookie.imageKey}
-                size={stats.cookieRenderSize}
-              />
-            </LinearGradient>
-          </Animated.View>
-        </View>
+        <Animated.View style={{
+          transform: [{ translateX: stageTranslateX }, { translateY: stageTranslateY }],
+        }}>
+          <View style={styles.cookieStage}>
+            <View style={styles.ringOuter} />
+            <View style={styles.ringInner} />
+            <CookieGainFeedback gains={gains} onDone={removeGain} />
+            <Animated.View style={{ transform: [{ scale }] }}>
+              <LinearGradient colors={gradients.cookieButton} style={styles.cookieButton}>
+                <CookieImage
+                  imageKey={activeCookie.imageKey}
+                  size={stats.cookieRenderSize}
+                />
+              </LinearGradient>
+            </Animated.View>
+          </View>
+        </Animated.View>
         <Text style={styles.autoText}>
           자동 생산 {formatNumber(stats.autoProduction)}개/초
         </Text>

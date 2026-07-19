@@ -28,13 +28,22 @@ Local encoding: MP3, 128 kbps, 44.1 kHz, joint stereo
 SHA-256: b38888dcdfb4d5c3b13988308b430a0172846dcaa0ccde2feedc8ed4d1d911c2
 
 Asset: Choir magic shine
-Runtime use: delayed full cookie-super-critical magic-shine layer
+Runtime status: retained for source history; current code does not load it
 Local file: assets/audio/cookie-super-critical-shine.mp3
 Source page: https://mixkit.co/free-sound-effects/magic/
 Downloaded preview: https://assets.mixkit.co/active_storage/sfx/658/658-preview.mp3
 Item ID: 658
 Local encoding: MP3, 128 kbps, 44.1 kHz, joint stereo
 SHA-256: d74385e8f1e14947172ca5a5b36ef0f89571be08b88f19f11e2145d8a43dda34
+
+Asset: Heavy electric shockwave impact
+Runtime use: delayed full cookie-super-critical explosive shockwave layer
+Local file: assets/audio/cookie-super-critical-shockwave.mp3
+Source page: https://mixkit.co/free-sound-effects/explosion/
+Downloaded preview: https://assets.mixkit.co/active_storage/sfx/2599/2599-preview.mp3
+Item ID: 2599
+Local encoding: MP3, about 257 kbps, 44.1 kHz, stereo, 6.69 seconds
+SHA-256: db01ea375897b47166292daa4ab4c9798fa2ff2087c397db62de5ae262286abc
 
 Legacy retained asset: Short explosion
 Local file: assets/audio/cookie-critical-explosion.wav

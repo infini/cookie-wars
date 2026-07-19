@@ -196,12 +196,13 @@ describe('데이터 테이블', () => {
     expect(COOKIES[29].name).toBe('무한 우주 쿠키');
     expect(COOKIES[30].name).toBe('혜성 꼬리 쿠키');
     expect(COOKIES[COOKIES.length - 1].name).toBe('쿠키왕국 심장 쿠키');
-    expect(COOKIE_CRITICAL.probabilityScale).toBe(10_000);
-    expect(COOKIE_CRITICAL.maximumChanceUnits).toBe(5_000);
+    expect(COOKIE_CRITICAL.probabilityScale).toBe(100_000);
+    expect(COOKIE_CRITICAL.maximumChanceUnits).toBe(50_000);
     expect(COOKIE_CRITICAL.baseRewardMultiplier).toBe(10);
-    expect(COOKIE_SUPER_CRITICAL.probabilityScale).toBe(10_000);
-    expect(COOKIE_SUPER_CRITICAL.maximumChanceUnits).toBe(1_000);
+    expect(COOKIE_SUPER_CRITICAL.probabilityScale).toBe(100_000);
+    expect(COOKIE_SUPER_CRITICAL.maximumChanceUnits).toBe(10_000);
     expect(COOKIE_SUPER_CRITICAL.baseRewardMultiplier).toBe(100);
+    expect(COOKIE_UPGRADE_RULES.cookieSuperCritical.valueIncreasePerLevel).toBe(25);
     expect(BATTLE_AUTO.nextBattleDelayMs).toBeGreaterThan(0);
     expect(COOKIE_INPUT.pressRetentionOffsetPixels)
       .toBeGreaterThanOrEqual(COOKIE_INPUT.hitSlopPixels);
@@ -710,12 +711,13 @@ describe('데이터 테이블 런타임 검증', () => {
   });
 
   test.each([
-    ['COOKIE_FEEDBACK.criticalEffect.ringFadeStartProgress', (config: any) => {
-      config.COOKIE_FEEDBACK.criticalEffect.ringFadeStartProgress =
-        config.COOKIE_FEEDBACK.criticalEffect.secondRingStartProgress;
+    ['COOKIE_FEEDBACK.criticalEffect.lightningFadeStartProgress', (config: any) => {
+      config.COOKIE_FEEDBACK.criticalEffect.lightningFadeStartProgress =
+        config.COOKIE_FEEDBACK.criticalEffect.lightningRevealProgress;
     }],
-    ['COOKIE_FEEDBACK.criticalEffect.sparkleFadeStartProgress', (config: any) => {
-      config.COOKIE_FEEDBACK.criticalEffect.sparkleStaggerProgress = 0.2;
+    ['COOKIE_FEEDBACK.superCriticalEffect.shakeEndProgress', (config: any) => {
+      config.COOKIE_FEEDBACK.superCriticalEffect.shakeEndProgress =
+        config.COOKIE_FEEDBACK.superCriticalEffect.shakeThirdProgress;
     }],
     ['COOKIE_FEEDBACK.criticalEffect.compactDurationMs', (config: any) => {
       config.COOKIE_FEEDBACK.criticalEffect.compactDurationMs =

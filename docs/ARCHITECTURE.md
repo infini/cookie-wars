@@ -6,7 +6,7 @@
 
 `src/navigation/navigation.json`이 대분류 순서, 소분류 소속, 한국어 라벨, 아이콘, 화면 제목, 기본 leaf와 몬스터 NEW 배지 출처를 관리합니다. `navigation/model.ts`는 중복 ID, 누락 화면, 잘못된 부모·기본 leaf 참조를 시작 시 검증하고 기본/기억 화면 선택과 배지 상향을 순수 함수로 제공합니다. `ScreenLayout`은 공통 상단 정보와 설정, 자식이 둘 이상일 때만 나타나는 `SubmenuNav`, 4개 대분류 `BottomNav`를 조합합니다. 게임·전투에는 소메뉴 네이티브 뷰 자체가 생기지 않아 콘텐츠 영역을 유지합니다.
 
-`GameScreen`은 통계 행과 전투 이동 버튼 사이의 중앙 영역 전체를 하나의 쿠키 획득 `Pressable`로 사용합니다. `useImmediateCookiePress`는 터치 시작에 즉시 보상을 주고 같은 터치의 후속 `onPress`만 제거하며, 접근성 서비스처럼 `onPress`만 보내는 입력은 그대로 처리합니다. hit slop·이동 허용 범위·중복 제거 시간은 `cookie-input.json`에서 읽습니다. 획득 텍스트와 일반·슈퍼 크리티컬 연출 선택은 `screens/game/CookieGainFeedback`로 분리해 화면 조정자의 크기를 제한했습니다.
+`GameScreen`은 통계 행과 전투 이동 버튼 사이의 중앙 영역 전체를 하나의 쿠키 획득 `Pressable`로 사용합니다. `useImmediateCookiePress`는 터치 시작에 즉시 보상을 주고 같은 터치의 후속 `onPress`만 제거하며, 접근성 서비스처럼 `onPress`만 보내는 입력은 그대로 처리합니다. hit slop·이동 허용 범위·중복 제거 시간은 `cookie-input.json`에서 읽습니다. 획득 텍스트와 일반·슈퍼 크리티컬 연출 선택은 `screens/game/CookieGainFeedback`로 분리했습니다. 전체 슈퍼 크리티컬일 때만 별도 native-driver 값으로 쿠키 무대를 짧게 흔들어 희귀 발동의 무게를 주고, 축약 발동은 화면 안정성을 유지합니다.
 
 의존 방향은 아래와 같습니다.
 
@@ -83,7 +83,7 @@ services/storage          engine/useBattleEngine
 
 쿠키 도감은 `FlatList`로 가상화해 50종의 고해상도 이미지를 한꺼번에 마운트하지 않습니다. `assetRegistry.test.ts`는 쿠키·보스·봇 데이터의 모든 이미지 키를 각 정적 `require` 레지스트리와 대조하며, `validateCookies`는 세 공통 배율의 동일성과 진화 순서에 따른 단조 증가를 강제합니다. 쿠키 런타임 이미지는 APK 용량을 억제하도록 투명 WebP를 정적 번들합니다.
 
-쿠키 클릭 계산은 `domain/cookieClick.ts`가 담당합니다. `cookieCritical.ts`와 `cookieSuperCritical.ts`가 각 테이블과 강화 진행에서 확률 단위·보상 배수를 계산합니다. 클릭 도메인은 주입된 0~1 난수 한 번을 슈퍼 구간, 일반 크리티컬 구간, 일반 구간 순서의 배타적인 영역으로 나누므로 두 크리티컬이 한 클릭에서 중복되지 않습니다. 결과는 `normal | critical | superCritical` 판별 유니온으로 반환해 잘못된 불리언 조합을 만들 수 없습니다. 확률은 각각 50%·10%에서 멈추고 배수는 안전 정수 범위까지 계속 증가합니다. 화면·효과음은 이 판별값만 소비하고 보상 수치를 다시 계산하지 않습니다.
+쿠키 클릭 계산은 `domain/cookieClick.ts`가 담당합니다. `cookieCritical.ts`와 `cookieSuperCritical.ts`가 각 테이블과 저장된 강화 레벨에서 확률 단위·보상 배수를 매번 계산합니다. 100,000단위 정수 눈금을 사용해 슈퍼 크리티컬의 강화당 +0.025%p를 부동소수점 없이 표현하며, 기존 저장도 레벨만 보유하므로 별도 통화 지급이나 저장 변환 없이 새 공식을 소급 적용합니다. 클릭 도메인은 주입된 0~1 난수 한 번을 슈퍼 구간, 일반 크리티컬 구간, 일반 구간 순서의 배타적인 영역으로 나누므로 두 크리티컬이 한 클릭에서 중복되지 않습니다. 결과는 `normal | critical | superCritical` 판별 유니온으로 반환해 잘못된 불리언 조합을 만들 수 없습니다. 확률은 각각 50%·10%에서 멈추고 배수는 안전 정수 범위까지 계속 증가합니다. 화면·효과음은 이 판별값만 소비하고 보상 수치를 다시 계산하지 않습니다.
 
 `battleRewardSelectors.ts`는 저장된 `battleMedals`를 안전 정수로 정규화하고 `battle-rewards.json`의 능력별 퍼센트를 곱해 세 영구 배율을 만듭니다. `cookieSelectors.ts`는 강화 값과 현재 쿠키 진화 배율을 먼저 계산한 뒤 이 배율을 클릭 힘·자동 생산·쿠키 성 체력에 각각 마지막으로 적용합니다. 훈장 수는 진화 합계에 들어가지 않아 전투 보상과 쿠키 종류 해금 규칙이 서로 결합되지 않습니다.
 
@@ -139,9 +139,9 @@ v8 이하 저장은 정규화된 `difficultyWinCounts`를 모두 합산하고 `b
 
 `useCookieAudioFeedback`은 Freesound CC0 `Crunch` MP3의 3보이스 풀을 테이블의 작은 재생 속도 차이로 번갈아 사용하고 직전 보이스를 바로 반복하지 않습니다. 일반 크리티컬에는 Mixkit `Short explosion`과 `Fairy arcade sparkle`, 슈퍼 크리티컬에는 별도의 `Movie trailer epic impact`와 `Choir magic shine`을 계층으로 더합니다. 일반과 슈퍼의 전체 연출 최소 간격을 따로 추적하므로 흔한 일반 크리티컬 직후에도 희귀 슈퍼의 첫 전체 연출은 생략되지 않습니다. 화면을 전환하거나 사운드를 끄거나 Provider가 해제되면 모든 쿠키 레이어를 되감고 예약 타이머도 취소합니다. `FeedbackContext`는 메뉴·전투 사운드와 진동을 조정합니다. 전투 종료 시 재생 세대 번호를 올리고 음악과 모든 액션 플레이어를 일시정지·되감기하므로, 종료 전에 시작한 비동기 재생 요청도 결과 화면에서 소리를 다시 시작할 수 없습니다.
 
-`CookieCriticalEffect`는 하나의 native-driver 진행값으로 중앙 그라데이션 코어, 두 겹 확장 링, 회전하는 쿠키 파편 8개와 시간차 십자 별빛을 합성합니다. 전체 이펙트가 과도하게 겹치지 않도록 전체·축약 동시 개수와 획득 텍스트 개수를 테이블에서 제한합니다. React Native 레이아웃 View와 `LinearGradient`만 사용하므로 추가 래스터 이펙트 에셋은 번들하지 않습니다.
+`CookieCriticalEffect`는 하나의 native-driver 진행값으로 교차 참격광, 꺾이는 번개 균열과 회전하는 각진 쿠키 파편을 합성합니다. 원형 코어·확장 링은 렌더하지 않습니다. 전체 이펙트가 과도하게 겹치지 않도록 전체·축약 동시 개수와 획득 텍스트 개수를 테이블에서 제한합니다.
 
-`CookieSuperCriticalEffect`는 별도 native-driver 진행값으로 백색 섬광·금색 코어·3색 확장 링·12개 방사 광선·다색 별빛을 합성합니다. 전용 컴포넌트와 전용 설정 묶음을 사용하므로 일반 크리티컬 파일이 비대해지지 않으며, 전체/축약 동시 개수도 독립적으로 제한합니다.
+`CookieSuperCriticalEffect`는 별도 native-driver 진행값으로 각진 섬광, 수직 낙뢰 기둥, X자·수평의 주 참격과 청록·자홍 잔상, 10갈래 번개, 다색 파편 폭발을 합성합니다. 두 효과가 함께 쓰는 `AngularImpactPrimitives`가 참격·번개·파편의 생성 규칙만 담당하고, 일반·슈퍼 컴포넌트는 각 테이블을 조합하는 역할만 맡습니다. 모두 React Native View와 `LinearGradient`로 렌더해 래스터 이펙트 에셋이나 JS 프레임별 상태 갱신을 추가하지 않습니다.
 
 `useBattleScreenSession`은 저장된 `autoBattleEnabled`를 읽어 idle 상태의 최초 시작, active 상태의 성 쿨타임별 자동 발사, 승리 보상 확정 뒤 다음 전투 시작을 각각 독립 effect로 조정합니다. 패배와 최종 난이도 마지막 전투는 자동 전환 조건에서 제외합니다. 사용자가 HUD나 결과 모달에서 설정을 끄면 각 effect의 cleanup이 예약 진행을 취소합니다. 실제 발사 가능 여부와 피해는 수동 입력과 같은 엔진 명령을 사용하므로 자동 모드가 전투 판정을 우회하지 않습니다.
 
@@ -155,7 +155,7 @@ v8 이하 저장은 정규화된 `difficultyWinCounts`를 모두 합산하고 `b
 
 - `__tests__/config.test.ts`: 게임 설정의 타입·참조·의미 검증, 15개 난이도·맵·보스, 보스·봇 애니메이션 프레임 참조, 50종 쿠키, 크리티컬 보상·피드백과 전투 속도 무결성
 - `__tests__/gameReducer.test.ts`: 스테이지별 거대 원반·전투 훈장 최초 보상과 재도전 차단, v9 소급·중복 방지, v10 저장 정규화, X1·X2·X3 순환·복구, 네 활성 강화의 무한 성장과 우선 정렬
-- `__tests__/cookieClick.test.ts`: 기본 1%·10배 크리티컬 경계, 50% 확률 상한, 무제한 배수 성장과 극단 수치 포화
+- `__tests__/cookieClick.test.ts`: 두 기본 크리티컬 경계, 슈퍼 강화당 +0.025%p와 기존 Lv.20의 0.575% 소급, 확률 상한·무제한 배수 성장
 - `__tests__/cookieFeedback.test.ts`: 전체·축약 크리티컬 경계, 직전 클릭 보이스 반복 방지와 최소 클릭 간격
 - `__tests__/battleEngine.test.ts`: 단일 보스 전투, 실제 속도 서브스텝, 공격 반경·중첩 발사·수동 성 공격, 거대 원반 피해, 이벤트 저널과 극단 수치 포화
 - `__tests__/bossAnimation.test.ts`: 15종 보스의 걷기 프레임과 `special` 강공격에만 적용되는 준비·충돌·복귀 전환

@@ -38,8 +38,8 @@ export function useCookieAudioFeedback({
   const superCriticalImpact = useAudioPlayer(
     require('../../assets/audio/cookie-super-critical-impact.mp3'),
   );
-  const superCriticalShine = useAudioPlayer(
-    require('../../assets/audio/cookie-super-critical-shine.mp3'),
+  const superCriticalShockwave = useAudioPlayer(
+    require('../../assets/audio/cookie-super-critical-shockwave.mp3'),
   );
   const voices = useMemo(() => [voice1, voice2, voice3], [voice1, voice2, voice3]);
   const allPlayers = useMemo(
@@ -48,9 +48,9 @@ export function useCookieAudioFeedback({
       criticalImpact,
       criticalSparkle,
       superCriticalImpact,
-      superCriticalShine,
+      superCriticalShockwave,
     ],
-    [criticalImpact, criticalSparkle, superCriticalImpact, superCriticalShine, voices],
+    [criticalImpact, criticalSparkle, superCriticalImpact, superCriticalShockwave, voices],
   );
   const soundEnabledRef = useRef(soundEnabled);
   const playbackEpoch = useRef(0);
@@ -97,15 +97,15 @@ export function useCookieAudioFeedback({
     superCriticalImpact.volume = volume
       * AUDIO_SETTINGS.soundVolumeMultipliers.critical
       * COOKIE_FEEDBACK.audio.superCriticalImpactVolumeMultiplier;
-    superCriticalShine.volume = volume
+    superCriticalShockwave.volume = volume
       * AUDIO_SETTINGS.soundVolumeMultipliers.critical
-      * COOKIE_FEEDBACK.audio.superCriticalShineVolumeMultiplier;
+      * COOKIE_FEEDBACK.audio.superCriticalShockwaveVolumeMultiplier;
   }, [
     criticalImpact,
     criticalSparkle,
     soundVolumeLevel,
     superCriticalImpact,
-    superCriticalShine,
+    superCriticalShockwave,
     voices,
   ]);
 
@@ -184,12 +184,12 @@ export function useCookieAudioFeedback({
       }).catch(() => undefined);
       const timeout = setTimeout(() => {
         pendingTimeouts.current.delete(timeout);
-        void superCriticalShine.seekTo(0).then(() => {
+        void superCriticalShockwave.seekTo(0).then(() => {
           if (requestedEpoch === playbackEpoch.current && soundEnabledRef.current) {
-            superCriticalShine.play();
+            superCriticalShockwave.play();
           }
         }).catch(() => undefined);
-      }, COOKIE_FEEDBACK.audio.superCriticalShineDelayMs);
+      }, COOKIE_FEEDBACK.audio.superCriticalShockwaveDelayMs);
       pendingTimeouts.current.add(timeout);
     }
     return tier;
@@ -197,7 +197,7 @@ export function useCookieAudioFeedback({
     criticalImpact,
     criticalSparkle,
     superCriticalImpact,
-    superCriticalShine,
+    superCriticalShockwave,
     voices,
   ]);
 

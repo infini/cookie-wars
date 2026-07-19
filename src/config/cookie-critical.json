@@ -1,7 +1,7 @@
 {
   "upgradeId": "cookieCritical",
-  "probabilityScale": 10000,
-  "maximumChanceUnits": 5000,
+  "probabilityScale": 100000,
+  "maximumChanceUnits": 50000,
   "baseRewardMultiplier": 10,
   "rewardMultiplierIncreasePerLevel": 1,
   "displayMaximumFractionDigits": 2

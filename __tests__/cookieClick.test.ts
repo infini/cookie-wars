@@ -28,9 +28,23 @@ describe('쿠키 클릭 크리티컬', () => {
   });
 
   test('0.25% 단위 강화도 화면에서 버리지 않고 표시한다', () => {
-    expect(formatCriticalChancePercent(100)).toBe('1');
-    expect(formatCriticalChancePercent(125)).toBe('1.25');
-    expect(formatSuperCriticalChancePercent(10)).toBe('0.1');
+    expect(formatCriticalChancePercent(1000)).toBe('1');
+    expect(formatCriticalChancePercent(1250)).toBe('1.25');
+    expect(formatSuperCriticalChancePercent(100)).toBe('0.1');
+  });
+
+  test('기존 슈퍼 크리티컬 레벨에도 레벨당 0.025%p를 소급 적용한다', () => {
+    const levelTwentyState = {
+      ...initialGameState,
+      upgradeLevels: {
+        ...initialGameState.upgradeLevels,
+        cookieSuperCritical: 20,
+      },
+    };
+    const stats = getCookieSuperCriticalStats(levelTwentyState);
+
+    expect(stats.chanceUnits).toBe(575);
+    expect(formatSuperCriticalChancePercent(stats.chanceUnits)).toBe('0.575');
   });
 
   test('강화 레벨이 오르면 확률과 배수가 함께 오르고 확률만 50%에서 멈춘다', () => {

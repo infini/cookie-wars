@@ -50,7 +50,7 @@
 | 쿠키 크리티컬 충격 | Mixkit `Short explosion` | Mixkit Sound Effects Free License |
 | 쿠키 크리티컬 반짝임 | Mixkit `Fairy arcade sparkle` | Mixkit Sound Effects Free License |
 | 쿠키 슈퍼 크리티컬 충격 | Mixkit `Movie trailer epic impact` | Mixkit Sound Effects Free License |
-| 쿠키 슈퍼 크리티컬 마법 광채 | Mixkit `Choir magic shine` | Mixkit Sound Effects Free License |
+| 쿠키 슈퍼 크리티컬 전기 폭발 | Mixkit `Heavy electric shockwave impact` | Mixkit Sound Effects Free License |
 | 메뉴 선택 | Kenney Interface Sounds `click_003.ogg` | CC0 1.0 |
 | 강화 성공 | Kenney Interface Sounds `confirmation_002.ogg` | CC0 1.0 |
 | 사용 불가 | Kenney Interface Sounds `back_003.ogg` | CC0 1.0 |
@@ -68,7 +68,7 @@
 
 강한 크리티컬은 같은 깨짐음 위에 Mixkit `Short explosion` 충격음과 70ms 뒤의 `Fairy arcade sparkle`을 겹칩니다. 두 파일은 Mixkit 미리듣기 MP3이며 [Mixkit Free License](https://mixkit.co/license/)의 Sound Effects 항목을 따릅니다. 항목 ID, 다운로드 URL, 로컬 파일명과 SHA-256은 `assets/licenses/MIXKIT_SOUND_EFFECT_SOURCE.txt`에 기록했습니다. 짧은 시간에 크리티컬이 연속 발생하면 큰 레이어는 최소 간격으로 제한하고 작은 시각·기본 클릭 피드백만 유지합니다. 재생 속도, 상대 음량, 최소 간격과 지연은 `cookie-feedback.json`에서 관리합니다.
 
-슈퍼 크리티컬은 Mixkit `Movie trailer epic impact`와 90ms 뒤의 `Choir magic shine`을 전용으로 겹칩니다. 일반 크리티컬과 다른 두 원본을 사용하며, 4초 안에 다시 발동하면 보상은 전부 지급하고 긴 음원 레이어만 축약합니다. 두 파일의 항목 ID·직접 다운로드 주소·SHA-256도 같은 출처 기록 파일에 남겼습니다.
+슈퍼 크리티컬은 Mixkit `Movie trailer epic impact`와 110ms 뒤의 `Heavy electric shockwave impact`를 겹쳐 첫 충격 뒤 `콰광` 하는 저음·전기 폭발이 이어지도록 구성합니다. 일반 크리티컬과 다른 두 원본을 사용하며, 7초 안에 다시 발동하면 보상은 전부 지급하고 긴 음원 레이어만 축약합니다. 두 파일의 항목 ID·직접 다운로드 주소·SHA-256도 같은 출처 기록 파일에 남겼습니다. 이전 `Choir magic shine`은 출처 추적용으로만 보관하고 런타임에서는 불러오지 않습니다.
 
 ## 글꼴과 아이콘
 
@@ -97,5 +97,5 @@
 - [Mixkit Boom Sound Effects · Short explosion](https://mixkit.co/free-sound-effects/boom/)
 - [Mixkit Video Game Sound Effects · Fairy arcade sparkle](https://mixkit.co/free-sound-effects/video-game/)
 - [Mixkit Impact Sound Effects · Movie trailer epic impact](https://mixkit.co/free-sound-effects/impact/)
-- [Mixkit Magic Sound Effects · Choir magic shine](https://mixkit.co/free-sound-effects/magic/)
+- [Mixkit Explosion Sound Effects · Heavy electric shockwave impact](https://mixkit.co/free-sound-effects/explosion/)
 - [Mixkit Free License](https://mixkit.co/license/)

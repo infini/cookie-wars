@@ -23,12 +23,12 @@
     "unit": "크리티컬",
     "countsTowardCookieEvolution": true,
     "levels": [
-      { "level": 1, "value": 100, "cost": 0 },
-      { "level": 2, "value": 125, "cost": 60 },
-      { "level": 3, "value": 150, "cost": 210 },
-      { "level": 4, "value": 175, "cost": 650 },
-      { "level": 5, "value": 200, "cost": 1900 },
-      { "level": 6, "value": 225, "cost": 5200 }
+      { "level": 1, "value": 1000, "cost": 0 },
+      { "level": 2, "value": 1250, "cost": 60 },
+      { "level": 3, "value": 1500, "cost": 210 },
+      { "level": 4, "value": 1750, "cost": 650 },
+      { "level": 5, "value": 2000, "cost": 1900 },
+      { "level": 6, "value": 2250, "cost": 5200 }
     ]
   },
   {
@@ -38,12 +38,12 @@
     "unit": "슈퍼 크리티컬",
     "countsTowardCookieEvolution": false,
     "levels": [
-      { "level": 1, "value": 10, "cost": 0 },
-      { "level": 2, "value": 12, "cost": 600 },
-      { "level": 3, "value": 14, "cost": 2200 },
-      { "level": 4, "value": 16, "cost": 7000 },
-      { "level": 5, "value": 18, "cost": 21000 },
-      { "level": 6, "value": 20, "cost": 60000 }
+      { "level": 1, "value": 100, "cost": 0 },
+      { "level": 2, "value": 125, "cost": 600 },
+      { "level": 3, "value": 150, "cost": 2200 },
+      { "level": 4, "value": 175, "cost": 7000 },
+      { "level": 5, "value": 200, "cost": 21000 },
+      { "level": 6, "value": 225, "cost": 60000 }
     ]
   },
   {

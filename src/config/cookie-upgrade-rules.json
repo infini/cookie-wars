@@ -4,11 +4,11 @@
     "costGrowthMultiplier": 1.25
   },
   "cookieCritical": {
-    "valueIncreasePerLevel": 25,
+    "valueIncreasePerLevel": 250,
     "costGrowthMultiplier": 1.25
   },
   "cookieSuperCritical": {
-    "valueIncreasePerLevel": 2,
+    "valueIncreasePerLevel": 25,
     "costGrowthMultiplier": 1.32
   },
   "autoProduction": {

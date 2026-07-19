@@ -77,17 +77,17 @@
 ### `cookie-critical.json`
 
 - `upgradeId`: `cookie-upgrades.json`에서 확률 진행을 읽을 강화 ID. 현재 `cookieCritical`
-- `probabilityScale`: 정수 난수와 확률 값을 대응시키는 전체 단위. 현재 10,000
-- `maximumChanceUnits`: 실제 발동 확률 상한. 현재 5,000으로 정확히 50%
+- `probabilityScale`: 정수 난수와 확률 값을 대응시키는 전체 단위. 0.025%p를 정수로 정확히 표현하기 위해 현재 100,000
+- `maximumChanceUnits`: 실제 발동 확률 상한. 현재 50,000으로 정확히 50%
 - `baseRewardMultiplier`: Lv.1 크리티컬 획득 배수. 현재 10배
 - `rewardMultiplierIncreasePerLevel`: Lv.1 이후 한 단계마다 더할 획득 배수. 현재 +1배
 - `displayMaximumFractionDigits`: 한국어 UI에서 확률을 표시할 최대 소수 자릿수
 
-`cookie-upgrades.json`의 `levels[].value`와 무한 강화 규칙의 `valueIncreasePerLevel`은 확률 단위로 해석합니다. Lv.1 값 100은 1%, 이후 한 단계당 25는 0.25%p입니다. 계산된 확률 값은 50%에서 제한하지만 강화 단계와 배수는 제한하지 않습니다. 따라서 Lv.1은 1%·10배, Lv.2는 1.25%·11배이며 확률 상한에 도달한 뒤에도 레벨마다 배수가 계속 증가합니다. 클릭마다 0~1 난수 한 번을 정수 단위로 변환해 판정하고, 발동하면 최종 클릭 힘에 해당 배수를 곱합니다. 극단 단계의 결과는 공통 안전 정수 포화 정책을 따릅니다.
+`cookie-upgrades.json`의 `levels[].value`와 무한 강화 규칙의 `valueIncreasePerLevel`은 확률 단위로 해석합니다. Lv.1 값 1,000은 1%, 이후 한 단계당 250은 0.25%p입니다. 계산된 확률 값은 50%에서 제한하지만 강화 단계와 배수는 제한하지 않습니다. 따라서 Lv.1은 1%·10배, Lv.2는 1.25%·11배이며 확률 상한에 도달한 뒤에도 레벨마다 배수가 계속 증가합니다. 클릭마다 0~1 난수 한 번을 정수 단위로 변환해 판정하고, 발동하면 최종 클릭 힘에 해당 배수를 곱합니다. 극단 단계의 결과는 공통 안전 정수 포화 정책을 따릅니다.
 
 ### `cookie-super-critical.json`
 
-필드는 `cookie-critical.json`과 같고 현재 `upgradeId`는 `cookieSuperCritical`입니다. Lv.1은 값 10으로 정확히 0.1%·100배이며, 명시 레벨 뒤에는 확률이 레벨당 2단위(0.02%p), 배수가 레벨당 10배 증가합니다. 확률은 1,000단위인 10%에서 멈추고 배수와 강화 레벨은 계속 성장합니다. 두 크리티컬은 같은 10,000 눈금을 사용하고 최대 확률 합이 100%를 넘으면 설정 검증이 실패합니다. 클릭 판정은 한 난수에서 슈퍼 구간을 먼저, 그 다음 일반 크리티컬 구간을 배치해 중복 지급하지 않습니다.
+필드는 `cookie-critical.json`과 같고 현재 `upgradeId`는 `cookieSuperCritical`입니다. Lv.1은 값 100으로 정확히 0.1%·100배이며, 이후 모든 레벨은 확률이 25단위(0.025%p), 배수가 10배씩 증가합니다. 확률은 10,000단위인 10%에서 멈추고 배수와 강화 레벨은 계속 성장합니다. 저장에는 확률값이 아니라 강화 레벨이 있으므로 기존 사용자도 현재 레벨을 기준으로 새 공식을 즉시 소급 적용받습니다. 예를 들어 Lv.20은 `0.1% + 19×0.025%p = 0.575%`입니다. 두 크리티컬은 같은 100,000 눈금을 사용하고 최대 확률 합이 100%를 넘으면 설정 검증이 실패합니다. 클릭 판정은 한 난수에서 슈퍼 구간을 먼저, 그 다음 일반 크리티컬 구간을 배치해 중복 지급하지 않습니다.
 
 ### `cookie-input.json`
 
@@ -115,15 +115,16 @@
 - `audio.criticalSparkleDelayMs`: 충격음 뒤 반짝임 레이어 지연. 현재 70ms
 - `audio.voicePlaybackRates`, `voiceVolumeMultipliers`: Freesound `Crunch` 원본을 번갈아 재생하는 세 보이스의 속도와 상대 음량
 - `audio.criticalImpactVolumeMultiplier`, `criticalSparkleVolumeMultiplier`: Mixkit 충격·반짝임 레이어의 상대 음량
-- `audio.minimumFullSuperCriticalIntervalMs`, `superCriticalLayerDurationMs`: 슈퍼 전용 전체 음향의 최소 간격과 꼬리 길이
-- `audio.superCriticalImpactVolumeMultiplier`, `superCriticalShineVolumeMultiplier`, `superCriticalShineDelayMs`: 슈퍼 전용 Mixkit 충격·마법 광채의 음량과 지연
+- `audio.minimumFullSuperCriticalIntervalMs`, `superCriticalLayerDurationMs`: 슈퍼 전용 전체 음향의 최소 간격과 꼬리 길이. 현재 7,000ms·6,800ms
+- `audio.superCriticalImpactVolumeMultiplier`, `superCriticalShockwaveVolumeMultiplier`, `superCriticalShockwaveDelayMs`: 슈퍼 전용 Mixkit 첫 충격과 `콰광` 전기 폭발의 음량·지연
 - `floatingGain.*`: `+획득량` 텍스트의 동시 표시 상한, 수명, 상승 거리와 크기 키프레임
 - `criticalEffect.durationMs`, `compactDurationMs`, `sizePixels`: 전체·축약 효과의 수명과 기준 크기
 - `criticalEffect.maximumConcurrentFullEffects`, `maximumConcurrentCompactEffects`: 두 효과가 화면에 남을 수 있는 개수 상한
-- `criticalEffect.flash*`, `core*`, `firstRing*`, `secondRing*`: 중앙 섬광, 그라데이션 코어와 이중 링의 크기·시간·색상
-- `criticalEffect.fragment*`: 회전하며 퍼지는 초코칩 쿠키 파편 8개의 개수·거리·크기·색상
-- `criticalEffect.sparkle*`: 전체 5개·축약 3개 십자 별빛의 지연, 거리, 회전과 색상
-- `superCriticalEffect.*`: 슈퍼 전용 백색 섬광, 금색 코어, 3색 링, 방사 광선, 별빛, 문구의 수명·개수·색상·키프레임
+- `criticalEffect.flash*`, `slash*`: 각진 순간 섬광과 두 방향 교차 참격의 크기·색상·키프레임
+- `criticalEffect.lightning*`, `fragment*`: 여러 갈래로 꺾이는 번개와 회전 쿠키 파편의 개수·거리·색상
+- `superCriticalEffect.column*`, `slash*`, `ghostSlash*`: 수직 낙뢰 기둥과 X자·수평 다색 참격 레이어
+- `superCriticalEffect.lightning*`, `shard*`, `shake*`: 10갈래 번개, 각진 다색 파편 폭발과 쿠키 무대 흔들림
+- `superCriticalEffect.label*`: 슈퍼 크리티컬 문구의 크기·위치·그림자·스케일
 
 크리티컬 판정은 두 크리티컬 수치 테이블만 사용하고, 판정 결과가 `cookie-feedback.json`의 `normal`, 일반 전체/축약, 슈퍼 전체/축약 표시 정책을 선택합니다. 연속 발동은 보상 배수를 그대로 지급하면서 긴 음향·시각 레이어만 생략한 축약 효과로 표시합니다. 보이스 배열 불일치, 오디오 꼬리보다 짧은 전체 연출 간격, 범위 밖 음량·진행률, 잘못된 키프레임 순서는 설정 검증에서 거부합니다.
 
