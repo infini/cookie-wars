@@ -33,6 +33,12 @@ export type {
   CookieFragmentsConfig,
 } from './cookieFragments';
 export type {
+  ClickerRobotFormationConfig,
+  ClickerRobotStats,
+  ClickerRobotsConfig,
+  FlyingFragmentCollectorConfig,
+} from './clickerRobots';
+export type {
   CookiePityConfig,
   CookiePityChanceUnits,
   CookiePityKind,
@@ -66,7 +72,9 @@ export type {
   CookieSuperCriticalConfig,
   CookieUpgradeRulesConfig,
   DiscConfig,
+  DiscDamageGrowthMode,
   DiscLevelConfig,
+  DiscUpgradeProfileConfig,
   DiscUpgradeRulesConfig,
   InfiniteUpgradeRuleConfig,
   UpgradeConfig,

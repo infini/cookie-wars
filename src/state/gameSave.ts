@@ -9,6 +9,7 @@ import {
   SAVE_MIGRATIONS,
 } from '../config';
 import { getBattleStageId } from '../domain/gameSelectors';
+import { calculateDiscUpgradeRefund } from '../domain/gameSelectors';
 import { normalizeSoundVolumeLevel } from '../domain/audioSettings';
 import { normalizeBattleSpeedMultiplier } from '../domain/battleSpeedSettings';
 import { settleOfflineProduction } from '../domain/offlineProduction';
@@ -155,6 +156,26 @@ function normalizeDiscLevels(
   return levels;
 }
 
+function normalizeDiscUpgradeSpentCookies(
+  savedSpent: Record<string, number> | undefined,
+  discLevels: Record<string, number>,
+): Record<string, number> {
+  const normalized = Object.fromEntries(DISCS.map((disc) => [disc.id, 0]));
+  const savedByCurrentId: Record<string, unknown> = {};
+  for (const [savedId, value] of Object.entries(savedSpent ?? {})) {
+    const currentId = SAVE_MIGRATIONS.discIdAliases[savedId] ?? savedId;
+    if (normalized[currentId] === undefined) continue;
+    savedByCurrentId[currentId] = value;
+  }
+  for (const disc of DISCS) {
+    const savedValue = savedByCurrentId[disc.id];
+    normalized[disc.id] = savedValue === undefined
+      ? calculateDiscUpgradeRefund(disc, discLevels[disc.id])
+      : normalizeStoredInteger(savedValue, { fallback: 0 });
+  }
+  return normalized;
+}
+
 function unlockedDifficultyIndex(winCounts: Record<string, number>): number {
   let unlockedIndex = 0;
   for (let index = 0; index < DIFFICULTIES.length - 1; index += 1) {
@@ -193,6 +214,10 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
       .concat(saved.ownedDiscIds === undefined && saved.discOwned ? [DISCS[0].id] : []),
   );
   const discLevels = normalizeDiscLevels(saved.discLevels, saved.discLevel);
+  const discUpgradeSpentCookies = normalizeDiscUpgradeSpentCookies(
+    saved.discUpgradeSpentCookies,
+    discLevels,
+  );
   const migratedSelectedDiscId = saved.selectedDiscId
     ? SAVE_MIGRATIONS.discIdAliases[saved.selectedDiscId] ?? saved.selectedDiscId
     : undefined;
@@ -238,6 +263,7 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     botCounts: normalizeBotCounts(saved.botCounts),
     ownedDiscIds,
     discLevels,
+    discUpgradeSpentCookies,
     selectedDiscId,
     selectedDifficultyId,
     highestUnlockedDifficultyIndex,

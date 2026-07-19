@@ -17,6 +17,7 @@ export interface GameCommands {
   buyUpgrade: (upgradeId: string) => boolean;
   buyDisc: (discId: string) => boolean;
   upgradeDisc: (discId: string) => boolean;
+  resetDisc: (discId: string) => boolean;
   equipDisc: (discId: string) => boolean;
   buyBot: (botId: string) => boolean;
   setDifficulty: (difficultyId: string) => boolean;
@@ -58,6 +59,7 @@ export function createGameCommands(
     buyUpgrade: (upgradeId) => dispatchProjectedAction({ type: 'BUY_UPGRADE', upgradeId }),
     buyDisc: (discId) => dispatchProjectedAction({ type: 'BUY_DISC', discId }),
     upgradeDisc: (discId) => dispatchProjectedAction({ type: 'UPGRADE_DISC', discId }),
+    resetDisc: (discId) => dispatchProjectedAction({ type: 'RESET_DISC', discId }),
     equipDisc: (discId) => dispatchProjectedAction({ type: 'EQUIP_DISC', discId }),
     buyBot: (botId) => dispatchProjectedAction({ type: 'BUY_BOT', botId }),
     setDifficulty: (difficultyId) => dispatchProjectedAction({

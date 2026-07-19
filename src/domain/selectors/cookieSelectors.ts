@@ -19,6 +19,7 @@ import { getUpgradeProgress, UpgradeProgress } from './upgradeSelectors';
 import { getBattleMedalBonuses } from './battleRewardSelectors';
 import { getCookieCriticalStats } from '../cookieCritical';
 import { getCookieSuperCriticalStats } from '../cookieSuperCritical';
+import { getClickerRobotStats } from './clickerRobotSelectors';
 
 export interface CookieEvolutionProgress {
   visibleUpgradeLevels: number;
@@ -53,11 +54,13 @@ export function calculateCookieStats(state: GameState): CookieStats {
     value('cookieHealth'),
     evolution.active.healthMultiplier,
   );
+  const boostedClickPower = saturatingProductInteger(
+    clickPower,
+    medalBonuses.clickPowerMultiplier,
+  );
+  const clickerRobots = getClickerRobotStats(state, boostedClickPower);
   return {
-    clickPower: saturatingProductInteger(
-      clickPower,
-      medalBonuses.clickPowerMultiplier,
-    ),
+    clickPower: boostedClickPower,
     criticalChanceUnits: critical.chanceUnits,
     criticalRewardMultiplier: critical.rewardMultiplier,
     superCriticalChanceUnits: superCritical.chanceUnits,
@@ -74,6 +77,11 @@ export function calculateCookieStats(state: GameState): CookieStats {
     cookieLevel: evolution.totalUpgradeLevels,
     activeCookieId: evolution.active.id,
     totalUpgradeLevels: evolution.totalUpgradeLevels,
+    clickerRobotCount: clickerRobots.robotCount,
+    clickerRobotPostCapLevel: clickerRobots.postCapLevel,
+    clickerRobotClicksPerSecond: clickerRobots.totalClicksPerSecond,
+    clickerRobotPowerPerHit: clickerRobots.powerPerHit,
+    clickerRobotCookiesPerSecond: clickerRobots.cookiesPerSecond,
   };
 }
 

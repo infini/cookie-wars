@@ -1,0 +1,22 @@
+Cookie Wars - clicker robot hammer sound provenance
+
+Source pack: Kenney Impact Sounds
+Creator: Kenney (www.kenney.nl)
+Source page: https://kenney.nl/assets/impact-sounds
+Archive URL: https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip
+Downloaded: 2026-07-19
+License: Creative Commons CC0 1.0
+License page: https://creativecommons.org/publicdomain/zero/1.0/
+
+Archive SHA-256:
+029d734af1582474edf3a694d1b0cebc97c1c152f2f39fa34d4c2bafc5de77f8  kenney_impact-sounds.zip
+
+Bundled files are unchanged OGG originals renamed for their runtime role:
+eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3  Audio/impactWood_light_000.ogg -> assets/audio/clicker-hammer-1.ogg
+4b76bf3ccc8e60d19188f3165b778a7817786faa6887c55d9049bcbeef3b425f  Audio/impactWood_light_001.ogg -> assets/audio/clicker-hammer-2.ogg
+b183cf7a5bd783817e0e4b82af34ac6658fa1927049089dadc8b15c2ecc771dc  Audio/impactWood_light_002.ogg -> assets/audio/clicker-hammer-3.ogg
+
+Runtime policy:
+- Three voices rotate so the 0.266-second sounds are not cut off at the base 5 hits/second rhythm.
+- The group cadence is capped at one audible hit per 200ms even when 28 robots and post-cap speed upgrades are active.
+- Global sound on/off and the five volume levels apply before the clicker-specific multiplier.

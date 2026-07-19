@@ -58,6 +58,7 @@ function expectSafeStoredIntegers(state: typeof initialGameState): void {
     state.lastSavedAt,
     ...Object.values(state.upgradeLevels),
     ...Object.values(state.discLevels),
+    ...Object.values(state.discUpgradeSpentCookies),
     ...Object.values(state.botCounts),
     ...Object.values(state.difficultyWinCounts),
   ]) expectSafeInteger(value);
@@ -254,6 +255,7 @@ describe('게임 숫자 안전 경계', () => {
       { type: 'BUY_UPGRADE', upgradeId: 'clickPower' },
       { type: 'BUY_DISC', discId: DISCS[0].id },
       { type: 'UPGRADE_DISC', discId: DISCS[0].id },
+      { type: 'RESET_DISC', discId: DISCS[0].id },
       { type: 'EQUIP_DISC', discId: DISCS[1].id },
       { type: 'BUY_BOT', botId: BOTS[0].id },
       { type: 'SET_DIFFICULTY', difficultyId: DIFFICULTIES.at(-1)!.id },

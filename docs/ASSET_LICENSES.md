@@ -13,6 +13,7 @@
 | `assets/images/cookies/`의 51~80단계 런타임 WebP (`crystal-dragon-egg`~`cookie-universe-core`) | 쿠키전쟁용 OpenAI 이미지 생성 결과 30종 | 프로젝트 전용 원본 |
 | `monster-body.png`, `monster-eye.png`, `monster-mouth.png` 보관 원본 | Kenney Monster Builder Pack | CC0 1.0 |
 | `cookie-castle.png`, `cookie-bot.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
+| `assets/images/clicker-robots/clicker-hammer.webp` | OpenGameArt `Stylized Low poly Tools`, zisongbr / fmoreira | CC0 1.0 |
 | `crumb-minion.png`, `sugar-guard.png`, `chocolate-brute.png`, `wafer-sorcerer.png`, `cookie-tyrant.png` | 쿠키전쟁용 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 | `assets/images/enemies/cookie-tyrant-hammer.png` | 기존 폭군과 신규 쿠키 전쟁망치를 결합한 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
 | `assets/images/enemies/boss-*.webp` 30종 | 난이도별 고유 망치 보스 OpenAI 이미지 생성 결과 | 프로젝트 전용 원본 |
@@ -34,7 +35,7 @@
 
 생성 이미지는 특정 상용 게임의 캐릭터나 로고를 복제하지 않고 독자적인 3D 모바일 게임 아트 방향으로 제작했습니다. 아군 원반은 파랑·금색, 적 원반은 빨강·검붉은색입니다. 현재 전투에서 사용하는 30개 JPG 맵은 모두 세로 9:16, 상단 고유 랜드마크, 낮은 디테일의 중앙 70%, 동적 쿠키 성을 위한 열린 하단 지면을 유지합니다. 기존 초원·과수원·설원·악마계·신계와 Blood Moon의 수정 광산·버섯 숲·증기 주조소·심해 도시·운석 지대·창조 공방·무한 공간은 지형과 건축 자체가 다르며 단순 색상·재질 변형을 사용하지 않았습니다. 30개 정적 WebP 보스와 보스별 6프레임은 갑옷·몸체 재료·실루엣·전쟁망치가 다르고 모든 프레임에서 망치를 실제로 들고 있습니다. 5종 봇의 30프레임은 종류별 재질과 장비를 유지하면서 달리기와 원반 투척 자세를 구분합니다. 21~80단계 생성 쿠키 60종은 구운 쿠키 질감과 고유 실루엣을 유지합니다. 14단계 별빛 쇼트케이크도 6단계 딸기 케이크와 중복되지 않는 프로젝트 전용 이미지로 교체했습니다.
 
-외부 VFX 원본 페이지, 직접 다운로드 주소와 SHA-256은 `assets/licenses/OPENGAMEART_COOKIE_VFX_SOURCE.txt`에 기록했습니다. 기존 `process_external_cookie_vfx.py`는 보관용 화산 프레임과 번개를 변환하고, `process_external_cookie_feedback_vfx.py`는 CodeManu의 60프레임 `BigHit`, `Explosion2`, `TheVortex`를 크리티컬·마그마·슈퍼 WebP로 변환하며 Inguz 청록 충격과 Calinou 번개 세 갈래를 전기 WebP로 합성합니다. 네 종류의 형광 팔레트와 외곽 발광 설정은 `scripts/cookie-feedback-vfx.json`에서 관리합니다. 앱은 실행 중 네트워크를 사용하지 않습니다.
+외부 VFX 원본 페이지, 직접 다운로드 주소와 SHA-256은 `assets/licenses/OPENGAMEART_COOKIE_VFX_SOURCE.txt`에 기록했습니다. 클릭커 망치의 원본 archive·CC0·입출력 SHA-256은 `assets/licenses/OPENGAMEART_CLICKER_ROBOT_SOURCE.txt`에 별도로 기록했습니다. 기존 `process_external_cookie_vfx.py`는 보관용 화산 프레임과 번개를 변환하고, `process_external_cookie_feedback_vfx.py`는 CodeManu의 60프레임 `BigHit`, `Explosion2`, `TheVortex`를 크리티컬·마그마·슈퍼 WebP로 변환하며 Inguz 청록 충격과 Calinou 번개 세 갈래를 전기 WebP로 합성합니다. 네 종류의 형광 팔레트와 외곽 발광 설정은 `scripts/cookie-feedback-vfx.json`에서 관리합니다. 앱은 실행 중 네트워크를 사용하지 않습니다.
 
 표에서 `프로젝트 전용 원본`으로 표시한 생성 이미지는 코드의 MIT License 범위에 포함하지 않습니다. 별도 표기가 없는 한 이미지 자체의 재사용·재배포에는 프로젝트 소유자의 별도 허가가 필요합니다.
 
@@ -69,6 +70,7 @@
 | 아군 원반 | Kenney RPG Audio `knifeSlice.ogg` | CC0 1.0 |
 | 적·거대 원반, 분노 | Kenney Digital Audio `phaserDown3.ogg`, `phaseJump3.ogg`, `powerUp10.ogg` | CC0 1.0 |
 | 약한 피격 3종, 강한 피격, 근접 타격 | Kenney Impact Sounds `impactGeneric_light_000~002.ogg`, `impactPunch_heavy_001.ogg`, `impactWood_heavy_003.ogg` | CC0 1.0 |
+| 클릭커 로봇 망치 3종 | Kenney Impact Sounds `impactWood_light_000~002.ogg` | CC0 1.0 |
 | 전투 배경 음악 | MintoDog, `Hope (Orchestral battle music)` | CC0 1.0 |
 | 보관 중인 이전 피격·원반·적 처치 `hit.ogg`, `disc-throw.ogg`, `enemy-defeated.ogg` | Kenney Impact Sounds / Sci-Fi Sounds | CC0 1.0 |
 | 보관 중인 이전 쿠키봇 `bot-laser.ogg` | Kenney Sci-Fi Sounds | CC0 1.0 |
@@ -90,7 +92,7 @@
 - MaterialCommunityIcons 글꼴·아이콘: Apache License 2.0 (Pictogrammers)
 - `@expo/vector-icons` 코드: MIT License
 
-재배포 가능한 원문 라이선스 사본과 에셋별 출처 기록은 `assets/licenses`에 포함되어 있습니다. Mixkit은 로컬 출처 기록과 위 공식 라이선스 페이지를 함께 확인합니다.
+재배포 가능한 원문 라이선스 사본과 에셋별 출처 기록은 `assets/licenses`에 포함되어 있습니다. 클릭커 망치 소리의 archive·원본 파일·런타임 파일 SHA-256은 `KENNEY_CLICKER_ROBOT_SOUND_SOURCE.txt`에 기록했습니다. Mixkit은 로컬 출처 기록과 위 공식 라이선스 페이지를 함께 확인합니다.
 
 ## 원본 페이지
 
@@ -109,6 +111,7 @@
 - [OpenGameArt · Hit Animation 2](https://opengameart.org/content/hit-animation-2-frame-by-frame)
 - [OpenGameArt · 2D Explosion Animations](https://opengameart.org/content/2d-explosion-animations-frame-by-frame)
 - [OpenGameArt · 2DFX Impact spritesheets](https://opengameart.org/node/128928)
+- [OpenGameArt · Stylized Low poly Tools](https://opengameart.org/content/stylized-low-poly-tools)
 - [Freesound · Crunch by qubodup](https://freesound.org/people/qubodup/sounds/816237/)
 - [Creative Commons CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
 - [Mixkit Boom Sound Effects · Short explosion](https://mixkit.co/free-sound-effects/boom/)

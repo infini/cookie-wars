@@ -20,6 +20,7 @@ import {
   CookieFeedbackConfig,
   CookieFragmentsConfig,
   CookieInputConfig,
+  ClickerRobotsConfig,
   CookiePityConfig,
   CookieSuperCriticalConfig,
   CookieSpecialEffectsConfig,
@@ -61,6 +62,7 @@ export interface GameConfigInput {
   COOKIE_FEEDBACK: unknown;
   COOKIE_FRAGMENTS: unknown;
   COOKIE_INPUT: unknown;
+  CLICKER_ROBOTS: unknown;
   COOKIE_PITY: unknown;
   COOKIE_SUPER_CRITICAL: unknown;
   COOKIE_SPECIAL_EFFECTS: unknown;
@@ -101,6 +103,7 @@ export interface ValidatedGameConfig {
   COOKIE_FEEDBACK: CookieFeedbackConfig;
   COOKIE_FRAGMENTS: CookieFragmentsConfig;
   COOKIE_INPUT: CookieInputConfig;
+  CLICKER_ROBOTS: ClickerRobotsConfig;
   COOKIE_PITY: CookiePityConfig;
   COOKIE_SUPER_CRITICAL: CookieSuperCriticalConfig;
   COOKIE_SPECIAL_EFFECTS: CookieSpecialEffectsConfig;

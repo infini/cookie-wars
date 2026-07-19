@@ -2,15 +2,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFeedback } from '../services/FeedbackContext';
+import { useClickerRobotAudio } from '../services/useClickerRobotAudio';
 import { useGame } from '../state/GameContext';
 import { colors, gradients } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import { formatNumber } from '../utils/format';
 import { CookieImage } from '../components/CookieImage';
 import { CookieFragmentCollectible } from '../components/CookieFragmentCollectible';
+import { ClickerRobotFormation } from '../components/ClickerRobotFormation';
+import { FlyingFragmentCollector } from '../components/FlyingFragmentCollector';
 import { StatChip } from '../components/StatChip';
 import {
   COOKIE_FEEDBACK,
+  CLICKER_ROBOTS,
   COOKIE_INPUT,
   getCookie,
   getCookieSpecialEffect,
@@ -53,6 +57,15 @@ export function GameScreen() {
     === medalBonuses.autoProductionBonusPercent
     && medalBonuses.clickPowerBonusPercent
       === medalBonuses.castleHealthBonusPercent;
+  const clickerClicksPerSecondPerRobot = stats.clickerRobotCount > 0
+    ? stats.clickerRobotClicksPerSecond / stats.clickerRobotCount
+    : 0;
+  useClickerRobotAudio({
+    robotCount: stats.clickerRobotCount,
+    clicksPerSecondPerRobot: clickerClicksPerSecondPerRobot,
+    soundEnabled: state.soundEnabled,
+    soundVolumeLevel: state.soundVolumeLevel,
+  });
 
   const showSpecialFeedback = useCallback((item: Omit<CookieSpecialFeedbackItem, 'id'>) => {
     const next = { ...item, id: nextSpecialId.current++ };
@@ -198,6 +211,10 @@ export function GameScreen() {
           <View style={styles.cookieStage}>
             <View style={styles.ringOuter} />
             <View style={styles.ringInner} />
+            <ClickerRobotFormation
+              robotCount={stats.clickerRobotCount}
+              clicksPerSecondPerRobot={clickerClicksPerSecondPerRobot}
+            />
             <CookieGainFeedback gains={gains} onDone={removeGain} />
             <Animated.View style={{ transform: [{ scale }] }}>
               <LinearGradient colors={gradients.cookieButton} style={styles.cookieButton}>
@@ -221,6 +238,12 @@ export function GameScreen() {
           </Text>
           <Text style={[styles.infoText, styles.clickInfo]}>
             클릭 시 획득 개수 {formatNumber(stats.clickPower)}개
+          </Text>
+          <Text style={[styles.infoText, styles.clickerInfo]}>
+            🔨 클릭커 로봇 {formatNumber(stats.clickerRobotCount)}대 · 초당 {formatNumber(stats.clickerRobotCookiesPerSecond)}개
+          </Text>
+          <Text style={[styles.infoText, styles.flyingInfo]}>
+            🚁 플라잉 클릭커 {CLICKER_ROBOTS.flyingFragmentCollector.freeCount}대 · 쿠키 조각 자동 수집
           </Text>
           <CookieRareStats
             criticalChance={formatCriticalChancePercent(stats.criticalChanceUnits)}
@@ -246,6 +269,7 @@ export function GameScreen() {
           onExpire={expireFragment}
         />
       ) : null}
+      <FlyingFragmentCollector mission={activeFragment} onCollect={claimFragment} />
     </View>
   );
 }
@@ -298,4 +322,6 @@ const styles = StyleSheet.create({
   medalInfo: { color: colors.purple },
   autoInfo: { color: colors.muted },
   clickInfo: { color: colors.blue },
+  clickerInfo: { color: colors.orange },
+  flyingInfo: { color: colors.greenDark },
 });

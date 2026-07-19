@@ -20,6 +20,7 @@ import cookieExpansionData from './cookie-expansion.json';
 import cookieFeedbackData from './cookie-feedback.json';
 import cookieFragmentData from './cookie-fragments.json';
 import cookieInputData from './cookie-input.json';
+import clickerRobotData from './clicker-robots.json';
 import cookiePityData from './cookie-pity.json';
 import cookieSuperCriticalData from './cookie-super-critical.json';
 import cookieSpecialEffectData from './cookie-special-effects.json';
@@ -39,11 +40,13 @@ import {
   BattleMapConfig,
   BotConfig,
   CookieConfig,
+  ClickerRobotsConfig,
   CookieFragmentKind,
   CookieSpecialEffectKind,
   CookieFragmentTypeConfig,
   DifficultyConfig,
   DiscConfig,
+  DiscUpgradeProfileConfig,
   EnemyDiscConfig,
   EnemyWaveConfig,
   MonsterConfig,
@@ -76,6 +79,7 @@ export const CONFIG_TABLES = validateGameConfig({
   COOKIE_FEEDBACK: cookieFeedbackData,
   COOKIE_FRAGMENTS: cookieFragmentData,
   COOKIE_INPUT: cookieInputData,
+  CLICKER_ROBOTS: clickerRobotData,
   COOKIE_PITY: cookiePityData,
   COOKIE_SUPER_CRITICAL: cookieSuperCriticalData,
   COOKIE_SPECIAL_EFFECTS: cookieSpecialEffectData,
@@ -116,6 +120,7 @@ export const {
   COOKIE_FEEDBACK,
   COOKIE_FRAGMENTS,
   COOKIE_INPUT,
+  CLICKER_ROBOTS,
   COOKIE_PITY,
   COOKIE_SUPER_CRITICAL,
   COOKIE_SPECIAL_EFFECTS,
@@ -142,6 +147,9 @@ const enemyWaveById = new Map(ENEMY_WAVES.map((item) => [item.id, item]));
 const botById = new Map(BOTS.map((item) => [item.id, item]));
 const upgradeById = new Map(COOKIE_UPGRADES.map((item) => [item.id, item]));
 const discById = new Map(DISCS.map((item) => [item.id, item]));
+const discUpgradeProfileById = new Map(
+  DISC_UPGRADE_RULES.profiles.map((item) => [item.id, item]),
+);
 const cookieById = new Map(COOKIES.map((item) => [item.id, item]));
 const cookieFragmentById = new Map(
   COOKIE_FRAGMENTS.types.map((item) => [item.id, item]),
@@ -203,6 +211,15 @@ export function getBot(id: string): BotConfig | undefined {
 
 export function getDisc(id: string): DiscConfig | undefined {
   return discById.get(id);
+}
+
+export function getDiscUpgradeProfile(disc: DiscConfig): DiscUpgradeProfileConfig {
+  const profileId = disc.upgradeProfileId ?? DISC_UPGRADE_RULES.defaultProfileId;
+  return requireConfig(
+    discUpgradeProfileById.get(profileId),
+    'DISC_UPGRADE_RULES.profiles.id',
+    profileId,
+  );
 }
 
 export function getCookie(id: string): CookieConfig {

@@ -24,6 +24,7 @@ import { GameButton } from '../components/GameButton';
 import { Panel } from '../components/Panel';
 import {
   COOKIE_CRITICAL,
+  CLICKER_ROBOTS,
   COOKIE_FRAGMENTS,
   COOKIE_PITY,
   COOKIE_SUPER_CRITICAL,
@@ -38,6 +39,7 @@ const icons: Record<string, React.ComponentProps<typeof MaterialCommunityIcons>[
   electricFragmentChance: 'lightning-bolt',
   autoProduction: 'clock-fast',
   cookieHealth: 'shield-home',
+  clickerRobot: 'robot-industrial',
 };
 
 function formatPityLimit(chanceUnits: number, probabilityScale: number): string {
@@ -50,6 +52,17 @@ function formatUpgradeValue(
   upgrade: UpgradeConfig,
   level: UpgradeLevelConfig,
 ): string {
+  if (upgrade.id === CLICKER_ROBOTS.upgradeId) {
+    const robotCount = Math.min(level.value, CLICKER_ROBOTS.maximumRobotCount);
+    const postCapLevel = Math.max(0, level.value - CLICKER_ROBOTS.maximumRobotCount);
+    const clicksPerSecond = CLICKER_ROBOTS.baseClicksPerSecondPerRobot
+      + postCapLevel * CLICKER_ROBOTS.clicksPerSecondIncreasePerPostCapLevel;
+    const powerPercent = CLICKER_ROBOTS.basePowerPercent
+      + postCapLevel * CLICKER_ROBOTS.powerPercentIncreasePerPostCapLevel;
+    return postCapLevel > 0
+      ? `${formatNumber(robotCount)}대 · 각 ${formatNumber(clicksPerSecond)}회/초 · 힘 ${formatNumber(powerPercent)}%`
+      : `${formatNumber(robotCount)}대 · 각 ${formatNumber(clicksPerSecond)}회/초`;
+  }
   const fragment = COOKIE_FRAGMENTS.types.find((item) => item.upgradeId === upgrade.id);
   if (fragment) {
     const stats = calculateCookieFragmentStatsForLevel(
@@ -83,7 +96,7 @@ export function UpgradeScreen() {
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <Text style={styles.help}>쿠키를 사용해서 더 강해져요!</Text>
-      <Text style={styles.levelHelp}>화면의 7가지 강화가 모두 쿠키 진화 레벨에 포함돼요.</Text>
+      <Text style={styles.levelHelp}>화면의 8가지 강화가 모두 쿠키 진화 레벨에 포함돼요.</Text>
       {sortedUpgrades.map((progress) => {
         const { config: upgrade, current, next, affordable } = progress;
         const handleUpgrade = () => {

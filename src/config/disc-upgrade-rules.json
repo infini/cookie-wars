@@ -1,8 +1,27 @@
 {
-  "damageGrowthMultiplier": 1.12,
-  "sizeIncreasePerLevel": 1,
-  "speedIncreasePerLevel": 8,
-  "cooldownReductionMsPerLevel": 10,
-  "minimumCooldownMs": 250,
-  "costGrowthMultiplier": 1.2
+  "defaultProfileId": "standard",
+  "profiles": [
+    {
+      "id": "standard",
+      "damageGrowthMode": "multiplier",
+      "damageGrowthMultiplier": 1.12,
+      "damageIncreasePerLevel": 0,
+      "sizeIncreasePerLevel": 1,
+      "speedIncreasePerLevel": 8,
+      "cooldownReductionMsPerLevel": 10,
+      "minimumCooldownMs": 250,
+      "costGrowthMultiplier": 1.2
+    },
+    {
+      "id": "supernova-linear",
+      "damageGrowthMode": "linear",
+      "damageGrowthMultiplier": 1,
+      "damageIncreasePerLevel": 10000000,
+      "sizeIncreasePerLevel": 2,
+      "speedIncreasePerLevel": 10,
+      "cooldownReductionMsPerLevel": 8,
+      "minimumCooldownMs": 250,
+      "costGrowthMultiplier": 1.5
+    }
+  ]
 }

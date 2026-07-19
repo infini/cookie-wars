@@ -1,0 +1,40 @@
+{
+  "upgradeId": "clickerRobot",
+  "maximumRobotCount": 28,
+  "quadrantCount": 4,
+  "robotsPerQuadrant": 7,
+  "baseClicksPerSecondPerRobot": 5,
+  "clicksPerSecondIncreasePerPostCapLevel": 1,
+  "basePowerPercent": 100,
+  "powerPercentIncreasePerPostCapLevel": 25,
+  "productionIntervalMs": 1000,
+  "sound": {
+    "minimumIntervalMs": 200,
+    "volumeMultiplier": 0.34
+  },
+  "formation": {
+    "stageSizePixels": 358,
+    "orbitRadiusPixels": 160,
+    "robotSizePixels": 34,
+    "hammerSizePixels": 25,
+    "hammerOffsetXPixels": 19,
+    "hammerOffsetYPixels": 2,
+    "hammerRaisedDegrees": -38,
+    "hammerStrikeDegrees": 24,
+    "strikeProgress": 0.42,
+    "bodyRecoilPixels": 2,
+    "minimumVisualCycleMs": 80
+  },
+  "flyingFragmentCollector": {
+    "freeCount": 1,
+    "robotSizePixels": 54,
+    "homeOffsetXPixels": -142,
+    "homeOffsetYPixels": -164,
+    "dispatchDelayMs": 180,
+    "travelDurationMs": 920,
+    "returnDurationMs": 520,
+    "hoverDistancePixels": 5,
+    "hoverDurationMs": 620,
+    "propellerSizePixels": 30
+  }
+}

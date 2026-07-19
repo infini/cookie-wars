@@ -248,6 +248,9 @@ export function validateDiscs(value: unknown): UnknownRecord[] {
   discs.forEach((disc, index) => {
     const itemPath = `${path}[${index}]`;
     validateStringFields(disc, itemPath, ['name', 'description']);
+    if (disc.upgradeProfileId !== undefined) {
+      validateStringFields(disc, itemPath, ['upgradeProfileId']);
+    }
     numberField(disc, 'purchaseCost', itemPath, { integer: true, min: 0 });
     const levelsPath = `${itemPath}.levels`;
     const levels = validateLevelRows(disc.levels, levelsPath, [
@@ -265,11 +268,31 @@ export function validateDiscs(value: unknown): UnknownRecord[] {
 export function validateDiscUpgradeRules(value: unknown): void {
   const path = 'DISC_UPGRADE_RULES';
   const config = record(value, path);
-  validateNumberFields(config, path, [
-    'damageGrowthMultiplier', 'costGrowthMultiplier',
-  ], { min: 0 });
-  validateNumberFields(config, path, [
-    'sizeIncreasePerLevel', 'speedIncreasePerLevel', 'cooldownReductionMsPerLevel',
-  ], { integer: true, min: 0 });
-  validatePositiveNumberFields(config, path, ['minimumCooldownMs'], { integer: true });
+  validateStringFields(config, path, ['defaultProfileId']);
+  const profiles = validateIdTable(config.profiles, `${path}.profiles`);
+  profiles.forEach((profile, index) => {
+    const profilePath = `${path}.profiles[${index}]`;
+    validateStringFields(profile, profilePath, ['damageGrowthMode']);
+    if (!['multiplier', 'linear'].includes(profile.damageGrowthMode as string)) {
+      throw new ConfigValidationError(
+        `${profilePath}.damageGrowthMode`,
+        'multiplier 또는 linear여야 합니다.',
+      );
+    }
+    validateNumberFields(profile, profilePath, [
+      'damageGrowthMultiplier', 'costGrowthMultiplier',
+    ], { min: 0 });
+    validateNumberFields(profile, profilePath, [
+      'damageIncreasePerLevel',
+      'sizeIncreasePerLevel',
+      'speedIncreasePerLevel',
+      'cooldownReductionMsPerLevel',
+    ], { integer: true, min: 0 });
+    validatePositiveNumberFields(
+      profile,
+      profilePath,
+      ['minimumCooldownMs'],
+      { integer: true },
+    );
+  });
 }

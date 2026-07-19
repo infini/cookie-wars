@@ -31,6 +31,7 @@ export type GameAction =
   | { type: 'BUY_UPGRADE'; upgradeId: string }
   | { type: 'BUY_DISC'; discId: string }
   | { type: 'UPGRADE_DISC'; discId: string }
+  | { type: 'RESET_DISC'; discId: string }
   | { type: 'EQUIP_DISC'; discId: string }
   | { type: 'BUY_BOT'; botId: string }
   | { type: 'SET_DIFFICULTY'; difficultyId: string }
@@ -117,6 +118,29 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         cookies: saturatingSubtract(state.cookies, progress.next.cost),
         discLevels: { ...state.discLevels, [progress.config.id]: progress.next.level },
+        discUpgradeSpentCookies: {
+          ...state.discUpgradeSpentCookies,
+          [progress.config.id]: saturatingAdd(
+            state.discUpgradeSpentCookies[progress.config.id],
+            progress.next.cost,
+          ),
+        },
+      };
+    }
+    case 'RESET_DISC': {
+      const progress = getDiscProgress(state, action.discId);
+      if (!progress?.resettable) return state;
+      return {
+        ...state,
+        cookies: saturatingAdd(state.cookies, progress.upgradeRefund),
+        discLevels: {
+          ...state.discLevels,
+          [progress.config.id]: progress.config.levels[0].level,
+        },
+        discUpgradeSpentCookies: {
+          ...state.discUpgradeSpentCookies,
+          [progress.config.id]: 0,
+        },
       };
     }
     case 'EQUIP_DISC':

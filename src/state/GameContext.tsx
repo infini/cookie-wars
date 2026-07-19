@@ -14,6 +14,7 @@ import {
 } from './gameReducer';
 import { createProjectedGameDispatcher } from './gameRuntime';
 import { useAutoProduction } from './useAutoProduction';
+import { useClickerRobotProduction } from './useClickerRobotProduction';
 import { GameCommands, useGameCommands } from './useGameCommands';
 import { useGamePersistence } from './useGamePersistence';
 
@@ -38,6 +39,11 @@ export function GameProvider({ children }: PropsWithChildren) {
   useAutoProduction({
     hydrated,
     autoProduction: stats.autoProduction,
+    dispatchProjectedAction,
+  });
+  useClickerRobotProduction({
+    hydrated,
+    cookiesPerSecond: stats.clickerRobotCookiesPerSecond,
     dispatchProjectedAction,
   });
   const commands = useGameCommands(dispatchProjectedAction, stateRef);

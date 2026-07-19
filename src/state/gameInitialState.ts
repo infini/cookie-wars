@@ -26,6 +26,7 @@ export const initialGameState: GameState = {
   legacyCookieEvolutionBonusLevels: 0,
   ownedDiscIds: [],
   discLevels: makeInitialDiscLevels(),
+  discUpgradeSpentCookies: Object.fromEntries(DISCS.map((disc) => [disc.id, 0])),
   selectedDiscId: DISCS[0].id,
   botCounts: makeInitialBotCounts(),
   selectedDifficultyId: DIFFICULTIES[0].id,

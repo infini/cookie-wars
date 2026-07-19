@@ -4,13 +4,14 @@ import {
   BOTS,
   COOKIE_UPGRADES,
   DIFFICULTIES,
-  DISC_UPGRADE_RULES,
   DISCS,
   MONSTERS,
   PROGRESSION,
   SAVE_MIGRATIONS,
+  getDiscUpgradeProfile,
 } from '../src/config';
 import { completeBattleTransition } from '../src/domain/battleCompletion';
+import { getClickerRobotSoundIntervalMs } from '../src/domain/clickerRobotAudio';
 import {
   calculateBotPrice,
   calculateCookieStats,
@@ -20,6 +21,7 @@ import {
   getBattleStageId,
   getDifficultyProgress,
   getDiscProgress,
+  getClickerRobotStats,
   getMaximumCookieRenderSize,
   getSortedUpgradeProgress,
   getUpgradeProgress,
@@ -34,6 +36,7 @@ import {
 } from '../src/state/gameReducer';
 import { createProjectedGameDispatcher } from '../src/state/gameRuntime';
 import { createGameCommands } from '../src/state/useGameCommands';
+import { calculateClickerRobotProductionTick } from '../src/state/useClickerRobotProduction';
 import type { GameState } from '../src/types/game';
 
 function createTestCommands(actions: GameAction[], stateRef: { current: GameState }) {
@@ -624,11 +627,85 @@ describe('게임 저장 상태', () => {
     const upgraded = gameReducer(highLevelState, { type: 'UPGRADE_DISC', discId: disc.id });
     expect(before.next).toBeDefined();
     expect(before.next!.level).toBe(101);
-    expect(before.current.cooldownMs).toBe(DISC_UPGRADE_RULES.minimumCooldownMs);
+    expect(before.current.cooldownMs).toBe(
+      getDiscUpgradeProfile(disc).minimumCooldownMs,
+    );
     expect(before.next!.damage).toBeGreaterThan(before.current.damage);
     expect(before.next!.size).toBeGreaterThan(before.current.size);
     expect(before.next!.speed).toBeGreaterThan(before.current.speed);
     expect(upgraded.discLevels[disc.id]).toBe(101);
+  });
+
+  test('원반 강화 초기화는 구매비를 제외한 실제 강화 비용만 모두 반환한다', () => {
+    const disc = DISCS[0];
+    const firstUpgradeCost = disc.levels[1].cost;
+    const secondUpgradeCost = disc.levels[2].cost;
+    const startingCookies = disc.purchaseCost + firstUpgradeCost + secondUpgradeCost;
+    const purchased = gameReducer(
+      { ...initialGameState, cookies: startingCookies },
+      { type: 'BUY_DISC', discId: disc.id },
+    );
+    const level2 = gameReducer(purchased, { type: 'UPGRADE_DISC', discId: disc.id });
+    const level3 = gameReducer(level2, { type: 'UPGRADE_DISC', discId: disc.id });
+    const reset = gameReducer(level3, { type: 'RESET_DISC', discId: disc.id });
+
+    expect(level3.discUpgradeSpentCookies[disc.id])
+      .toBe(firstUpgradeCost + secondUpgradeCost);
+    expect(reset.cookies).toBe(startingCookies - disc.purchaseCost);
+    expect(reset.ownedDiscIds).toContain(disc.id);
+    expect(reset.discLevels[disc.id]).toBe(disc.levels[0].level);
+    expect(reset.discUpgradeSpentCookies[disc.id]).toBe(0);
+    expect(gameReducer(reset, { type: 'RESET_DISC', discId: disc.id })).toBe(reset);
+  });
+
+  test('기존 저장의 원반 레벨은 강화비 원장을 소급 복원해 초기화할 수 있다', () => {
+    const disc = DISCS[0];
+    const migrated = mergeSavedGame({
+      saveVersion: SAVE_MIGRATIONS.currentSaveVersion - 1,
+      ownedDiscIds: [disc.id],
+      selectedDiscId: disc.id,
+      discLevels: { [disc.id]: 3 },
+    });
+    expect(migrated.discUpgradeSpentCookies[disc.id])
+      .toBe(disc.levels[1].cost + disc.levels[2].cost);
+  });
+
+  test('클릭커 로봇은 28대 이후 수량 대신 속도와 클릭 힘이 성장한다', () => {
+    const atCapState = {
+      ...initialGameState,
+      upgradeLevels: { ...initialGameState.upgradeLevels, clickerRobot: 29 },
+    };
+    const afterCapState = {
+      ...atCapState,
+      upgradeLevels: { ...atCapState.upgradeLevels, clickerRobot: 30 },
+    };
+    const atCap = getClickerRobotStats(atCapState, 100);
+    const afterCap = getClickerRobotStats(afterCapState, 100);
+
+    expect(atCap).toMatchObject({
+      robotCount: 28,
+      postCapLevel: 0,
+      clicksPerSecondPerRobot: 5,
+      totalClicksPerSecond: 140,
+      powerPerHit: 100,
+      cookiesPerSecond: 14_000,
+    });
+    expect(afterCap).toMatchObject({
+      robotCount: 28,
+      postCapLevel: 1,
+      clicksPerSecondPerRobot: 6,
+      totalClicksPerSecond: 168,
+      powerPerHit: 125,
+      cookiesPerSecond: 21_000,
+    });
+    expect(calculateClickerRobotProductionTick(afterCap.cookiesPerSecond)).toBe(21_000);
+  });
+
+  test('클릭커 망치 소리는 기본 속도를 따르되 고속 강화에서도 안전 상한을 지킨다', () => {
+    expect(getClickerRobotSoundIntervalMs(5)).toBe(200);
+    expect(getClickerRobotSoundIntervalMs(6)).toBe(200);
+    expect(getClickerRobotSoundIntervalMs(2)).toBe(500);
+    expect(getClickerRobotSoundIntervalMs(Number.NaN)).toBe(200);
   });
 
   test('이전 단일 원반 저장은 첫 원반의 소유·레벨로 안전하게 이전된다', () => {
@@ -737,13 +814,13 @@ describe('게임 저장 상태', () => {
     },
   );
 
-  test('신규 저장의 쿠키 진화 합계는 화면에 보이는 7종 강화의 기본 레벨을 합산한 7이다', () => {
+  test('신규 저장의 쿠키 진화 합계는 화면에 보이는 8종 강화의 기본 레벨을 합산한 8이다', () => {
     const evolution = getCookieEvolutionProgress(initialGameState);
 
     expect(initialGameState.legacyCookieEvolutionBonusLevels).toBe(0);
-    expect(evolution.visibleUpgradeLevels).toBe(7);
+    expect(evolution.visibleUpgradeLevels).toBe(8);
     expect(evolution.legacyBonusLevels).toBe(0);
-    expect(evolution.totalUpgradeLevels).toBe(7);
+    expect(evolution.totalUpgradeLevels).toBe(8);
     expect(evolution.active.id).toBe('classic-cookie');
   });
 
@@ -758,10 +835,10 @@ describe('게임 저장 상태', () => {
     };
     const evolution = getCookieEvolutionProgress(state);
 
-    expect(evolution.visibleUpgradeLevels).toBe(12);
-    expect(evolution.totalUpgradeLevels).toBe(12);
+    expect(evolution.visibleUpgradeLevels).toBe(13);
+    expect(evolution.totalUpgradeLevels).toBe(13);
     expect(evolution.active.id).toBe('fortune-cookie');
-    expect(evolution.remainingLevels).toBe(3);
+    expect(evolution.remainingLevels).toBe(2);
   });
 
   test('업그레이드 총레벨이 조건에 도달하면 더 좋은 쿠키로 자동 진화한다', () => {
@@ -774,10 +851,10 @@ describe('게임 저장 상태', () => {
     };
     const evolution = getCookieEvolutionProgress(evolvedState);
     const stats = calculateCookieStats(evolvedState);
-    expect(evolution.totalUpgradeLevels).toBe(13);
+    expect(evolution.totalUpgradeLevels).toBe(14);
     expect(evolution.active.id).toBe('fortune-cookie');
-    expect(evolution.remainingLevels).toBe(2);
-    expect(evolution.progressRatio).toBeCloseTo(2 / 3);
+    expect(evolution.remainingLevels).toBe(1);
+    expect(evolution.progressRatio).toBeCloseTo(5 / 6);
     expect(stats.clickPower).toBeGreaterThan(34);
   });
 
@@ -811,7 +888,7 @@ describe('게임 저장 상태', () => {
     expect(blocked).toEqual(funded);
     expect(maximumSize.upgradeLevels.cookieSize).toBe(6);
     expect(maximumEvolution).toEqual(minimumEvolution);
-    expect(maximumEvolution.totalUpgradeLevels).toBe(17);
+    expect(maximumEvolution.totalUpgradeLevels).toBe(18);
     expect(calculateCookieStats(maximumSize).cookieRenderSize)
       .toBe(getMaximumCookieRenderSize());
     expect(getMaximumCookieRenderSize()).toBe(cookieSize.renderMaximumSizePixels);
@@ -823,24 +900,24 @@ describe('게임 저장 상태', () => {
       clickPowerLevel: 1,
       expectedBonus: 0,
       expectedCookieId: 'classic-cookie',
-      expectedRemainingLevels: 2,
-      expectedProgressRatio: 2 / 3,
+      expectedRemainingLevels: 1,
+      expectedProgressRatio: 5 / 6,
     },
     {
       cookieSizeLevel: 3,
       clickPowerLevel: 6,
       expectedBonus: 2,
-      expectedCookieId: 'fortune-cookie',
-      expectedRemainingLevels: 1,
-      expectedProgressRatio: 5 / 6,
+      expectedCookieId: 'donut-cookie',
+      expectedRemainingLevels: 6,
+      expectedProgressRatio: 0,
     },
     {
       cookieSizeLevel: 6,
       clickPowerLevel: 9,
       expectedBonus: 5,
-      expectedCookieId: 'donut-cookie',
-      expectedRemainingLevels: 1,
-      expectedProgressRatio: 5 / 6,
+      expectedCookieId: 'waffle-cookie',
+      expectedRemainingLevels: 6,
+      expectedProgressRatio: 0,
     },
   ])(
     'v7 쿠키 크기 Lv$cookieSizeLevel은 고정 보너스로 한 번만 이전하고 조각 기본 레벨도 반영한다',
@@ -868,8 +945,8 @@ describe('게임 저장 상태', () => {
 
       expect(migrated.saveVersion).toBe(SAVE_MIGRATIONS.currentSaveVersion);
       expect(migrated.legacyCookieEvolutionBonusLevels).toBe(expectedBonus);
-      expect(evolution.visibleUpgradeLevels).toBe(clickPowerLevel + 6);
-      expect(evolution.totalUpgradeLevels).toBe(legacyTotalUpgradeLevels + 3);
+      expect(evolution.visibleUpgradeLevels).toBe(clickPowerLevel + 7);
+      expect(evolution.totalUpgradeLevels).toBe(legacyTotalUpgradeLevels + 4);
       expect(evolution.active.id).toBe(expectedCookieId);
       expect(evolution.remainingLevels).toBe(expectedRemainingLevels);
       expect(evolution.progressRatio).toBeCloseTo(expectedProgressRatio);
@@ -906,9 +983,9 @@ describe('게임 저장 상태', () => {
     };
     const evolution = getCookieEvolutionProgress(midwayState);
 
-    expect(evolution.totalUpgradeLevels).toBe(16);
-    expect(evolution.remainingLevels).toBe(5);
-    expect(evolution.progressRatio).toBeCloseTo(1 / 6);
+    expect(evolution.totalUpgradeLevels).toBe(17);
+    expect(evolution.remainingLevels).toBe(4);
+    expect(evolution.progressRatio).toBeCloseTo(1 / 3);
   });
 
   test('강화 가능 항목을 위에, 완료 항목을 가장 아래에 정렬한다', () => {
@@ -926,6 +1003,7 @@ describe('게임 저장 상태', () => {
       'magmaFragmentChance',
       'cookieSuperCritical',
       'electricFragmentChance',
+      'clickerRobot',
     ]);
     expect(sorted.slice(0, 3).every((item) => item.affordable)).toBe(true);
     expect(sorted[3].affordable).toBe(false);

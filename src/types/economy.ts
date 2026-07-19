@@ -51,16 +51,27 @@ export interface DiscConfig {
   name: string;
   purchaseCost: number;
   description: string;
+  upgradeProfileId?: string;
   levels: DiscLevelConfig[];
 }
 
-export interface DiscUpgradeRulesConfig {
+export type DiscDamageGrowthMode = 'multiplier' | 'linear';
+
+export interface DiscUpgradeProfileConfig {
+  id: string;
+  damageGrowthMode: DiscDamageGrowthMode;
   damageGrowthMultiplier: number;
+  damageIncreasePerLevel: number;
   sizeIncreasePerLevel: number;
   speedIncreasePerLevel: number;
   cooldownReductionMsPerLevel: number;
   minimumCooldownMs: number;
   costGrowthMultiplier: number;
+}
+
+export interface DiscUpgradeRulesConfig {
+  defaultProfileId: string;
+  profiles: DiscUpgradeProfileConfig[];
 }
 
 export interface BotConfig {

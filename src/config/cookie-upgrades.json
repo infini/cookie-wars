@@ -96,6 +96,23 @@
     ]
   },
   {
+    "id": "clickerRobot",
+    "name": "클릭커 로봇",
+    "description": "쿠키 둘레에서 망치질해 자동으로 쿠키를 얻어요. 28대 이후에는 속도와 로봇 클릭 힘이 함께 올라요.",
+    "unit": "대",
+    "countsTowardCookieEvolution": true,
+    "levels": [
+      { "level": 1, "value": 0, "cost": 0 },
+      { "level": 2, "value": 1, "cost": 10000 },
+      { "level": 3, "value": 2, "cost": 25000 },
+      { "level": 4, "value": 3, "cost": 60000 },
+      { "level": 5, "value": 4, "cost": 140000 },
+      { "level": 6, "value": 5, "cost": 320000 },
+      { "level": 7, "value": 6, "cost": 700000 },
+      { "level": 8, "value": 7, "cost": 1500000 }
+    ]
+  },
+  {
     "id": "autoProduction",
     "name": "자동 생산",
     "description": "가만히 있어도 쿠키를 구워요.",

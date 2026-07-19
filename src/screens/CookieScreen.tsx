@@ -103,7 +103,7 @@ export function CookieScreen() {
               </View>
             </View>
             <Text style={styles.levelRule}>
-              강화 화면의 쿠키 관련 7종을 강화할 때마다 진화 레벨이 올라요.
+              강화 화면의 쿠키 관련 8종을 강화할 때마다 진화 레벨이 올라요.
             </Text>
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: `${evolution.progressRatio * 100}%` }]} />

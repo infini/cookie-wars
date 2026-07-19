@@ -19,6 +19,10 @@
     "valueIncreasePerLevel": 25,
     "costGrowthMultiplier": 1.34
   },
+  "clickerRobot": {
+    "valueIncreasePerLevel": 1,
+    "costGrowthMultiplier": 1.36
+  },
   "autoProduction": {
     "valueIncreasePerLevel": 25,
     "costGrowthMultiplier": 1.25

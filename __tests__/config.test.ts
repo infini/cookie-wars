@@ -22,6 +22,7 @@ import {
   COOKIE_SPECIAL_EFFECTS,
   COOKIE_UPGRADES,
   COOKIE_UPGRADE_RULES,
+  CLICKER_ROBOTS,
   COOKIES,
   CONFIG_TABLES,
   ConfigValidationError,
@@ -42,6 +43,7 @@ import {
   getEnemyDisc,
   getEnemyWave,
   getMonster,
+  getDiscUpgradeProfile,
   validateGameConfig,
 } from '../src/config';
 import { getBattleDifficulty } from '../src/domain/gameSelectors';
@@ -182,7 +184,7 @@ describe('데이터 테이블', () => {
   test('진행·음량·상점 값은 데이터 테이블에서 제공한다', () => {
     expect(PROGRESSION.winsToUnlockNextDifficulty).toBe(20);
     expect(PROGRESSION.giantDiscRewardPerFirstClear).toBe(1);
-    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(15);
+    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(16);
     expect(SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion).toBe(8);
     expect(SAVE_MIGRATIONS.battleMedalMigrationVersion).toBe(9);
     expect(SAVE_MIGRATIONS.difficultyExpansionMigrations).toEqual([
@@ -204,7 +206,7 @@ describe('데이터 테이블', () => {
     expect(GIANT_DISC.damageMultiplier).toBe(30);
     expect(GIANT_DISC.renderWidthRatio).toBeGreaterThanOrEqual(1 / 3);
     expect(AUDIO_SETTINGS.levels.map((item) => item.level)).toEqual([1, 2, 3, 4, 5]);
-    expect(DISCS).toHaveLength(5);
+    expect(DISCS).toHaveLength(6);
     expect(BOTS).toHaveLength(5);
     expect(DISCS.every((disc) => disc.purchaseCost > 0)).toBe(true);
     expect(BOTS.every((bot) => bot.baseCost > 0 && bot.costMultiplier >= 1)).toBe(true);
@@ -217,18 +219,42 @@ describe('데이터 테이블', () => {
     expect(DISCS[DISCS.length - 1].levels[0].damage).toBeGreaterThanOrEqual(
       DISCS[0].levels[0].damage * 40,
     );
-    expect(DISC_UPGRADE_RULES.minimumCooldownMs).toBeGreaterThan(0);
+    expect(DISC_UPGRADE_RULES.profiles.every(
+      (profile) => profile.minimumCooldownMs > 0,
+    )).toBe(true);
+    expect(getDiscUpgradeProfile(DISCS.at(-1)!)).toMatchObject({
+      damageGrowthMode: 'linear',
+      damageIncreasePerLevel: 10_000_000,
+    });
+    expect(DISCS.at(-1)).toMatchObject({
+      id: 'supernova-disc',
+      purchaseCost: 5_000_000_000,
+    });
+    expect(DISCS.at(-1)!.levels[0].damage).toBe(300_000_000);
     expect(BATTLE_RULES.botDiscSizeMultiplier).toBeGreaterThan(0);
     expect(BATTLE_RULES.botDiscSizeMultiplier).toBeLessThan(1);
     expect(Object.keys(COOKIE_UPGRADE_RULES).sort()).toEqual([
       'autoProduction',
       'clickPower',
+      'clickerRobot',
       'cookieCritical',
       'cookieHealth',
       'cookieSuperCritical',
       'electricFragmentChance',
       'magmaFragmentChance',
     ]);
+    expect(CLICKER_ROBOTS).toMatchObject({
+      maximumRobotCount: 28,
+      robotsPerQuadrant: 7,
+      baseClicksPerSecondPerRobot: 5,
+    });
+    expect(CLICKER_ROBOTS.maximumRobotCount)
+      .toBe(CLICKER_ROBOTS.robotsPerQuadrant * CLICKER_ROBOTS.quadrantCount);
+    expect(CLICKER_ROBOTS.flyingFragmentCollector.freeCount).toBe(1);
+    expect(CLICKER_ROBOTS.sound).toEqual({
+      minimumIntervalMs: 200,
+      volumeMultiplier: 0.34,
+    });
     expect(COOKIE_UPGRADE_RULES.clickPower.valueIncreasePerLevel).toBe(100);
     expect(
       COOKIE_UPGRADES.find((upgrade) => upgrade.id === 'clickPower')
@@ -252,6 +278,7 @@ describe('데이터 테이블', () => {
       'cookieSuperCritical',
       'magmaFragmentChance',
       'electricFragmentChance',
+      'clickerRobot',
       'autoProduction',
       'cookieHealth',
     ]);
@@ -544,8 +571,8 @@ describe('데이터 테이블 런타임 검증', () => {
     ['DISCS[0].levels[0].cooldownMs', (config) => {
       config.DISCS[0].levels[0].cooldownMs = 0;
     }],
-    ['DISC_UPGRADE_RULES.minimumCooldownMs', (config) => {
-      config.DISC_UPGRADE_RULES.minimumCooldownMs = 0;
+    ['DISC_UPGRADE_RULES.profiles[0].minimumCooldownMs', (config) => {
+      config.DISC_UPGRADE_RULES.profiles[0].minimumCooldownMs = 0;
     }],
     ['ENEMY_DISCS[0].cooldownMs', (config) => {
       config.ENEMY_DISCS[0].cooldownMs = 0;
@@ -615,17 +642,17 @@ describe('데이터 테이블 런타임 검증', () => {
     ['DISCS[0].levels[0].cost', (config) => {
       config.DISCS[0].levels[0].cost = 0.5;
     }],
-    ['DISC_UPGRADE_RULES.sizeIncreasePerLevel', (config) => {
-      config.DISC_UPGRADE_RULES.sizeIncreasePerLevel = 1.5;
+    ['DISC_UPGRADE_RULES.profiles[0].sizeIncreasePerLevel', (config) => {
+      config.DISC_UPGRADE_RULES.profiles[0].sizeIncreasePerLevel = 1.5;
     }],
-    ['DISC_UPGRADE_RULES.speedIncreasePerLevel', (config) => {
-      config.DISC_UPGRADE_RULES.speedIncreasePerLevel = 8.5;
+    ['DISC_UPGRADE_RULES.profiles[0].speedIncreasePerLevel', (config) => {
+      config.DISC_UPGRADE_RULES.profiles[0].speedIncreasePerLevel = 8.5;
     }],
-    ['DISC_UPGRADE_RULES.cooldownReductionMsPerLevel', (config) => {
-      config.DISC_UPGRADE_RULES.cooldownReductionMsPerLevel = 10.5;
+    ['DISC_UPGRADE_RULES.profiles[0].cooldownReductionMsPerLevel', (config) => {
+      config.DISC_UPGRADE_RULES.profiles[0].cooldownReductionMsPerLevel = 10.5;
     }],
-    ['DISC_UPGRADE_RULES.minimumCooldownMs', (config) => {
-      config.DISC_UPGRADE_RULES.minimumCooldownMs = 250.5;
+    ['DISC_UPGRADE_RULES.profiles[0].minimumCooldownMs', (config) => {
+      config.DISC_UPGRADE_RULES.profiles[0].minimumCooldownMs = 250.5;
     }],
     ['ENEMY_DISCS[0].level', (config) => { config.ENEMY_DISCS[0].level = 1.5; }],
     ['ENEMY_DISCS[0].damage', (config) => { config.ENEMY_DISCS[0].damage = 4.5; }],

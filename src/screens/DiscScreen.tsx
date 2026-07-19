@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getDiscOffers, getDiscProgress } from '../domain/gameSelectors';
 import { DiscImage } from '../components/DiscImage';
 import { GameButton } from '../components/GameButton';
@@ -12,7 +12,7 @@ import { fonts } from '../theme/typography';
 import { formatNumber, formatSeconds } from '../utils/format';
 
 export function DiscScreen() {
-  const { state, buyDisc, upgradeDisc, equipDisc } = useGame();
+  const { state, buyDisc, upgradeDisc, resetDisc, equipDisc } = useGame();
   const feedback = useFeedback();
   const discOffers = getDiscOffers(state);
   const selectedDisc = getDiscProgress(state);
@@ -41,6 +41,20 @@ export function DiscScreen() {
 
       {discOffers.map((disc) => {
         const { current, next } = disc;
+        const confirmReset = () => {
+          Alert.alert(
+            `${disc.config.name} 강화 초기화`,
+            `구매한 원반은 그대로 보유하고 Lv.1로 돌아갑니다. 강화에 사용한 쿠키 ${formatNumber(disc.upgradeRefund)}개를 모두 돌려받을까요?`,
+            [
+              { text: '취소', style: 'cancel' },
+              {
+                text: '초기화하고 반환받기',
+                style: 'destructive',
+                onPress: () => resultFeedback(resetDisc(disc.config.id)),
+              },
+            ],
+          );
+        };
         return (
         <Panel key={disc.config.id} style={[styles.offerCard, disc.selected && styles.selectedOffer]}>
           <View style={styles.sectionHeader}>
@@ -103,6 +117,15 @@ export function DiscScreen() {
               />
             ) : null}
           </View>
+          {disc.resettable ? (
+            <GameButton
+              title={`강화 초기화 · 🍪 ${formatNumber(disc.upgradeRefund)} 반환`}
+              onPress={confirmReset}
+              variant="red"
+              compact
+              style={styles.resetButton}
+            />
+          ) : null}
         </Panel>
         );
       })}
@@ -146,6 +169,7 @@ const styles = StyleSheet.create({
   nextText: { fontFamily: fonts.bold, fontSize: 10, color: colors.purple, textAlign: 'center' },
   offerButtons: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   offerButton: { flex: 1 },
+  resetButton: { marginTop: 7 },
   rules: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', paddingHorizontal: 8 },
   rulesText: { flex: 1, fontFamily: fonts.medium, fontSize: 10, lineHeight: 16, color: colors.muted },
 });

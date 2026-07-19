@@ -6,7 +6,7 @@
 
 `src/navigation/navigation.json`이 대분류 순서, 소분류 소속, 한국어 라벨, 아이콘, 화면 제목, 기본 leaf와 몬스터 NEW 배지 출처를 관리합니다. `navigation/model.ts`는 중복 ID, 누락 화면, 잘못된 부모·기본 leaf 참조를 시작 시 검증하고 기본/기억 화면 선택과 배지 상향을 순수 함수로 제공합니다. `ScreenLayout`은 공통 상단 정보와 설정, 자식이 둘 이상일 때만 나타나는 `SubmenuNav`, 5개 대분류 `BottomNav`를 조합합니다. `TopBar`는 게임 화면에서 부제·잔액 대신 현재 진화 쿠키 이름을 표시하고 다른 화면에서는 기존 화면 제목·잔액을 유지합니다. 게임·대결·전투에는 소메뉴 네이티브 뷰 자체가 생기지 않아 콘텐츠 영역을 유지합니다.
 
-`GameScreen`은 두 통계 카드 아래의 중앙 영역 전체를 하나의 쿠키 획득 `Pressable`로 사용합니다. 별도 전투 이동 버튼을 제거해 공통 하단 `전투` 메뉴만 이동 책임을 가지며, 다음 진화까지 남은 강화 수와 진행 막대는 중앙 쿠키 위에 간결하게 둡니다. 하단은 전투 훈장·자동 생산·클릭 획득과 두 줄 희귀 보상 아이콘만 조합합니다. `useImmediateCookiePress`는 터치 시작에 즉시 보상을 주고 같은 터치의 후속 `onPress`만 제거하며, 접근성 서비스처럼 `onPress`만 보내는 입력은 그대로 처리합니다. hit slop·이동 허용 범위·중복 제거 시간은 `cookie-input.json`에서 읽습니다. 획득 텍스트는 `screens/game/CookieGainFeedback`, 네 희귀 연출의 독립 수명은 `CookieSpecialFeedback`, 5초 조각 수명과 중복 수령 방지는 `useCookieFragmentCollection`로 분리했습니다. 네 희귀 보상은 공통 `CookieAnimatedSpecialEffect`에서 Android 네이티브 animated WebP로 재생하며 모두 중앙에 배치합니다. 다른 종류는 서로 겹치고 같은 종류만 새 ID로 교체되며, 슈퍼 크리티컬일 때만 별도 native-driver 값으로 쿠키 무대를 짧게 흔듭니다. 조각 `Pressable`은 메인 쿠키와 형제인 투명 오버레이에 있으므로 획득 터치가 기본 클릭으로 전파되지 않습니다.
+`GameScreen`은 두 통계 카드 아래의 중앙 영역 전체를 하나의 쿠키 획득 `Pressable`로 사용합니다. 별도 전투 이동 버튼을 제거해 공통 하단 `전투` 메뉴만 이동 책임을 가지며, 다음 진화까지 남은 강화 수와 진행 막대는 중앙 쿠키 위에 간결하게 둡니다. 하단은 전투 훈장·자동 생산·클릭 획득·클릭커 상태와 두 줄 희귀 보상 아이콘을 조합합니다. `ClickerRobotFormation`은 최대 28개 슬롯만 표시하되 공용 native-driver 망치 값 하나를 사용하고, `useClickerRobotProduction`은 모든 로봇 생산량을 한 틱으로 합산합니다. `useClickerRobotAudio`는 메인 화면이 활성일 때만 Kenney 목재 타격음 3개 보이스를 순환하고 데이터의 최소 간격·상대 음량과 전역 효과음 설정을 적용합니다. `FlyingFragmentCollector`는 무료 1대의 대기·조각 추적·귀환만 표현하고 실제 보상은 기존 `claimCookieFragment` 명령을 재사용하므로 중복 지급 경로를 만들지 않습니다. `useImmediateCookiePress`는 터치 시작에 즉시 보상을 주고 같은 터치의 후속 `onPress`만 제거하며, 접근성 서비스처럼 `onPress`만 보내는 입력은 그대로 처리합니다. hit slop·이동 허용 범위·중복 제거 시간은 `cookie-input.json`에서 읽습니다. 획득 텍스트는 `screens/game/CookieGainFeedback`, 네 희귀 연출의 독립 수명은 `CookieSpecialFeedback`, 5초 조각 수명과 중복 수령 방지는 `useCookieFragmentCollection`로 분리했습니다. 네 희귀 보상은 공통 `CookieAnimatedSpecialEffect`에서 Android 네이티브 animated WebP로 재생하며 모두 중앙에 배치합니다. 다른 종류는 서로 겹치고 같은 종류만 새 ID로 교체되며, 슈퍼 크리티컬일 때만 별도 native-driver 값으로 쿠키 무대를 짧게 흔듭니다. 조각 `Pressable`은 메인 쿠키와 형제인 투명 오버레이에 있으므로 획득 터치가 기본 클릭으로 전파되지 않습니다.
 
 `MiniGameScreen`은 저장 통화와 분리된 로컬 UI 상태만 사용합니다. `domain/miniGame.ts`가 10초 단위 시간 변경, A→인계→B 단계 전이와 승자 판정을 순수 함수로 제공하고, `useMiniGamePhaseTimer`는 종료 시각을 `Date.now()`로 고정해 렌더 지연이나 앱 일시 정지 뒤에도 클릭 허용 경계를 정확히 유지합니다. A와 B는 같은 선택 시간을 사용하며 B 종료 뒤에만 두 기록과 승자를 함께 표시합니다.
 
@@ -44,10 +44,11 @@ services/storage          engine/useBattleEngine
 
 - `difficulties.json`: 한 마리 보스의 HP·공격 배율, 이동 속도, 적 원반 레벨
 - `enemy-discs.json`: 난이도별 적 원반 능력치
-- `discs.json`: 능력 격차가 큰 5종 원반 구매·초기 레벨 데이터
-- `disc-upgrade-rules.json`: 초기 레벨 이후 무한 강화 성장식과 최소 쿨타임
+- `discs.json`: 능력 격차가 큰 6종 원반 구매·초기 레벨·강화 프로필 참조
+- `disc-upgrade-rules.json`: 곱셈/고정 증가 프로필별 무한 강화 성장식과 최소 쿨타임
 - `cookie-upgrades.json`: 클릭 힘·일반/슈퍼 크리티컬·자동 생산·쿠키 성 체력과 비활성 호환용 쿠키 크기 레벨 및 진화 기여 여부
-- `cookie-upgrade-rules.json`: 표시되는 일곱 활성 강화의 명시 레벨 이후 무한 성장
+- `cookie-upgrade-rules.json`: 표시되는 여덟 활성 강화의 명시 레벨 이후 무한 성장
+- `clicker-robots.json`: 28대·4구역 편성, 자동 클릭 속도·힘, 공용 망치와 무료 조각 수집 로봇 이동
 - `cookie-critical.json`: 크리티컬 확률 단위·50% 상한·기본 10배·레벨당 배수
 - `cookie-super-critical.json`: 슈퍼 크리티컬 확률 단위·10% 상한·기본 100배·레벨당 배수
 - `cookie-fragments.json`: 두 쿠키 조각의 강화 연결·기본/레벨당 확률과 배수·5초 수명·등장/획득/음향 연출
@@ -86,7 +87,7 @@ services/storage          engine/useBattleEngine
 
 `types/game.ts`도 기존 import를 보존하는 얇은 타입 파사드입니다. 실제 계약은 오디오, 전투 표현, 전투 규칙, 전투 콘텐츠, 성장·상점, 저장 상태, 내비게이션, 시스템 설정 모듈로 나뉩니다. 하위 타입 모듈은 파사드를 역참조하지 않고 저장 상태가 음량 타입만 읽는 한 방향 의존을 유지합니다. 새 설정 필드를 추가할 때는 해당 영역 타입만 변경하고 파사드에서 공개 여부를 결정합니다.
 
-쿠키 진화 종류는 별도로 저장하지 않고 `countsTowardCookieEvolution: true`인 업그레이드의 현재 레벨 합계에 저장된 `legacyCookieEvolutionBonusLevels`를 더해 매번 계산합니다. 강화 화면에 보이는 7종 전체가 기여해 새 게임의 기본 합계가 7이며, 이미 저장된 슈퍼·두 조각 단계도 같은 selector가 읽으므로 별도 마이그레이션 없이 즉시 소급됩니다. 숨김 `cookieSize`만 `false`입니다. `cookies.json`에서 요구 총레벨 이하인 가장 높은 쿠키가 자동 활성화되며 해당 행의 클릭·자동 생산·쿠키 성 체력 배율이 최종 능력치에 적용됩니다. 메인 화면은 현재 진화 레벨·현재 쿠키 이름과 다음 진화의 남은 강화 수·구간 진행률을 표시하고, `CookieScreen`은 다음 쿠키 이름·필요 레벨과 전체 도감을 보여 줍니다. 쿠키 이미지는 `cookieSize`의 최고 비율과 JSON의 280px 상한으로 계산한 확대된 최대 크기에 고정합니다.
+쿠키 진화 종류는 별도로 저장하지 않고 `countsTowardCookieEvolution: true`인 업그레이드의 현재 레벨 합계에 저장된 `legacyCookieEvolutionBonusLevels`를 더해 매번 계산합니다. 강화 화면에 보이는 8종 전체가 기여해 새 게임의 기본 합계가 8이며, 기존 저장에는 클릭커 Lv.1을 채우고 이미 저장된 다른 단계도 같은 selector가 즉시 소급합니다. 숨김 `cookieSize`만 `false`입니다. `cookies.json`에서 요구 총레벨 이하인 가장 높은 쿠키가 자동 활성화되며 해당 행의 클릭·자동 생산·쿠키 성 체력 배율이 최종 능력치에 적용됩니다. 메인 화면은 현재 진화 레벨·현재 쿠키 이름과 다음 진화의 남은 강화 수·구간 진행률을 표시하고, `CookieScreen`은 다음 쿠키 이름·필요 레벨과 전체 도감을 보여 줍니다. 쿠키 이미지는 `cookieSize`의 최고 비율과 JSON의 280px 상한으로 계산한 확대된 최대 크기에 고정합니다.
 
 쿠키 도감은 `FlatList`로 가상화해 80종의 고해상도 이미지를 한꺼번에 마운트하지 않습니다. `assetRegistry.test.ts`는 쿠키·전장·보스·봇·외부 VFX의 모든 이미지 키를 각 정적 `require` 레지스트리와 대조합니다. `validateCookies`는 세 공통 배율의 동일성과 진화 순서에 따른 단조 증가를, `validateCookieExpansion`은 51~80단계의 시작 레벨·12레벨 간격·단계당 ×1.10 반올림을 강제합니다. 쿠키 런타임 이미지는 APK 용량을 억제하도록 투명 WebP를 정적 번들합니다.
 
@@ -106,7 +107,7 @@ services/storage          engine/useBattleEngine
 
 전투 승리 시 `completeBattleTransition`이 난이도 진행 단계와 `rewardClaimedStageIds`의 `난이도ID:전투번호` 키를 함께 확인합니다. 새 스테이지로 진행되는 승리는 `battle-rewards.json`에 따라 전투 훈장 1개를 `battleMedals`에 더하고, 진행 단계가 오르면서 해당 키도 없을 때 거대 원반 1개를 지급합니다. 난이도 진행도를 보상 판정의 우선 기준으로 삼으므로 이미 20승을 완료한 전투는 보상 키가 손상되어 누락됐더라도 재승리 보상이 0입니다. 20번째 최초 승리에서는 `highestUnlockedDifficultyIndex`와 `selectedDifficultyId`를 같은 순수 전이에서 다음 난이도로 올립니다. 결과 모달이 다시 렌더된 뒤 `다음 전투`는 새 선택값의 승리 수 0을 읽어 1번째 전투를 시작하며, 다음 난이도가 없는 `black sun extreme god`만 현재 선택을 유지합니다. 전투 승리는 현재 쿠키나 누적 쿠키를 직접 변경하지 않습니다. `difficultyWinCounts`는 난이도별 진행 단계, `clearedDifficultyIds`는 최소 한 번 승리한 기록, `highestUnlockedDifficultyIndex`는 순차 해금에 사용합니다. 재도전, 보상, 해금이 서로 독립된 상태입니다.
 
-저장 버전은 `save-migrations.json`의 `currentSaveVersion`에서 읽습니다. v7 이하 저장은 테이블에 고정한 레거시 ID `cookieSize`의 유효 레벨에서 기본 Lv.1을 뺀 값을 `legacyCookieEvolutionBonusLevels`로 한 번만 이전하고 v8 규칙을 거칩니다. 현재 강화 목록을 순회하지 않으므로 향후 `cookieSize` 행을 제거해도 v7 직행 업데이트가 달라지지 않습니다. v11의 슈퍼 크리티컬과 v12의 마그마·전기 조각 강화는 누락 시 Lv.1로 정규화합니다. v13은 네 실패 횟수 `cookiePityMisses`를 추가하며 이전 저장은 0, 손상 값은 음이 아닌 안전 정수로 복구합니다. 난이도 확장 이전은 `difficultyExpansionMigrations` 배열을 순서대로 평가해 v14에서 기존 15개 완료 저장을 Blood Moon, v15에서 기존 30개 완료 저장을 Black Sun 첫 난이도로 한 번 연결합니다. 화면에 보이는 7종 단계는 진화 합계에 그대로 들어가 기존 강화가 자동 소급되며, 새 게임의 진화 기본 합계는 7이고 쿠키 크기만 기여 플래그가 `false`입니다.
+저장 버전은 `save-migrations.json`의 `currentSaveVersion`에서 읽습니다. v7 이하 저장은 테이블에 고정한 레거시 ID `cookieSize`의 유효 레벨에서 기본 Lv.1을 뺀 값을 `legacyCookieEvolutionBonusLevels`로 한 번만 이전하고 v8 규칙을 거칩니다. 현재 강화 목록을 순회하지 않으므로 향후 `cookieSize` 행을 제거해도 v7 직행 업데이트가 달라지지 않습니다. v11의 슈퍼 크리티컬과 v12의 마그마·전기 조각 강화는 누락 시 Lv.1로 정규화합니다. v13은 네 실패 횟수 `cookiePityMisses`를 추가하며 이전 저장은 0, 손상 값은 음이 아닌 안전 정수로 복구합니다. 난이도 확장 이전은 `difficultyExpansionMigrations` 배열을 순서대로 평가해 v14에서 기존 15개 완료 저장을 Blood Moon, v15에서 기존 30개 완료 저장을 Black Sun 첫 난이도로 한 번 연결합니다. v16은 `discUpgradeSpentCookies` 원장을 추가하며 이전 저장은 원반별 현재 레벨까지의 테이블 가격을 안전 정수로 합산합니다. 화면에 보이는 8종 단계는 진화 합계에 그대로 들어가 기존 강화가 자동 소급되며, 새 게임의 진화 기본 합계는 8이고 쿠키 크기만 기여 플래그가 `false`입니다.
 
 v10 상태에는 X1·X2·X3 중 선택한 `battleSpeedMultiplier`를 저장합니다. 이전 저장처럼 값이 없거나 허용 목록 밖·비유한 값이면 `battle-rules.json`의 기본 X1로 복구합니다. 쿠키 크리티컬은 기존 `upgradeLevels` 맵을 그대로 사용하므로 이전 저장에 키가 없으면 `cookie-upgrades.json`의 Lv.1로 초기화되고 이후 강화 단계가 일반 강화와 같은 경로로 저장됩니다.
 
@@ -114,7 +115,7 @@ v8 이하 저장은 정규화된 `difficultyWinCounts`를 모두 합산하고 `b
 
 `giantDiscCount`는 이전 저장에 없으면 0으로 초기화하고 이후 획득·사용량을 영구 저장합니다. 이전 버전의 난이도 단위 보상 기록은 해당 난이도의 1번 전투 보상 키로 이전하므로 이미 보상을 받은 전투에서 거대 원반이 중복 지급되지 않습니다. 이전 단일 `discOwned`와 `discLevel`은 첫 번째 원반의 소유 여부와 레벨로 이전합니다. 10종 시절 제거된 원반의 소유·선택·레벨은 대응되는 현재 원반에 합치며 둘 다 레벨이 있으면 더 높은 값을 보존합니다. 제거된 쿠키봇 수량도 대응되는 현재 봇 수량에 더합니다. 이전 몬스터 ID도 새 다등급 몬스터 ID로 바꾸고 존재하지 않는 몬스터 ID는 제거합니다. 기존 `clearedDifficultyIds`는 해당 난이도 1승으로 이전하며, 새 20승 규칙에 맞춰 실제 해금 인덱스를 다시 계산합니다. 존재하지 않거나 잠긴 난이도가 선택되어 있으면 가장 높은 사용 가능 난이도로 안전하게 복구합니다.
 
-현재 앱보다 높은 양의 안전 정수 `saveVersion`만 다운그레이드 상황으로 간주합니다. 알려진 필드만 메모리에서 정규화해 실행하되 오프라인 생산을 정산하거나 AsyncStorage에 다시 저장하지 않는 읽기 전용 호환 모드로 두어, 최신 앱이 만든 원본 저장을 구버전이 덮어쓰지 않습니다. 소수나 비안전 정수처럼 손상된 버전 값은 미래 저장으로 오인하지 않고 현재 v15의 저장 가능한 상태로 복구합니다.
+현재 앱보다 높은 양의 안전 정수 `saveVersion`만 다운그레이드 상황으로 간주합니다. 알려진 필드만 메모리에서 정규화해 실행하되 오프라인 생산을 정산하거나 AsyncStorage에 다시 저장하지 않는 읽기 전용 호환 모드로 두어, 최신 앱이 만든 원본 저장을 구버전이 덮어쓰지 않습니다. 소수나 비안전 정수처럼 손상된 버전 값은 미래 저장으로 오인하지 않고 현재 v16의 저장 가능한 상태로 복구합니다.
 
 ## 전투 엔진
 

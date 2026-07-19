@@ -71,7 +71,7 @@
 - `levels[].value`: 해당 단계의 실제 능력치
 - `levels[].cost`: 그 단계로 올라갈 때 소모할 쿠키. 첫 단계는 기본 보유이므로 0
 
-`cookie-upgrade-rules.json`에 ID가 있는 항목은 명시 레벨 뒤의 능력치와 가격도 데이터로 생성합니다. 화면에 보이는 클릭 힘(`clickPower`), 쿠키 크리티컬(`cookieCritical`), 쿠키 슈퍼 크리티컬(`cookieSuperCritical`), 마그마·전기 조각, 자동 생산(`autoProduction`), 쿠키 성 체력(`cookieHealth`) 7종은 모두 최고 레벨이 없습니다. 네 희귀 보상은 발동 확률만 각 상한에서 멈추고 획득 배수와 강화 단계는 계속 성장합니다.
+`cookie-upgrade-rules.json`에 ID가 있는 항목은 명시 레벨 뒤의 능력치와 가격도 데이터로 생성합니다. 화면에 보이는 클릭 힘(`clickPower`), 쿠키 크리티컬(`cookieCritical`), 쿠키 슈퍼 크리티컬(`cookieSuperCritical`), 마그마·전기 조각, 클릭커 로봇(`clickerRobot`), 자동 생산(`autoProduction`), 쿠키 성 체력(`cookieHealth`) 8종은 모두 최고 레벨이 없습니다. 네 희귀 보상은 발동 확률만 각 상한에서 멈추고 획득 배수와 강화 단계는 계속 성장합니다.
 
 - `valueIncreasePerLevel`: 이후 한 레벨마다 증가하는 능력치
 - `costGrowthMultiplier`: 이후 강화 비용 증가 배율
@@ -82,7 +82,21 @@
 
 `mini-game.json`은 A·B 순차 쿠키 클릭 대결만 제어합니다. 현재 제한 시간은 최소 10초, 최대 60초, 기본 30초이며 `durationStepSeconds: 10` 단위로만 바꿉니다. A 카운트다운·플레이가 끝난 뒤 인계 화면을 거쳐 B가 정확히 같은 시간으로 플레이하고, B 종료 뒤 A·B 기록과 승자 또는 무승부를 표시합니다. 점수는 화면 로컬 상태이며 보유 쿠키·평생 쿠키·강화·저장 데이터에 합산하지 않습니다. `timerRefreshIntervalMs`, 쿠키 크기, 눌림 배율·시간과 복귀 스프링 속도·탄성도 같은 테이블에서 관리합니다.
 
-강화 화면에 보이는 클릭 힘(`clickPower`), 일반·슈퍼 크리티컬, 마그마·전기 조각, 자동 생산, 쿠키 성 체력 7종은 모두 `countsTowardCookieEvolution: true`입니다. 일곱 기여 강화가 모두 Lv.1인 새 게임의 진화 기여 합계는 7이며, 기존 저장도 이미 올린 슈퍼·두 조각 레벨 전체가 다음 실행부터 자동 합산됩니다. 쿠키 크기(`cookieSize`)만 `false`이며 `enabled: false`, `visible: false`인 호환·렌더 기준용 데이터로 남아 강화 화면에서 숨기고 새로 구매할 수 없습니다.
+강화 화면에 보이는 클릭 힘(`clickPower`), 일반·슈퍼 크리티컬, 마그마·전기 조각, 클릭커 로봇, 자동 생산, 쿠키 성 체력 8종은 모두 `countsTowardCookieEvolution: true`입니다. 여덟 기여 강화가 모두 Lv.1인 새 게임의 진화 기여 합계는 8이며, 기존 저장은 새 클릭커 로봇을 Lv.1·0대로 채우고 이미 올린 다른 강화 레벨을 그대로 합산합니다. 쿠키 크기(`cookieSize`)만 `false`이며 `enabled: false`, `visible: false`인 호환·렌더 기준용 데이터로 남아 강화 화면에서 숨기고 새로 구매할 수 없습니다.
+
+### `clicker-robots.json`
+
+- `upgradeId`: `cookie-upgrades.json`의 클릭커 강화 ID
+- `maximumRobotCount`, `quadrantCount`, `robotsPerQuadrant`: 현재 총 28대, 4구역마다 7대인 원형 편성 상한
+- `baseClicksPerSecondPerRobot`: 로봇 한 대의 기본 초당 망치질 횟수. 현재 5
+- `clicksPerSecondIncreasePerPostCapLevel`: 28대 이후 강화당 한 대의 초당 클릭 증가량
+- `basePowerPercent`, `powerPercentIncreasePerPostCapLevel`: 로봇 1회 공격이 현재 플레이어 클릭 힘에서 차지하는 비율과 28대 이후 강화 증가량
+- `productionIntervalMs`: 여러 로봇의 생산을 합산해 상태에 반영하는 주기
+- `sound.minimumIntervalMs`, `sound.volumeMultiplier`: 여러 로봇의 타격음을 한 리듬으로 합칠 최소 간격과 전역 볼륨 대비 상대 음량
+- `formation.*`: 28개 슬롯의 반경·크기와 공용 망치 동작
+- `flyingFragmentCollector.*`: 무료 수량, 대기 위치, 출동·귀환 시간과 프로펠러 표현
+
+Lv.1은 0대이고 Lv.2부터 한 단계마다 한 대가 추가되어 Lv.29에서 28대가 됩니다. Lv.30부터 수량은 유지하고 초당 클릭과 로봇 클릭 힘을 함께 올립니다. 28개 개별 타이머를 만들지 않고 공용 망치 애니메이션 하나와 합산 생산 틱 하나를 사용합니다. 클릭커 생산은 일반 쿠키만 만들며 크리티컬·조각 발견 판정을 반복하지 않습니다. 망치 소리는 로봇별로 중첩하지 않고 3개 보이스를 순환하는 한 리듬으로 합치며, 기본 5회/초보다 빨라져도 `minimumIntervalMs` 200ms를 지켜 초당 5회를 넘지 않습니다. 무료 플라잉 클릭커 1대는 수동 클릭으로 발견된 마그마·전기 조각만 자동 수집합니다.
 
 업그레이드 화면은 `visible`인 항목만 대상으로 현재 쿠키 잔액으로 바로 살 수 있는 항목을 첫 그룹, 다음 단계는 있지만 쿠키가 부족한 항목을 두 번째 그룹, `next`가 없는 강화 완료 항목을 마지막 그룹에 둡니다. 같은 그룹에서는 다음 강화 비용이 낮은 항목부터, 비용이 같으면 이 JSON 배열 순서대로 안정 정렬합니다. 잔액이나 레벨이 바뀔 때 selector가 다시 계산합니다.
 
@@ -178,21 +192,25 @@
 ### `discs.json`과 무한 강화
 
 - `purchaseCost`: 원반 최초 영구 구매 가격
+- `upgradeProfileId`: 명시 레벨 이후 적용할 `disc-upgrade-rules.json` 프로필. 없으면 기본 프로필
 - `levels[].damage`, `size`, `speed`, `cooldownMs`: 레벨별 전투 능력치
 - `levels[].cost`: 해당 레벨로 강화하는 가격. Lv.1은 구매 직후 단계라 0
 
 각 원반은 별도로 영구 구매하고 강화합니다. 구매한 원반 중 하나를 장착하며 쿠키봇과 쿠키 성은 모두 장착 원반의 현재 능력치를 사용합니다. 화면은 가격을 표시만 하고 구매 시 리듀서가 이 파일을 다시 읽어 잔액과 가격을 검증합니다.
 
-`discs.json`의 마지막 명시 레벨 뒤에는 `disc-upgrade-rules.json`으로 다음 레벨을 계속 생성하므로 최고 레벨이 없습니다.
+`discs.json`의 마지막 명시 레벨 뒤에는 `disc-upgrade-rules.json`의 선택 프로필로 다음 레벨을 계속 생성하므로 최고 레벨이 없습니다. 기본 5종은 곱셈 공격력 프로필, 초신성 원반은 `linear` 프로필을 사용해 Lv.1 3억에서 매 강화 정확히 1천만씩 증가합니다.
 
+- `defaultProfileId`, `profiles[].id`: 기본 프로필과 원반이 참조할 프로필 ID
+- `damageGrowthMode`: `multiplier`면 배율 성장, `linear`면 고정 증가
 - `damageGrowthMultiplier`: 이후 레벨마다 곱할 공격력 성장 배율
+- `damageIncreasePerLevel`: `linear` 프로필의 레벨당 공격력 증가량
 - `sizeIncreasePerLevel`: 이후 레벨마다 더할 원반 크기
 - `speedIncreasePerLevel`: 이후 레벨마다 더할 이동 속도
 - `cooldownReductionMsPerLevel`: 이후 레벨마다 줄일 쿨타임
 - `minimumCooldownMs`: 쿨타임이 더 내려가지 않는 안전 하한
 - `costGrowthMultiplier`: 직전 기준 강화 비용의 단계별 증가 배율
 
-쿨타임이 하한에 닿아도 공격력·크기·속도는 계속 증가합니다. `battle-rules.json`의 `maxRenderedPlayerDiscSize`는 높은 레벨에서 화면이 원반 하나로 가려지지 않게 그림만 제한하며 저장된 크기 능력치를 제한하지 않습니다.
+쿨타임이 하한에 닿아도 공격력·크기·속도는 계속 증가합니다. 각 강화 성공 시 실제 소모 비용을 `discUpgradeSpentCookies` 원장에 누적합니다. 초기화는 영구 소유와 구매비를 유지한 채 Lv.1로 돌리고 이 원장만 전액 반환합니다. v15 이하 저장은 현재 레벨의 데이터 테이블 가격을 재계산해 원장을 소급 복원합니다. `battle-rules.json`의 `maxRenderedPlayerDiscSize`는 높은 레벨에서 화면이 원반 하나로 가려지지 않게 그림만 제한하며 저장된 크기 능력치를 제한하지 않습니다.
 
 ### `bots.json`
 
@@ -281,7 +299,7 @@
 - `autoProductionMultiplier`: 자동 생산량 배율
 - `healthMultiplier`: 전투의 쿠키 성 최대 HP 배율
 
-현재 80종 중 기존 50종의 요구 조건은 3, 9, 15, …, 297입니다. 확장 30종은 `cookie-expansion.json`에 따라 375에서 시작해 12레벨 간격으로 723까지 이어지고, 공통 능력 배율은 직전 쿠키의 ×1.10을 소수 둘째 자리로 반올림해 최종 ×1083.16까지 증가합니다. 진화 기여 강화는 강화 화면에 보이는 쿠키 관련 7종 전체이며 새 게임의 기본 합계는 7입니다. 조건을 만족한 가장 높은 쿠키가 자동 활성화됩니다. 별도 구매나 수동 장착은 없고 능력 배율은 누적하지 않으며 현재 쿠키 행 하나만 적용합니다. `validateCookieExpansion`이 확장 개수·첫 요구 레벨·간격·배율을 앱 시작 시 검증하고 `CookieImage` 레지스트리가 이미지 키를 확인합니다.
+현재 80종 중 기존 50종의 요구 조건은 3, 9, 15, …, 297입니다. 확장 30종은 `cookie-expansion.json`에 따라 375에서 시작해 12레벨 간격으로 723까지 이어지고, 공통 능력 배율은 직전 쿠키의 ×1.10을 소수 둘째 자리로 반올림해 최종 ×1083.16까지 증가합니다. 진화 기여 강화는 강화 화면에 보이는 쿠키 관련 8종 전체이며 새 게임의 기본 합계는 8입니다. 조건을 만족한 가장 높은 쿠키가 자동 활성화됩니다. 별도 구매나 수동 장착은 없고 능력 배율은 누적하지 않으며 현재 쿠키 행 하나만 적용합니다. `validateCookieExpansion`이 확장 개수·첫 요구 레벨·간격·배율을 앱 시작 시 검증하고 `CookieImage` 레지스트리가 이미지 키를 확인합니다.
 
 21~50단계 확장 쿠키는 클릭·자동 생산·쿠키 성 체력에 같은 행의 공통 배율을 적용합니다. 31단계 이후에도 직전 단계 대비 약 10%씩 증가해 성장 체감은 유지하되 갑작스러운 배율 급등은 피합니다.
 

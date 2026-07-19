@@ -19,6 +19,8 @@ export interface ReferenceTables {
   cookieFragments: UnknownRecord;
   cookieFeedback: UnknownRecord;
   cookieSpecialEffects: UnknownRecord;
+  clickerRobotsValue: unknown;
+  discUpgradeRulesValue: unknown;
 }
 
 export function validateReferences({
@@ -39,6 +41,8 @@ export function validateReferences({
   cookieFragments,
   cookieFeedback,
   cookieSpecialEffects,
+  clickerRobotsValue,
+  discUpgradeRulesValue,
 }: ReferenceTables): void {
   const difficultyIds = new Set(difficulties.map((item) => item.id as string));
   const enemyDiscLevels = new Set(enemyDiscs.map((item) => item.level as number));
@@ -47,6 +51,24 @@ export function validateReferences({
   const botIds = new Set(bots.map((item) => item.id as string));
   const discIds = new Set(discs.map((item) => item.id as string));
   const upgradeIds = new Set(upgrades.map((item) => item.id as string));
+  const clickerRobots = clickerRobotsValue as UnknownRecord;
+  assertReference(
+    clickerRobots.upgradeId as string,
+    upgradeIds,
+    'CLICKER_ROBOTS.upgradeId',
+    '쿠키 강화 ID',
+  );
+  const discUpgradeRules = discUpgradeRulesValue as UnknownRecord;
+  const discUpgradeProfiles = discUpgradeRules.profiles as UnknownRecord[];
+  const discUpgradeProfileIds = new Set(
+    discUpgradeProfiles.map((profile) => profile.id as string),
+  );
+  assertReference(
+    discUpgradeRules.defaultProfileId as string,
+    discUpgradeProfileIds,
+    'DISC_UPGRADE_RULES.defaultProfileId',
+    '원반 강화 프로필 ID',
+  );
   const bossAnimationIds = new Set(bossAnimations.map((item) => item.id as string));
   const botAnimationIds = new Set(botAnimations.map((item) => item.id as string));
 
@@ -147,6 +169,15 @@ export function validateReferences({
         `활성 강화 '${upgrade.id}'의 무한 강화 규칙이 없습니다.`,
       );
     }
+  });
+  discs.forEach((disc, index) => {
+    if (disc.upgradeProfileId === undefined) return;
+    assertReference(
+      disc.upgradeProfileId as string,
+      discUpgradeProfileIds,
+      `DISCS[${index}].upgradeProfileId`,
+      '원반 강화 프로필 ID',
+    );
   });
 
   const aliasTargets: Array<[string, Set<string>]> = [

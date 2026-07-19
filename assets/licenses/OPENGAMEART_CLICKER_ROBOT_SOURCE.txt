@@ -1,0 +1,19 @@
+Cookie Wars clicker-robot external hammer provenance
+
+Asset: Stylized Low poly Tools
+Author: zisongbr / attribution notice fmoreira
+Source page: https://opengameart.org/content/stylized-low-poly-tools
+Source archive: https://opengameart.org/sites/default/files/low_poly_tools_0.zip
+License: Creative Commons Zero (CC0 1.0)
+Retrieved: 2026-07-19
+Downloaded archive SHA-256: 56f2679190d4c93f9bcdc2ed263d08b2a02d2cd34da18ba514a8178803ef3e5f
+
+Selected source: Low Poly Tools/Icons/hammer.png (2000x2000 RGBA)
+Runtime file: assets/images/clicker-robots/clicker-hammer.webp
+Runtime conversion: transparent-alpha bounds crop, fit inside a transparent
+512x512 canvas, lossless WebP encoding.
+Runtime SHA-256: c191cb558821312e478613a6481ec1e3fcdf31bd7fba92670994cf9b02434a03
+
+The robot body reuses Cookie Wars' existing cookie-bot artwork so the new
+clicker and flying collector remain visually consistent with battle bots.
+The app bundles every runtime asset locally and performs no network download.

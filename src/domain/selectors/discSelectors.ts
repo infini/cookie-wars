@@ -1,8 +1,4 @@
-import {
-  DISC_UPGRADE_RULES,
-  DISCS,
-  getDisc,
-} from '../../config';
+import { DISCS, getDisc, getDiscUpgradeProfile } from '../../config';
 import {
   DiscConfig,
   DiscLevelConfig,
@@ -14,6 +10,7 @@ import {
   saturatingExponentialInteger,
   saturatingLinearInteger,
   saturatingProductInteger,
+  saturatingAdd,
   saturatingSubtract,
 } from '../safeNumbers';
 
@@ -26,6 +23,8 @@ export interface DiscProgress {
   purchaseCost: number;
   purchaseAffordable: boolean;
   upgradeAffordable: boolean;
+  upgradeRefund: number;
+  resettable: boolean;
 }
 
 export function getDiscProgress(state: GameState): DiscProgress;
@@ -49,6 +48,10 @@ export function getDiscProgress(
   const nextLevel = nextSafeInteger(current.level, config.levels[0].level);
   const next = nextLevel === undefined ? undefined : calculateDiscLevel(config, nextLevel);
   const owned = state.ownedDiscIds.includes(config.id);
+  const upgradeRefund = clampSafeInteger(
+    state.discUpgradeSpentCookies[config.id],
+    { fallback: calculateDiscUpgradeRefund(config, current.level) },
+  );
   const cookies = clampSafeInteger(state.cookies);
   const purchaseCost = clampSafeInteger(config.purchaseCost);
   return {
@@ -60,6 +63,8 @@ export function getDiscProgress(
     purchaseCost,
     purchaseAffordable: !owned && cookies >= purchaseCost,
     upgradeAffordable: owned && !!next && cookies >= next.cost,
+    upgradeRefund,
+    resettable: owned && current.level > config.levels[0].level,
   };
 }
 
@@ -96,38 +101,62 @@ export function calculateDiscLevel(
     cost: clampSafeInteger(configuredLast.cost),
   };
   const extraLevels = Math.max(0, requestedLevel - last.level);
+  const upgradeProfile = getDiscUpgradeProfile(config);
   const cooldownReduction = saturatingProductInteger(
-    DISC_UPGRADE_RULES.cooldownReductionMsPerLevel,
+    upgradeProfile.cooldownReductionMsPerLevel,
     extraLevels,
     'floor',
   );
   return {
     level: requestedLevel,
-    damage: saturatingExponentialInteger(
-      last.damage,
-      DISC_UPGRADE_RULES.damageGrowthMultiplier,
-      extraLevels,
-    ),
+    damage: upgradeProfile.damageGrowthMode === 'linear'
+      ? saturatingLinearInteger(
+        last.damage,
+        upgradeProfile.damageIncreasePerLevel,
+        extraLevels,
+      )
+      : saturatingExponentialInteger(
+        last.damage,
+        upgradeProfile.damageGrowthMultiplier,
+        extraLevels,
+      ),
     size: saturatingLinearInteger(
       last.size,
-      DISC_UPGRADE_RULES.sizeIncreasePerLevel,
+      upgradeProfile.sizeIncreasePerLevel,
       extraLevels,
     ),
     speed: saturatingLinearInteger(
       last.speed,
-      DISC_UPGRADE_RULES.speedIncreasePerLevel,
+      upgradeProfile.speedIncreasePerLevel,
       extraLevels,
     ),
     cooldownMs: Math.max(
-      clampSafeInteger(DISC_UPGRADE_RULES.minimumCooldownMs),
+      clampSafeInteger(upgradeProfile.minimumCooldownMs),
       saturatingSubtract(last.cooldownMs, cooldownReduction),
     ),
     cost: saturatingExponentialInteger(
       last.cost,
-      DISC_UPGRADE_RULES.costGrowthMultiplier,
+      upgradeProfile.costGrowthMultiplier,
       extraLevels,
     ),
   };
+}
+
+export function calculateDiscUpgradeRefund(
+  config: DiscConfig,
+  level: number,
+): number {
+  const firstLevel = config.levels[0].level;
+  const targetLevel = clampSafeInteger(level, {
+    fallback: firstLevel,
+    minimum: firstLevel,
+  });
+  let refund = 0;
+  for (let currentLevel = firstLevel + 1; currentLevel <= targetLevel; currentLevel += 1) {
+    refund = saturatingAdd(refund, calculateDiscLevel(config, currentLevel).cost);
+    if (refund === Number.MAX_SAFE_INTEGER) return refund;
+  }
+  return refund;
 }
 
 export function getDiscOffers(state: GameState): DiscProgress[] {

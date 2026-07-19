@@ -10,6 +10,7 @@ export interface GameState {
   legacyCookieEvolutionBonusLevels: number;
   ownedDiscIds: string[];
   discLevels: Record<string, number>;
+  discUpgradeSpentCookies: Record<string, number>;
   selectedDiscId: string;
   botCounts: Record<string, number>;
   selectedDifficultyId: string;
@@ -42,6 +43,11 @@ export interface CookieStats {
   cookieLevel: number;
   activeCookieId: string;
   totalUpgradeLevels: number;
+  clickerRobotCount: number;
+  clickerRobotPostCapLevel: number;
+  clickerRobotClicksPerSecond: number;
+  clickerRobotPowerPerHit: number;
+  clickerRobotCookiesPerSecond: number;
 }
 
 export type CookieClickKind = 'normal' | CriticalPityKind;

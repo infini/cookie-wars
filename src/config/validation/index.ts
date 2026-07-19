@@ -31,6 +31,7 @@ import { validateCookieFragments } from './cookieFragments';
 import { validateCookiePity } from './cookiePity';
 import { validateCookieSpecialEffects } from './cookieSpecialEffects';
 import { validateMiniGame } from './miniGame';
+import { validateClickerRobots } from './clickerRobots';
 import {
   validateDifficultyExpansion,
   validateDifficultyExpansionReferences,
@@ -59,6 +60,7 @@ export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig 
   validateAudioSettings(input.AUDIO_SETTINGS);
   validateBattleAuto(input.BATTLE_AUTO);
   validateCookieInput(input.COOKIE_INPUT);
+  validateClickerRobots(input.CLICKER_ROBOTS);
   validateCookiePity(input.COOKIE_PITY);
   const cookieFeedback = validateCookieFeedback(input.COOKIE_FEEDBACK);
   const cookieFragments = validateCookieFragments(input.COOKIE_FRAGMENTS);
@@ -115,6 +117,8 @@ export function validateGameConfig(input: GameConfigInput): ValidatedGameConfig 
     cookieFragments,
     cookieFeedback,
     cookieSpecialEffects,
+    clickerRobotsValue: input.CLICKER_ROBOTS,
+    discUpgradeRulesValue: input.DISC_UPGRADE_RULES,
   });
   validateDifficultyExpansionReferences({
     expansion: difficultyExpansion,
