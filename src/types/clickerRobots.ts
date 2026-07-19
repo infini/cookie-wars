@@ -1,3 +1,5 @@
+import type { CookieFragmentRewardResult } from './gameState';
+
 export interface ClickerRobotFormationConfig {
   stageSizePixels: number;
   orbitRadiusPixels: number;
@@ -30,6 +32,10 @@ export interface ClickerRobotSoundConfig {
   volumeMultiplier: number;
 }
 
+export interface ClickerRobotRareJudgementConfig {
+  intervalMs: number;
+}
+
 export interface ClickerRobotsConfig {
   upgradeId: string;
   maximumRobotCount: number;
@@ -40,6 +46,7 @@ export interface ClickerRobotsConfig {
   basePowerPercent: number;
   powerPercentIncreasePerPostCapLevel: number;
   productionIntervalMs: number;
+  rareJudgement: ClickerRobotRareJudgementConfig;
   sound: ClickerRobotSoundConfig;
   formation: ClickerRobotFormationConfig;
   flyingFragmentCollector: FlyingFragmentCollectorConfig;
@@ -54,4 +61,18 @@ export interface ClickerRobotStats {
   powerPercent: number;
   powerPerHit: number;
   cookiesPerSecond: number;
+}
+
+export interface ClickerRobotCriticalReward {
+  kind: 'critical' | 'superCritical';
+  amount: number;
+}
+
+export interface ClickerRobotRareEvent {
+  critical?: ClickerRobotCriticalReward;
+  fragment?: CookieFragmentRewardResult;
+}
+
+export interface ClickerRobotRareEventEnvelope extends ClickerRobotRareEvent {
+  id: number;
 }

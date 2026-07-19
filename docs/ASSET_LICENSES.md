@@ -33,7 +33,7 @@
 | `assets/images/vfx/cookie-feedback/critical*.webp`, `magma.webp`, `super-critical*.webp` | OpenGameArt `Free VFX Asset Pack`, CodeManu | CC0 1.0 |
 | `assets/images/vfx/cookie-feedback/electric.webp` | OpenGameArt `2DFX Impact spritesheets`, Esteban Díaz / Inguz Media Studio와 `Lightning animation`, Calinou | CC0 1.0 |
 
-생성 이미지는 특정 상용 게임의 캐릭터나 로고를 복제하지 않고 독자적인 3D 모바일 게임 아트 방향으로 제작했습니다. 아군 원반은 파랑·금색, 적 원반은 빨강·검붉은색입니다. 현재 전투에서 사용하는 30개 JPG 맵은 모두 세로 9:16, 상단 고유 랜드마크, 낮은 디테일의 중앙 70%, 동적 쿠키 성을 위한 열린 하단 지면을 유지합니다. 기존 초원·과수원·설원·악마계·신계와 Blood Moon의 수정 광산·버섯 숲·증기 주조소·심해 도시·운석 지대·창조 공방·무한 공간은 지형과 건축 자체가 다르며 단순 색상·재질 변형을 사용하지 않았습니다. 30개 정적 WebP 보스와 보스별 6프레임은 갑옷·몸체 재료·실루엣·전쟁망치가 다르고 모든 프레임에서 망치를 실제로 들고 있습니다. 5종 봇의 30프레임은 종류별 재질과 장비를 유지하면서 달리기와 원반 투척 자세를 구분합니다. 21~80단계 생성 쿠키 60종은 구운 쿠키 질감과 고유 실루엣을 유지합니다. 14단계 별빛 쇼트케이크도 6단계 딸기 케이크와 중복되지 않는 프로젝트 전용 이미지로 교체했습니다.
+생성 이미지는 특정 상용 게임의 캐릭터나 로고를 복제하지 않고 독자적인 3D 모바일 게임 아트 방향으로 제작했습니다. 아군 원반은 파랑·금색, 적 원반은 빨강·검붉은색입니다. 현재 전투에서 사용하는 30개 JPG 맵은 모두 세로 9:16, 상단 고유 랜드마크, 낮은 디테일의 중앙 70%, 동적 쿠키 성을 위한 열린 하단 지면을 유지합니다. 기존 초원·과수원·설원·악마계·신계와 Blood Moon의 수정 광산·버섯 숲·증기 주조소·심해 도시·운석 지대·창조 공방·무한 공간은 지형과 건축 자체가 다르며 단순 색상·재질 변형을 사용하지 않았습니다. 30개 정적 WebP 보스와 보스별 6프레임은 갑옷·몸체 재료·실루엣·전쟁망치가 다르고 모든 프레임에서 망치를 실제로 들고 있습니다. 5종 봇의 30프레임은 종류별 재질과 장비를 유지하면서 달리기와 원반 투척 자세를 구분합니다. 21~110단계 생성 쿠키 90종은 구운 쿠키 질감과 고유 실루엣을 유지합니다. 14단계 별빛 쇼트케이크도 6단계 딸기 케이크와 중복되지 않는 프로젝트 전용 이미지로 교체했습니다.
 
 외부 VFX 원본 페이지, 직접 다운로드 주소와 SHA-256은 `assets/licenses/OPENGAMEART_COOKIE_VFX_SOURCE.txt`에 기록했습니다. 클릭커 망치의 원본 archive·CC0·입출력 SHA-256은 `assets/licenses/OPENGAMEART_CLICKER_ROBOT_SOURCE.txt`에 별도로 기록했습니다. 기존 `process_external_cookie_vfx.py`는 보관용 화산 프레임과 번개를 변환하고, `process_external_cookie_feedback_vfx.py`는 CodeManu의 60프레임 `BigHit`, `Explosion2`, `TheVortex`를 크리티컬·마그마·슈퍼 WebP로 변환하며 Inguz 청록 충격과 Calinou 번개 세 갈래를 전기 WebP로 합성합니다. 네 종류의 형광 팔레트와 외곽 발광 설정은 `scripts/cookie-feedback-vfx.json`에서 관리합니다. 앱은 실행 중 네트워크를 사용하지 않습니다.
 
@@ -51,7 +51,7 @@
 
 세 프롬프트 모두 상용 모바일 디펜스 게임용 높은 시점, 가장자리 고해상도·중앙 낮은 디테일, 기존 중세 안뜰의 재색칠 금지를 명시했습니다.
 
-현재 사용하는 전장·보스·보스 애니메이션·쿠키봇 애니메이션·신규 쿠키의 최종 파일, 생성 방식, 공통 프롬프트와 변환·검수 절차는 [`GENERATED_ASSETS.md`](GENERATED_ASSETS.md)에 기록했습니다. 맵은 941×1672 progressive JPG quality 84, 정적 보스는 512×512 투명 WebP quality 86, 애니메이션 프레임은 384×384 lossless 투명 WebP, 쿠키 런타임 이미지는 512×512 투명 WebP quality 90으로 최적화했습니다. PNG 원본은 재가공용으로만 보관하고 앱은 80개 WebP를 정적 번들합니다.
+현재 사용하는 전장·보스·보스 애니메이션·쿠키봇 애니메이션·신규 쿠키의 최종 파일, 생성 방식, 공통 프롬프트와 변환·검수 절차는 [`GENERATED_ASSETS.md`](GENERATED_ASSETS.md)에 기록했습니다. 맵은 941×1672 progressive JPG quality 84, 정적 보스는 512×512 투명 WebP quality 86, 애니메이션 프레임은 384×384 lossless 투명 WebP, 쿠키 런타임 이미지는 512×512 투명 WebP quality 90으로 최적화했습니다. PNG 원본은 재가공용으로만 보관하고 앱은 110개 WebP를 정적 번들합니다.
 
 ## 효과음
 

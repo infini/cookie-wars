@@ -51,7 +51,7 @@ function createTestCommands(actions: GameAction[], stateRef: { current: GameStat
 
 describe('게임 저장 상태', () => {
   test('전투 완료 순수 전이가 최초 보상 결과와 reducer 상태를 함께 만든다', () => {
-    const funded = { ...initialGameState, cookies: 123, giantDiscCount: 4 };
+    const funded = { ...initialGameState, cookies: BigInt(123), giantDiscCount: 4 };
     const transition = completeBattleTransition(funded, DIFFICULTIES[0].id);
     const reduced = gameReducer(funded, {
       type: 'COMPLETE_BATTLE',
@@ -110,9 +110,9 @@ describe('게임 저장 상태', () => {
 
   test('정확히 한 번 강화할 쿠키로 빠르게 두 번 누르면 첫 구매만 승인한다', () => {
     const upgradeId = 'clickPower';
-    const pricingState = { ...initialGameState, cookies: Number.MAX_SAFE_INTEGER };
+    const pricingState = { ...initialGameState, cookies: BigInt(Number.MAX_SAFE_INTEGER) };
     const firstUpgrade = getUpgradeProgress(pricingState, upgradeId)!.next!;
-    const startingState = { ...initialGameState, cookies: firstUpgrade.cost };
+    const startingState = { ...initialGameState, cookies: BigInt(firstUpgrade.cost) };
     const actions: GameAction[] = [];
     const stateRef = { current: startingState };
     const commands = createTestCommands(actions, stateRef);
@@ -121,7 +121,7 @@ describe('게임 저장 상태', () => {
       commands.buyUpgrade(upgradeId),
       commands.buyUpgrade(upgradeId),
     ]).toEqual([true, false]);
-    expect(stateRef.current.cookies).toBe(0);
+    expect(stateRef.current.cookies).toBe(BigInt(0));
     expect(stateRef.current.upgradeLevels[upgradeId]).toBe(firstUpgrade.level);
     expect(actions).toEqual([{ type: 'BUY_UPGRADE', upgradeId }]);
     expect(actions.reduce(gameReducer, startingState)).toEqual(stateRef.current);
@@ -129,13 +129,13 @@ describe('게임 저장 상태', () => {
 
   test('두 단계 비용이 있으면 빠른 연속 강화가 각 단계 가격을 순서대로 적용한다', () => {
     const upgradeId = 'clickPower';
-    const pricingState = { ...initialGameState, cookies: Number.MAX_SAFE_INTEGER };
+    const pricingState = { ...initialGameState, cookies: BigInt(Number.MAX_SAFE_INTEGER) };
     const firstUpgrade = getUpgradeProgress(pricingState, upgradeId)!.next!;
     const afterFirst = gameReducer(pricingState, { type: 'BUY_UPGRADE', upgradeId });
     const secondUpgrade = getUpgradeProgress(afterFirst, upgradeId)!.next!;
     const startingState = {
       ...initialGameState,
-      cookies: firstUpgrade.cost + secondUpgrade.cost,
+      cookies: BigInt(firstUpgrade.cost + secondUpgrade.cost),
     };
     const actions: GameAction[] = [];
     const stateRef = { current: startingState };
@@ -146,7 +146,7 @@ describe('게임 저장 상태', () => {
       commands.buyUpgrade(upgradeId),
       commands.buyUpgrade(upgradeId),
     ]).toEqual([true, true, false]);
-    expect(stateRef.current.cookies).toBe(0);
+    expect(stateRef.current.cookies).toBe(BigInt(0));
     expect(stateRef.current.upgradeLevels[upgradeId]).toBe(secondUpgrade.level);
     expect(actions).toEqual([
       { type: 'BUY_UPGRADE', upgradeId },
@@ -170,8 +170,8 @@ describe('게임 저장 상태', () => {
     commands.discoverMonster(monsterId);
     commands.acknowledgeMonsters();
 
-    expect(stateRef.current.cookies).toBe(clickPower * 2);
-    expect(stateRef.current.lifetimeCookies).toBe(clickPower * 2);
+    expect(stateRef.current.cookies).toBe(BigInt(clickPower * 2));
+    expect(stateRef.current.lifetimeCookies).toBe(BigInt(clickPower * 2));
     expect(stateRef.current.cookiePityMisses).toEqual({
       critical: 2,
       superCritical: 2,
@@ -197,7 +197,7 @@ describe('게임 저장 상태', () => {
       amount: clickPower * 50,
       multiplier: 50,
     });
-    expect(stateRef.current.cookies).toBe(clickPower * 50);
+    expect(stateRef.current.cookies).toBe(BigInt(clickPower * 50));
     expect(actions).toEqual([{ type: 'GAIN_COOKIES', amount: clickPower * 50 }]);
   });
 
@@ -340,8 +340,8 @@ describe('게임 저장 상태', () => {
     );
     expect(reloaded.battleMedals).toBe(migrated.battleMedals);
     expect(migrated.saveVersion).toBe(SAVE_MIGRATIONS.currentSaveVersion);
-    expect(migrated.cookies).toBe(legacySave.cookies);
-    expect(migrated.lifetimeCookies).toBe(legacySave.lifetimeCookies);
+    expect(migrated.cookies).toBe(BigInt(legacySave.cookies));
+    expect(migrated.lifetimeCookies).toBe(BigInt(legacySave.lifetimeCookies));
     expect(migrated.giantDiscCount).toBe(legacySave.giantDiscCount);
   });
 
@@ -419,7 +419,7 @@ describe('게임 저장 상태', () => {
   });
 
   test('각 전투 스테이지는 최초 클리어마다 거대 원반을 주고 쿠키는 주지 않는다', () => {
-    const funded = { ...initialGameState, cookies: 10 };
+    const funded = { ...initialGameState, cookies: BigInt(10) };
     const first = gameReducer(funded, {
       type: 'COMPLETE_BATTLE',
       difficultyId: DIFFICULTIES[0].id,
@@ -428,8 +428,8 @@ describe('게임 저장 상태', () => {
       type: 'COMPLETE_BATTLE',
       difficultyId: DIFFICULTIES[0].id,
     });
-    expect(first.cookies).toBe(10);
-    expect(second.cookies).toBe(10);
+    expect(first.cookies).toBe(BigInt(10));
+    expect(second.cookies).toBe(BigInt(10));
     expect(first.lifetimeCookies).toBe(funded.lifetimeCookies);
     expect(second.lifetimeCookies).toBe(funded.lifetimeCookies);
     expect(first.giantDiscCount).toBe(1);
@@ -523,18 +523,21 @@ describe('게임 저장 상태', () => {
 
   test('원반은 충분한 쿠키가 있을 때 영구 구매된다', () => {
     const disc = DISCS[0];
-    const funded = { ...initialGameState, cookies: disc.purchaseCost };
+    const funded = { ...initialGameState, cookies: BigInt(disc.purchaseCost) };
     const purchased = gameReducer(funded, { type: 'BUY_DISC', discId: disc.id });
     const purchasedAgain = gameReducer(purchased, { type: 'BUY_DISC', discId: disc.id });
     expect(purchased.ownedDiscIds).toContain(disc.id);
     expect(purchased.selectedDiscId).toBe(disc.id);
-    expect(purchased.cookies).toBe(0);
+    expect(purchased.cookies).toBe(BigInt(0));
     expect(purchasedAgain).toEqual(purchased);
   });
 
   test('명시적으로 잘못된 상점 ID는 기본 상품으로 바뀌지 않고 모든 계층에서 거부된다', () => {
     const unknownId = 'unknown-shop-item';
-    const purchaseState = { ...initialGameState, cookies: Number.MAX_SAFE_INTEGER };
+    const purchaseState = {
+      ...initialGameState,
+      cookies: BigInt(Number.MAX_SAFE_INTEGER),
+    };
     const ownedDiscState = {
       ...purchaseState,
       ownedDiscIds: [DISCS[0].id],
@@ -579,13 +582,13 @@ describe('게임 저장 상태', () => {
 
   test('쿠키봇 구매 수량을 저장한다', () => {
     const bot = BOTS[0];
-    const funded = { ...initialGameState, cookies: 1000 };
+    const funded = { ...initialGameState, cookies: BigInt(1000) };
     const bought = gameReducer(funded, {
       type: 'BUY_BOT',
       botId: bot.id,
     });
     expect(bought.botCounts[bot.id]).toBe(1);
-    expect(bought.cookies).toBe(1000 - calculateBotPrice(bot, 0));
+    expect(bought.cookies).toBe(BigInt(1000 - calculateBotPrice(bot, 0)));
   });
 
   test('효과음 볼륨을 5단계로 저장하고 기존 저장은 4단계를 사용한다', () => {
@@ -618,7 +621,7 @@ describe('게임 저장 상태', () => {
     const disc = DISCS[0];
     const highLevelState = {
       ...initialGameState,
-      cookies: Number.MAX_SAFE_INTEGER,
+      cookies: BigInt(Number.MAX_SAFE_INTEGER),
       ownedDiscIds: [disc.id],
       selectedDiscId: disc.id,
       discLevels: { ...initialGameState.discLevels, [disc.id]: 100 },
@@ -642,7 +645,7 @@ describe('게임 저장 상태', () => {
     const secondUpgradeCost = disc.levels[2].cost;
     const startingCookies = disc.purchaseCost + firstUpgradeCost + secondUpgradeCost;
     const purchased = gameReducer(
-      { ...initialGameState, cookies: startingCookies },
+      { ...initialGameState, cookies: BigInt(startingCookies) },
       { type: 'BUY_DISC', discId: disc.id },
     );
     const level2 = gameReducer(purchased, { type: 'UPGRADE_DISC', discId: disc.id });
@@ -650,11 +653,11 @@ describe('게임 저장 상태', () => {
     const reset = gameReducer(level3, { type: 'RESET_DISC', discId: disc.id });
 
     expect(level3.discUpgradeSpentCookies[disc.id])
-      .toBe(firstUpgradeCost + secondUpgradeCost);
-    expect(reset.cookies).toBe(startingCookies - disc.purchaseCost);
+      .toBe(BigInt(firstUpgradeCost + secondUpgradeCost));
+    expect(reset.cookies).toBe(BigInt(startingCookies - disc.purchaseCost));
     expect(reset.ownedDiscIds).toContain(disc.id);
     expect(reset.discLevels[disc.id]).toBe(disc.levels[0].level);
-    expect(reset.discUpgradeSpentCookies[disc.id]).toBe(0);
+    expect(reset.discUpgradeSpentCookies[disc.id]).toBe(BigInt(0));
     expect(gameReducer(reset, { type: 'RESET_DISC', discId: disc.id })).toBe(reset);
   });
 
@@ -667,7 +670,7 @@ describe('게임 저장 상태', () => {
       discLevels: { [disc.id]: 3 },
     });
     expect(migrated.discUpgradeSpentCookies[disc.id])
-      .toBe(disc.levels[1].cost + disc.levels[2].cost);
+      .toBe(BigInt(disc.levels[1].cost + disc.levels[2].cost));
   });
 
   test('클릭커 로봇은 28대 이후 수량 대신 속도와 클릭 힘이 성장한다', () => {
@@ -732,8 +735,8 @@ describe('게임 저장 상태', () => {
 
     expect(prepared.persistenceWritable).toBe(false);
     expect(prepared.state.saveVersion).toBe(initialGameState.saveVersion);
-    expect(prepared.state.cookies).toBe(321);
-    expect(prepared.state.lifetimeCookies).toBe(654);
+    expect(prepared.state.cookies).toBe(BigInt(321));
+    expect(prepared.state.lifetimeCookies).toBe(BigInt(654));
     expect(prepared.state.lastSavedAt).toBe(1_000);
   });
 
@@ -803,7 +806,7 @@ describe('게임 저장 상태', () => {
       const config = COOKIE_UPGRADES.find((upgrade) => upgrade.id === upgradeId)!;
       const highLevelState = {
         ...initialGameState,
-        cookies: Number.MAX_SAFE_INTEGER,
+        cookies: BigInt(Number.MAX_SAFE_INTEGER),
         upgradeLevels: { ...initialGameState.upgradeLevels, [upgradeId]: 100 },
       };
       const progress = getUpgradeProgress(highLevelState, config.id)!;
@@ -860,7 +863,10 @@ describe('게임 저장 상태', () => {
 
   test('쿠키 크기는 숨겨지고 구매할 수 없으며 v8 진화 합계에 영향을 주지 않는다', () => {
     const cookieSize = COOKIE_UPGRADES.find((upgrade) => upgrade.id === 'cookieSize')!;
-    const funded = { ...initialGameState, cookies: Number.MAX_SAFE_INTEGER };
+    const funded = {
+      ...initialGameState,
+      cookies: BigInt(Number.MAX_SAFE_INTEGER),
+    };
     const sizeProgress = getUpgradeProgress(funded, cookieSize.id)!;
     const blocked = gameReducer(funded, { type: 'BUY_UPGRADE', upgradeId: cookieSize.id });
     const commonSave = {
@@ -991,7 +997,7 @@ describe('게임 저장 상태', () => {
   test('강화 가능 항목을 위에, 완료 항목을 가장 아래에 정렬한다', () => {
     const state = {
       ...initialGameState,
-      cookies: 110,
+      cookies: BigInt(110),
       upgradeLevels: { ...initialGameState.upgradeLevels, cookieSize: 6 },
     };
     const sorted = getSortedUpgradeProgress(state);
@@ -1052,12 +1058,18 @@ describe('게임 저장 상태', () => {
         magma: -3,
         electric: 2.9,
       },
+      clickerRobotPityMisses: {
+        critical: 5.9,
+        superCritical: -2,
+        magma: Number.NaN,
+        electric: Number.POSITIVE_INFINITY,
+      },
       lastSavedAt: Number.NEGATIVE_INFINITY,
     } as any);
 
     expect(restored.saveVersion).toBe(initialGameState.saveVersion);
-    expect(restored.cookies).toBe(0);
-    expect(restored.lifetimeCookies).toBe(0);
+    expect(restored.cookies).toBe(BigInt(0));
+    expect(restored.lifetimeCookies).toBe(BigInt(0));
     expect(restored.legacyCookieEvolutionBonusLevels).toBe(0);
     expect(restored.upgradeLevels).toEqual(initialGameState.upgradeLevels);
     expect(restored.discLevels).toEqual(initialGameState.discLevels);
@@ -1075,6 +1087,12 @@ describe('게임 저장 상태', () => {
       superCritical: 0,
       magma: 0,
       electric: 2,
+    });
+    expect(restored.clickerRobotPityMisses).toEqual({
+      critical: 5,
+      superCritical: 0,
+      magma: 0,
+      electric: 0,
     });
     expect(restored.lastSavedAt).toBe(0);
   });
@@ -1109,11 +1127,17 @@ describe('게임 저장 상태', () => {
         magma: 3.9,
         electric: 2.9,
       },
+      clickerRobotPityMisses: {
+        critical: 8.9,
+        superCritical: 7.9,
+        magma: 6.9,
+        electric: 5.9,
+      },
       lastSavedAt: Number.MAX_VALUE,
     } as any);
 
-    expect(restored.cookies).toBe(Number.MAX_SAFE_INTEGER);
-    expect(restored.lifetimeCookies).toBe(Number.MAX_SAFE_INTEGER);
+    expect(restored.cookies).toBe(BigInt(Math.floor(Number.MAX_VALUE)));
+    expect(restored.lifetimeCookies).toBe(BigInt(Math.floor(Number.MAX_VALUE)));
     expect(restored.legacyCookieEvolutionBonusLevels).toBe(Number.MAX_SAFE_INTEGER);
     expect(restored.upgradeLevels.clickPower).toBe(12);
     expect(restored.discLevels[DISCS[0].id]).toBe(8);
@@ -1133,6 +1157,12 @@ describe('게임 저장 상태', () => {
       magma: 3,
       electric: 2,
     });
+    expect(restored.clickerRobotPityMisses).toEqual({
+      critical: 8,
+      superCritical: 7,
+      magma: 6,
+      electric: 5,
+    });
     expect(restored.lastSavedAt).toBe(Number.MAX_SAFE_INTEGER);
   });
 
@@ -1147,7 +1177,7 @@ describe('게임 저장 상태', () => {
       clearedDifficultyIds: [DIFFICULTIES[1].id, 'unknown-difficulty'],
     });
 
-    expect(restored.lifetimeCookies).toBe(12);
+    expect(restored.lifetimeCookies).toBe(BigInt(12));
     expect(restored.clearedDifficultyIds).toEqual([
       DIFFICULTIES[0].id,
       DIFFICULTIES[1].id,

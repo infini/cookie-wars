@@ -15,8 +15,8 @@ describe('오프라인 자동 생산', () => {
   const savedAt = 1_000;
   const autoProductionState = {
     ...initialGameState,
-    cookies: 10,
-    lifetimeCookies: 20,
+    cookies: BigInt(10),
+    lifetimeCookies: BigInt(20),
     lastSavedAt: savedAt,
     upgradeLevels: {
       ...initialGameState.upgradeLevels,
@@ -44,8 +44,8 @@ describe('오프라인 자동 생산', () => {
       now,
     });
 
-    expect(restored.cookies).toBe(autoProductionState.cookies + 7);
-    expect(restored.lifetimeCookies).toBe(autoProductionState.lifetimeCookies + 7);
+    expect(restored.cookies).toBe(autoProductionState.cookies + BigInt(7));
+    expect(restored.lifetimeCookies).toBe(autoProductionState.lifetimeCookies + BigInt(7));
     expect(restored.lastSavedAt).toBe(now);
 
     const restoredAgain = gameReducer(restored, {
@@ -79,9 +79,9 @@ describe('오프라인 자동 생산', () => {
 
     expect(restored.battleMedals).toBe(completedStages);
     const expectedProduction = calculateCookieStats(restored).autoProduction * 5;
-    expect(restored.cookies).toBe(autoProductionState.cookies + expectedProduction);
+    expect(restored.cookies).toBe(autoProductionState.cookies + BigInt(expectedProduction));
     expect(restored.lifetimeCookies).toBe(
-      autoProductionState.lifetimeCookies + expectedProduction,
+      autoProductionState.lifetimeCookies + BigInt(expectedProduction),
     );
   });
 
@@ -124,8 +124,8 @@ describe('오프라인 자동 생산', () => {
       payload: recovered,
       now: now + PROGRESSION.autoProductionIntervalMs,
     });
-    expect(resumed.cookies).toBe(recovered.cookies + 1);
-    expect(resumed.lifetimeCookies).toBe(recovered.lifetimeCookies + 1);
+    expect(resumed.cookies).toBe(recovered.cookies + BigInt(1));
+    expect(resumed.lifetimeCookies).toBe(recovered.lifetimeCookies + BigInt(1));
     expect(resumed.lastSavedAt).toBe(now + PROGRESSION.autoProductionIntervalMs);
   });
 

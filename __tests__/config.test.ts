@@ -184,7 +184,7 @@ describe('데이터 테이블', () => {
   test('진행·음량·상점 값은 데이터 테이블에서 제공한다', () => {
     expect(PROGRESSION.winsToUnlockNextDifficulty).toBe(20);
     expect(PROGRESSION.giantDiscRewardPerFirstClear).toBe(1);
-    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(16);
+    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(18);
     expect(SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion).toBe(8);
     expect(SAVE_MIGRATIONS.battleMedalMigrationVersion).toBe(9);
     expect(SAVE_MIGRATIONS.difficultyExpansionMigrations).toEqual([
@@ -251,6 +251,9 @@ describe('데이터 테이블', () => {
     expect(CLICKER_ROBOTS.maximumRobotCount)
       .toBe(CLICKER_ROBOTS.robotsPerQuadrant * CLICKER_ROBOTS.quadrantCount);
     expect(CLICKER_ROBOTS.flyingFragmentCollector.freeCount).toBe(1);
+    expect(CLICKER_ROBOTS.rareJudgement).toEqual({ intervalMs: 200 });
+    expect(CLICKER_ROBOTS.productionIntervalMs % CLICKER_ROBOTS.rareJudgement.intervalMs)
+      .toBe(0);
     expect(CLICKER_ROBOTS.sound).toEqual({
       minimumIntervalMs: 200,
       volumeMultiplier: 0.34,
@@ -286,7 +289,7 @@ describe('데이터 테이블', () => {
       (upgrade) => typeof upgrade.countsTowardCookieEvolution === 'boolean',
     )).toBe(true);
     expect(Math.max(...cookieSize!.levels.map((level) => level.value))).toBeGreaterThan(0);
-    expect(COOKIES).toHaveLength(80);
+    expect(COOKIES).toHaveLength(110);
     expect(COOKIES.slice(0, COOKIE_EXPANSION.legacyCookieCount)
       .map((cookie) => cookie.requiredTotalUpgradeLevels)).toEqual(
       Array.from({ length: 50 }, (_, index) => 3 + index * 6),
@@ -314,7 +317,9 @@ describe('데이터 테이블', () => {
     expect(COOKIES[30].name).toBe('혜성 꼬리 쿠키');
     expect(COOKIES[49].name).toBe('쿠키왕국 심장 쿠키');
     expect(COOKIES[50].name).toBe('수정 용의 알 쿠키');
-    expect(COOKIES[COOKIES.length - 1].name).toBe('쿠키 우주핵 쿠키');
+    expect(COOKIES[79].name).toBe('쿠키 우주핵 쿠키');
+    expect(COOKIES[80].name).toBe('양자 불꽃 쿠키');
+    expect(COOKIES[COOKIES.length - 1].name).toBe('절대 쿠키 특이점');
     expect(COOKIE_CRITICAL.probabilityScale).toBe(200_000);
     expect(COOKIE_CRITICAL.maximumChanceUnits).toBe(100_000);
     expect(COOKIE_CRITICAL.baseRewardMultiplier).toBe(10);
@@ -598,6 +603,9 @@ describe('데이터 테이블 런타임 검증', () => {
     ['PROGRESSION.autoProductionIntervalMs', (config) => {
       config.PROGRESSION.autoProductionIntervalMs = 0;
     }],
+    ['CLICKER_ROBOTS.rareJudgement.intervalMs', (config) => {
+      config.CLICKER_ROBOTS.rareJudgement.intervalMs = 0;
+    }],
     ['SAVE_MIGRATIONS.currentSaveVersion', (config) => {
       config.SAVE_MIGRATIONS.currentSaveVersion = 0;
     }],
@@ -622,6 +630,9 @@ describe('데이터 테이블 런타임 검증', () => {
     }],
     ['COOKIE_UPGRADE_RULES.clickPower.valueIncreasePerLevel', (config) => {
       config.COOKIE_UPGRADE_RULES.clickPower.valueIncreasePerLevel = 25.5;
+    }],
+    ['CLICKER_ROBOTS.rareJudgement.intervalMs', (config) => {
+      config.CLICKER_ROBOTS.rareJudgement.intervalMs = 200.5;
     }],
     ['DISCS[0].purchaseCost', (config) => { config.DISCS[0].purchaseCost = 30.5; }],
     ['DISCS[0].levels[0].level', (config) => {
@@ -687,6 +698,14 @@ describe('데이터 테이블 런타임 검증', () => {
 
   test('현재 포함된 모든 JSON 설정을 앱 로딩 경계에서 검증한다', () => {
     expect(() => validateGameConfig(cloneConfig())).not.toThrow();
+  });
+
+  test('클릭커 희귀 판정 주기는 생산 정산 주기를 정확히 나눈다', () => {
+    const invalid = cloneConfig();
+    invalid.CLICKER_ROBOTS.rareJudgement.intervalMs = 300;
+    expect(() => validateGameConfig(invalid)).toThrow(
+      'CLICKER_ROBOTS.rareJudgement.intervalMs',
+    );
   });
 
   test('신규 난이도 수와 20% 경계 성장식을 테이블 검증으로 고정한다', () => {

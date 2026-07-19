@@ -6,10 +6,11 @@ import { colors, gradients } from '../theme/colors';
 import { fonts } from '../theme/typography';
 import { formatNumber } from '../utils/format';
 import { CookieImage } from './CookieImage';
+import type { CookieAmount } from '../types/game';
 
 interface TopBarProps {
   title: string;
-  cookies: number;
+  cookies: CookieAmount;
   activeCookieName: string;
   gameScreen: boolean;
   onOpenSettings: () => void;

@@ -8,6 +8,9 @@
   "basePowerPercent": 100,
   "powerPercentIncreasePerPostCapLevel": 25,
   "productionIntervalMs": 1000,
+  "rareJudgement": {
+    "intervalMs": 200
+  },
   "sound": {
     "minimumIntervalMs": 200,
     "volumeMultiplier": 0.34

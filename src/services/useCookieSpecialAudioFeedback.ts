@@ -115,6 +115,14 @@ export function useCookieSpecialAudioFeedback({
     SPECIAL_SOUND_KINDS.forEach((kind) => stopKind(kind));
   }, [stopKind]);
 
+  useEffect(() => () => {
+    playbackEpoch.current += 1;
+    SPECIAL_SOUND_KINDS.forEach((kind) => {
+      requestIds.current[kind] += 1;
+    });
+    cancelPending();
+  }, [cancelPending]);
+
   useEffect(() => {
     const volume = AUDIO_SETTINGS.levels.find(
       (item) => item.level === soundVolumeLevel,

@@ -11,12 +11,20 @@ import {
   saturatingAdd,
   saturatingSubtract,
 } from '../domain/safeNumbers';
+import {
+  addCookieAmounts,
+  maxCookieAmount,
+  normalizeCookieAmount,
+  subtractCookieAmounts,
+  ZERO_COOKIE_AMOUNT,
+} from '../domain/cookieAmounts';
 import { normalizeCookiePityMisses } from '../domain/cookiePity';
 import { normalizeSoundVolumeLevel } from '../domain/audioSettings';
 import {
   CookieClickResult,
   CookiePityMisses,
   GameState,
+  StoredGameState,
   SoundVolumeLevel,
 } from '../types/game';
 import { restoreSavedGame } from './gameSave';
@@ -25,9 +33,14 @@ export { initialGameState } from './gameInitialState';
 export { mergeSavedGame, prepareSavedGame, restoreSavedGame } from './gameSave';
 
 export type GameAction =
-  | { type: 'HYDRATE'; payload: Partial<GameState>; now: number }
+  | { type: 'HYDRATE'; payload: StoredGameState; now: number }
   | { type: 'GAIN_COOKIES'; amount: number }
   | { type: 'CLICK_COOKIE'; result: CookieClickResult; pityMisses: CookiePityMisses }
+  | {
+    type: 'APPLY_CLICKER_ROBOT_PRODUCTION';
+    amount: number;
+    pityMisses: CookiePityMisses;
+  }
   | { type: 'BUY_UPGRADE'; upgradeId: string }
   | { type: 'BUY_DISC'; discId: string }
   | { type: 'UPGRADE_DISC'; discId: string }
@@ -62,13 +75,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'GAIN_COOKIES': {
       const amount = clampSafeInteger(action.amount);
       if (amount <= 0) return state;
-      const currentCookies = clampSafeInteger(state.cookies);
-      const currentLifetimeCookies = Math.max(
+      const currentCookies = normalizeCookieAmount(state.cookies);
+      const currentLifetimeCookies = maxCookieAmount(
         currentCookies,
-        clampSafeInteger(state.lifetimeCookies),
+        state.lifetimeCookies,
       );
-      const cookies = saturatingAdd(currentCookies, amount);
-      const lifetimeCookies = saturatingAdd(currentLifetimeCookies, amount);
+      const cookies = addCookieAmounts(currentCookies, amount);
+      const lifetimeCookies = addCookieAmounts(currentLifetimeCookies, amount);
       if (cookies === state.cookies && lifetimeCookies === state.lifetimeCookies) return state;
       return {
         ...state,
@@ -78,18 +91,34 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
     case 'CLICK_COOKIE': {
       const amount = clampSafeInteger(action.result.amount);
-      const currentCookies = clampSafeInteger(state.cookies);
-      const currentLifetimeCookies = Math.max(
+      const currentCookies = normalizeCookieAmount(state.cookies);
+      const currentLifetimeCookies = maxCookieAmount(
         currentCookies,
-        clampSafeInteger(state.lifetimeCookies),
+        state.lifetimeCookies,
       );
       return {
         ...state,
-        cookies: amount > 0 ? saturatingAdd(currentCookies, amount) : currentCookies,
+        cookies: amount > 0 ? addCookieAmounts(currentCookies, amount) : currentCookies,
         lifetimeCookies: amount > 0
-          ? saturatingAdd(currentLifetimeCookies, amount)
+          ? addCookieAmounts(currentLifetimeCookies, amount)
           : currentLifetimeCookies,
         cookiePityMisses: normalizeCookiePityMisses(action.pityMisses),
+      };
+    }
+    case 'APPLY_CLICKER_ROBOT_PRODUCTION': {
+      const amount = clampSafeInteger(action.amount);
+      const currentCookies = normalizeCookieAmount(state.cookies);
+      const currentLifetimeCookies = maxCookieAmount(
+        currentCookies,
+        state.lifetimeCookies,
+      );
+      return {
+        ...state,
+        cookies: amount > 0 ? addCookieAmounts(currentCookies, amount) : currentCookies,
+        lifetimeCookies: amount > 0
+          ? addCookieAmounts(currentLifetimeCookies, amount)
+          : currentLifetimeCookies,
+        clickerRobotPityMisses: normalizeCookiePityMisses(action.pityMisses),
       };
     }
     case 'BUY_UPGRADE': {
@@ -97,7 +126,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!progress?.next || !progress.affordable) return state;
       return {
         ...state,
-        cookies: saturatingSubtract(state.cookies, progress.next.cost),
+        cookies: subtractCookieAmounts(state.cookies, progress.next.cost),
         upgradeLevels: { ...state.upgradeLevels, [action.upgradeId]: progress.next.level },
       };
     }
@@ -106,7 +135,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!progress?.purchaseAffordable) return state;
       return {
         ...state,
-        cookies: saturatingSubtract(state.cookies, progress.purchaseCost),
+        cookies: subtractCookieAmounts(state.cookies, progress.purchaseCost),
         ownedDiscIds: unique([...state.ownedDiscIds, progress.config.id]),
         selectedDiscId: progress.config.id,
       };
@@ -116,11 +145,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!progress?.next || !progress.upgradeAffordable) return state;
       return {
         ...state,
-        cookies: saturatingSubtract(state.cookies, progress.next.cost),
+        cookies: subtractCookieAmounts(state.cookies, progress.next.cost),
         discLevels: { ...state.discLevels, [progress.config.id]: progress.next.level },
         discUpgradeSpentCookies: {
           ...state.discUpgradeSpentCookies,
-          [progress.config.id]: saturatingAdd(
+          [progress.config.id]: addCookieAmounts(
             state.discUpgradeSpentCookies[progress.config.id],
             progress.next.cost,
           ),
@@ -130,16 +159,18 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'RESET_DISC': {
       const progress = getDiscProgress(state, action.discId);
       if (!progress?.resettable) return state;
+      const cookies = addCookieAmounts(state.cookies, progress.upgradeRefund);
       return {
         ...state,
-        cookies: saturatingAdd(state.cookies, progress.upgradeRefund),
+        cookies,
+        lifetimeCookies: maxCookieAmount(state.lifetimeCookies, cookies),
         discLevels: {
           ...state.discLevels,
           [progress.config.id]: progress.config.levels[0].level,
         },
         discUpgradeSpentCookies: {
           ...state.discUpgradeSpentCookies,
-          [progress.config.id]: 0,
+          [progress.config.id]: ZERO_COOKIE_AMOUNT,
         },
       };
     }
@@ -151,7 +182,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!offer?.affordable) return state;
       return {
         ...state,
-        cookies: saturatingSubtract(state.cookies, offer.price),
+        cookies: subtractCookieAmounts(state.cookies, offer.price),
         botCounts: {
           ...state.botCounts,
           [action.botId]: saturatingAdd(offer.count, 1),

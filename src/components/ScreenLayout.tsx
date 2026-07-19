@@ -5,13 +5,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MainMenuId, NavigationBadgeKey } from '../navigation/types';
 import { gradients } from '../theme/colors';
 import type { TabId } from '../types/game';
+import type { CookieAmount } from '../types/game';
 import { BottomNav } from './BottomNav';
 import { SubmenuNav } from './SubmenuNav';
 import { TopBar } from './TopBar';
 
 interface ScreenLayoutProps {
   title: string;
-  cookies: number;
+  cookies: CookieAmount;
   activeCookieName: string;
   activeTab: TabId;
   onChangeMainMenu: (menuId: MainMenuId) => void;

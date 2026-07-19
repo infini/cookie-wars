@@ -34,6 +34,9 @@ export type {
 } from './cookieFragments';
 export type {
   ClickerRobotFormationConfig,
+  ClickerRobotRareEvent,
+  ClickerRobotRareEventEnvelope,
+  ClickerRobotRareJudgementConfig,
   ClickerRobotStats,
   ClickerRobotsConfig,
   FlyingFragmentCollectorConfig,
@@ -82,11 +85,14 @@ export type {
 } from './economy';
 export type {
   BattleRewardResult,
+  CookieAmount,
   CookieClickKind,
   CookieClickResult,
   CookieFragmentRewardResult,
   CookieStats,
   GameState,
+  StoredCookieAmount,
+  StoredGameState,
 } from './gameState';
 export type { TabId } from './navigation';
 export type {

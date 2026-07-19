@@ -47,9 +47,15 @@ function expectSafeInteger(value: number): void {
 
 function expectSafeStoredIntegers(state: typeof initialGameState): void {
   for (const value of [
-    state.saveVersion,
     state.cookies,
     state.lifetimeCookies,
+    ...Object.values(state.discUpgradeSpentCookies),
+  ]) {
+    expect(typeof value).toBe('bigint');
+    expect(value).toBeGreaterThanOrEqual(BigInt(0));
+  }
+  for (const value of [
+    state.saveVersion,
     state.legacyCookieEvolutionBonusLevels,
     state.highestUnlockedDifficultyIndex,
     state.giantDiscCount,
@@ -58,7 +64,6 @@ function expectSafeStoredIntegers(state: typeof initialGameState): void {
     state.lastSavedAt,
     ...Object.values(state.upgradeLevels),
     ...Object.values(state.discLevels),
-    ...Object.values(state.discUpgradeSpentCookies),
     ...Object.values(state.botCounts),
     ...Object.values(state.difficultyWinCounts),
   ]) expectSafeInteger(value);
@@ -82,25 +87,28 @@ describe('게임 숫자 안전 경계', () => {
     expect(nextSafeInteger(MAX_GAME_INTEGER)).toBeUndefined();
   });
 
-  test('쿠키 획득 액션은 큰 값은 포화하고 NaN·Infinity·음수를 거부한다', () => {
-    const startingState = { ...initialGameState, cookies: 5, lifetimeCookies: 7 };
+  test('쿠키 획득 액션은 MAX_SAFE를 넘어 정확히 누적하고 NaN·Infinity·음수를 거부한다', () => {
+    const startingState = {
+      ...initialGameState,
+      cookies: BigInt(5),
+      lifetimeCookies: BigInt(7),
+    };
 
     for (const amount of [Number.NaN, Number.POSITIVE_INFINITY, -1]) {
       expect(gameReducer(startingState, { type: 'GAIN_COOKIES', amount }))
         .toBe(startingState);
     }
 
-    const saturated = gameReducer(startingState, {
+    const expanded = gameReducer(startingState, {
       type: 'GAIN_COOKIES',
       amount: Number.MAX_VALUE,
     });
-    expect(saturated.cookies).toBe(MAX_GAME_INTEGER);
-    expect(saturated.lifetimeCookies).toBe(MAX_GAME_INTEGER);
-    expectSafeInteger(saturated.cookies);
-    expectSafeInteger(saturated.lifetimeCookies);
+    expect(expanded.cookies).toBe(BigInt(MAX_GAME_INTEGER) + BigInt(5));
+    expect(expanded.lifetimeCookies).toBe(BigInt(MAX_GAME_INTEGER) + BigInt(7));
 
-    const alreadyMaximum = gameReducer(saturated, { type: 'GAIN_COOKIES', amount: 1 });
-    expect(alreadyMaximum).toBe(saturated);
+    const oneMore = gameReducer(expanded, { type: 'GAIN_COOKIES', amount: 1 });
+    expect(oneMore.cookies).toBe(expanded.cookies + BigInt(1));
+    expect(oneMore.lifetimeCookies).toBe(expanded.lifetimeCookies + BigInt(1));
   });
 
   test('MAX 레벨 강화와 MAX 쿠키봇은 비용만 소모하지 않고 정확히 중단된다', () => {
@@ -108,8 +116,8 @@ describe('게임 숫자 안전 경계', () => {
     const bot = BOTS[0];
     const maximumState = {
       ...initialGameState,
-      cookies: MAX_GAME_INTEGER,
-      lifetimeCookies: MAX_GAME_INTEGER,
+      cookies: BigInt(MAX_GAME_INTEGER),
+      lifetimeCookies: BigInt(MAX_GAME_INTEGER),
       ownedDiscIds: [disc.id],
       selectedDiscId: disc.id,
       upgradeLevels: {
@@ -151,15 +159,15 @@ describe('게임 숫자 안전 경계', () => {
       type: 'BUY_BOT',
       botId: bot.id,
     })).toBe(maximumState);
-    expect(maximumState.cookies).toBe(MAX_GAME_INTEGER);
+    expect(maximumState.cookies).toBe(BigInt(MAX_GAME_INTEGER));
   });
 
   test('MAX 직전 레벨은 한 번만 올라가고 다음 요청은 쿠키를 소모하지 않는다', () => {
     const disc = DISCS[0];
     const upgradeState = {
       ...initialGameState,
-      cookies: MAX_GAME_INTEGER,
-      lifetimeCookies: MAX_GAME_INTEGER,
+      cookies: BigInt(MAX_GAME_INTEGER),
+      lifetimeCookies: BigInt(MAX_GAME_INTEGER),
       upgradeLevels: {
         ...initialGameState.upgradeLevels,
         clickPower: MAX_GAME_INTEGER - 1,
@@ -174,13 +182,13 @@ describe('게임 숫자 안전 경계', () => {
       upgradeId: 'clickPower',
     });
     expect(upgraded.upgradeLevels.clickPower).toBe(MAX_GAME_INTEGER);
-    expectSafeInteger(upgraded.cookies);
+    expect(upgraded.cookies).toBeGreaterThanOrEqual(BigInt(0));
     expect(blockedUpgrade).toBe(upgraded);
 
     const discState = {
       ...initialGameState,
-      cookies: MAX_GAME_INTEGER,
-      lifetimeCookies: MAX_GAME_INTEGER,
+      cookies: BigInt(MAX_GAME_INTEGER),
+      lifetimeCookies: BigInt(MAX_GAME_INTEGER),
       ownedDiscIds: [disc.id],
       selectedDiscId: disc.id,
       discLevels: {
@@ -197,7 +205,7 @@ describe('게임 숫자 안전 경계', () => {
       discId: disc.id,
     });
     expect(upgradedDisc.discLevels[disc.id]).toBe(MAX_GAME_INTEGER);
-    expectSafeInteger(upgradedDisc.cookies);
+    expect(upgradedDisc.cookies).toBeGreaterThanOrEqual(BigInt(0));
     expect(blockedDisc).toBe(upgradedDisc);
   });
 
@@ -223,8 +231,8 @@ describe('게임 숫자 안전 경계', () => {
   test('모든 reducer 액션 뒤 저장 정수 필드의 안전 범위가 유지된다', () => {
     const saturatedSave = mergeSavedGame({
       saveVersion: SAVE_MIGRATIONS.currentSaveVersion,
-      cookies: Number.MAX_VALUE,
-      lifetimeCookies: Number.MAX_VALUE,
+      cookies: '10000000000000000000000000000000000000000',
+      lifetimeCookies: '10000000000000000000000000000000000000001',
       legacyCookieEvolutionBonusLevels: Number.MAX_VALUE,
       upgradeLevels: Object.fromEntries(
         COOKIE_UPGRADES.map((upgrade) => [upgrade.id, Number.MAX_VALUE]),
@@ -278,8 +286,8 @@ describe('게임 숫자 안전 경계', () => {
   test('MAX 저장 상태의 경제·전투 selector는 모두 유한한 안전 값을 반환한다', () => {
     const extremeState = mergeSavedGame({
       saveVersion: SAVE_MIGRATIONS.currentSaveVersion,
-      cookies: Number.MAX_VALUE,
-      lifetimeCookies: Number.MAX_VALUE,
+      cookies: '10000000000000000000000000000000000000000',
+      lifetimeCookies: '10000000000000000000000000000000000000001',
       legacyCookieEvolutionBonusLevels: Number.MAX_VALUE,
       upgradeLevels: Object.fromEntries(
         COOKIE_UPGRADES.map((upgrade) => [upgrade.id, Number.MAX_VALUE]),
@@ -388,7 +396,7 @@ describe('게임 숫자 안전 경계', () => {
       amount: firstUpgrade.cost,
     })).toBe(true);
     expect(commands.buyUpgrade(upgradeId)).toBe(true);
-    expect(stateRef.current.cookies).toBe(0);
+    expect(stateRef.current.cookies).toBe(BigInt(0));
     expect(stateRef.current.upgradeLevels[upgradeId]).toBe(firstUpgrade.level);
     expect(actions.reduce(gameReducer, initialGameState)).toEqual(stateRef.current);
 
@@ -396,16 +404,16 @@ describe('게임 숫자 안전 경계', () => {
     const maximumRef = {
       current: {
         ...initialGameState,
-        cookies: MAX_GAME_INTEGER - 1,
-        lifetimeCookies: MAX_GAME_INTEGER - 1,
+        cookies: BigInt(MAX_GAME_INTEGER - 1),
+        lifetimeCookies: BigInt(MAX_GAME_INTEGER - 1),
       },
     };
     const maximumProjectedDispatch = createProjectedGameDispatcher((action) => {
       maximumActions.push(action);
     }, maximumRef);
     expect(maximumProjectedDispatch({ type: 'GAIN_COOKIES', amount: 10 })).toBe(true);
-    expect(maximumProjectedDispatch({ type: 'GAIN_COOKIES', amount: 1 })).toBe(false);
-    expect(maximumRef.current.cookies).toBe(MAX_GAME_INTEGER);
-    expect(maximumActions).toHaveLength(1);
+    expect(maximumProjectedDispatch({ type: 'GAIN_COOKIES', amount: 1 })).toBe(true);
+    expect(maximumRef.current.cookies).toBe(BigInt(MAX_GAME_INTEGER) + BigInt(10));
+    expect(maximumActions).toHaveLength(2);
   });
 });

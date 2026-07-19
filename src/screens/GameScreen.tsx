@@ -1,11 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, Text, View } from 'react-native';
 import { useFeedback } from '../services/FeedbackContext';
 import { useClickerRobotAudio } from '../services/useClickerRobotAudio';
 import { useGame } from '../state/GameContext';
 import { colors, gradients } from '../theme/colors';
-import { fonts } from '../theme/typography';
 import { formatNumber } from '../utils/format';
 import { CookieImage } from '../components/CookieImage';
 import { CookieFragmentCollectible } from '../components/CookieFragmentCollectible';
@@ -35,9 +34,17 @@ import {
 } from './game/CookieSpecialFeedback';
 import { useImmediateCookiePress } from './game/useImmediateCookiePress';
 import { useCookieFragmentCollection } from './game/useCookieFragmentCollection';
+import { useClickerRobotRareFeedback } from './game/useClickerRobotRareFeedback';
+import { gameScreenStyles as styles } from './game/gameScreenStyles';
 
 export function GameScreen() {
-  const { state, stats, clickCookie, claimCookieFragment } = useGame();
+  const {
+    state,
+    stats,
+    clickCookie,
+    claimCookieFragment,
+    clickerRobotRareEvent,
+  } = useGame();
   const feedback = useFeedback();
   const scale = useRef(new Animated.Value(1)).current;
   const stageShake = useRef(new Animated.Value(0)).current;
@@ -83,6 +90,17 @@ export function GameScreen() {
       }).start();
     }
   }, [stageShake]);
+  const showCookieGain = useCallback((item: Omit<CookieGainItem, 'id'>) => {
+    const id = nextGainId.current++;
+    setGains((current) => {
+      const previousLimit = COOKIE_FEEDBACK.floatingGain.maximumConcurrent - 1;
+      const source = item.kind === 'normal'
+        ? current
+        : current.filter((active) => active.kind !== item.kind);
+      const previous = previousLimit > 0 ? source.slice(-previousLimit) : [];
+      return [...previous, { id, ...item }];
+    });
+  }, []);
   const handleFragmentReward = useCallback((reward: CookieFragmentRewardResult) => {
     feedback.playCookieFragment(reward.kind);
     feedback.success();
@@ -101,6 +119,11 @@ export function GameScreen() {
     claimReward: claimCookieFragment,
     onReward: handleFragmentReward,
   });
+  useClickerRobotRareFeedback({
+    event: clickerRobotRareEvent,
+    showGain: showCookieGain,
+    showSpecial: showSpecialFeedback,
+  });
   const handleCookiePress = useCallback(() => {
     const result = clickCookie();
     const feedbackTier = feedback.playCookieClick(result.kind);
@@ -108,15 +131,7 @@ export function GameScreen() {
       feedback.success();
     }
     else feedback.tap();
-    const id = nextGainId.current++;
-    setGains((current) => {
-      const previousLimit = COOKIE_FEEDBACK.floatingGain.maximumConcurrent - 1;
-      const source = result.kind === 'normal'
-        ? current
-        : current.filter((item) => item.kind !== result.kind);
-      const previous = previousLimit > 0 ? source.slice(-previousLimit) : [];
-      return [...previous, { id, ...result, feedbackTier }];
-    });
+    showCookieGain({ ...result, feedbackTier });
     if (result.kind === 'critical' || result.kind === 'superCritical') {
       showSpecialFeedback({
         kind: result.kind,
@@ -132,7 +147,14 @@ export function GameScreen() {
       Animated.spring(scale, { toValue: 0.89, speed: 40, bounciness: 2, useNativeDriver: true }),
       Animated.spring(scale, { toValue: 1, speed: 25, bounciness: 12, useNativeDriver: true }),
     ]).start();
-  }, [clickCookie, feedback, scale, showSpecialFeedback, spawnFragment]);
+  }, [
+    clickCookie,
+    feedback,
+    scale,
+    showCookieGain,
+    showSpecialFeedback,
+    spawnFragment,
+  ]);
   const handleSpecialDone = useCallback((id: number) => {
     setSpecialFeedbacks((current) => current.filter((item) => item.id !== id));
   }, []);
@@ -273,55 +295,3 @@ export function GameScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1, paddingVertical: 4 },
-  statsRow: { flexDirection: 'row', gap: 6 },
-  hero: {
-    flex: 1,
-    minHeight: 0,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 4,
-    paddingBottom: 6,
-  },
-  evolutionRemaining: {
-    fontFamily: fonts.extraBold,
-    fontSize: 13,
-    color: colors.purple,
-    textAlign: 'center',
-  },
-  evolutionSummary: { width: '92%', maxWidth: 360, alignItems: 'center' },
-  evolutionProgressTrack: {
-    width: '100%',
-    height: 10,
-    marginTop: 4,
-    overflow: 'hidden',
-    borderRadius: 5,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: '#D9BEFF',
-  },
-  evolutionProgressFill: { height: '100%', borderRadius: 4, backgroundColor: colors.purple },
-  cookieStage: { width: 358, height: 358, alignItems: 'center', justifyContent: 'center' },
-  ringOuter: {
-    position: 'absolute', width: 350, height: 350, borderRadius: 175,
-    backgroundColor: 'rgba(255, 200, 61, 0.22)', borderWidth: 3, borderColor: 'rgba(255, 169, 61, 0.32)',
-  },
-  ringInner: {
-    position: 'absolute', width: 314, height: 314, borderRadius: 157,
-    backgroundColor: 'rgba(255,255,255,0.55)',
-  },
-  cookieButton: {
-    width: 310, height: 310, borderRadius: 155, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 6, borderColor: '#FFD97A', shadowColor: colors.shadow, shadowOpacity: 0.35,
-    shadowRadius: 10, shadowOffset: { width: 0, height: 8 }, elevation: 10,
-  },
-  infoGroup: { alignItems: 'center', maxWidth: '98%', gap: 2 },
-  infoText: { fontFamily: fonts.extraBold, fontSize: 12, textAlign: 'center' },
-  medalInfo: { color: colors.purple },
-  autoInfo: { color: colors.muted },
-  clickInfo: { color: colors.blue },
-  clickerInfo: { color: colors.orange },
-  flyingInfo: { color: colors.greenDark },
-});

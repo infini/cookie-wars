@@ -3,16 +3,23 @@ import {
   DiscConfig,
   DiscLevelConfig,
   GameState,
+  CookieAmount,
 } from '../../types/game';
 import {
   clampSafeInteger,
+  MAX_GAME_INTEGER,
   nextSafeInteger,
   saturatingExponentialInteger,
   saturatingLinearInteger,
   saturatingProductInteger,
-  saturatingAdd,
   saturatingSubtract,
 } from '../safeNumbers';
+import {
+  addCookieAmounts,
+  canAffordCookieAmount,
+  normalizeCookieAmount,
+  ZERO_COOKIE_AMOUNT,
+} from '../cookieAmounts';
 
 export interface DiscProgress {
   config: DiscConfig;
@@ -23,7 +30,7 @@ export interface DiscProgress {
   purchaseCost: number;
   purchaseAffordable: boolean;
   upgradeAffordable: boolean;
-  upgradeRefund: number;
+  upgradeRefund: CookieAmount;
   resettable: boolean;
 }
 
@@ -48,11 +55,10 @@ export function getDiscProgress(
   const nextLevel = nextSafeInteger(current.level, config.levels[0].level);
   const next = nextLevel === undefined ? undefined : calculateDiscLevel(config, nextLevel);
   const owned = state.ownedDiscIds.includes(config.id);
-  const upgradeRefund = clampSafeInteger(
+  const upgradeRefund = normalizeCookieAmount(
     state.discUpgradeSpentCookies[config.id],
-    { fallback: calculateDiscUpgradeRefund(config, current.level) },
+    calculateDiscUpgradeRefund(config, current.level),
   );
-  const cookies = clampSafeInteger(state.cookies);
   const purchaseCost = clampSafeInteger(config.purchaseCost);
   return {
     config,
@@ -61,8 +67,8 @@ export function getDiscProgress(
     owned,
     selected: state.selectedDiscId === config.id,
     purchaseCost,
-    purchaseAffordable: !owned && cookies >= purchaseCost,
-    upgradeAffordable: owned && !!next && cookies >= next.cost,
+    purchaseAffordable: !owned && canAffordCookieAmount(state.cookies, purchaseCost),
+    upgradeAffordable: owned && !!next && canAffordCookieAmount(state.cookies, next.cost),
     upgradeRefund,
     resettable: owned && current.level > config.levels[0].level,
   };
@@ -145,16 +151,21 @@ export function calculateDiscLevel(
 export function calculateDiscUpgradeRefund(
   config: DiscConfig,
   level: number,
-): number {
+): CookieAmount {
   const firstLevel = config.levels[0].level;
   const targetLevel = clampSafeInteger(level, {
     fallback: firstLevel,
     minimum: firstLevel,
   });
-  let refund = 0;
+  let refund = ZERO_COOKIE_AMOUNT;
   for (let currentLevel = firstLevel + 1; currentLevel <= targetLevel; currentLevel += 1) {
-    refund = saturatingAdd(refund, calculateDiscLevel(config, currentLevel).cost);
-    if (refund === Number.MAX_SAFE_INTEGER) return refund;
+    const cost = calculateDiscLevel(config, currentLevel).cost;
+    refund = addCookieAmounts(refund, cost);
+    if (cost === MAX_GAME_INTEGER && currentLevel < targetLevel) {
+      const remainingLevels = BigInt(targetLevel - currentLevel);
+      refund += BigInt(MAX_GAME_INTEGER) * remainingLevels;
+      break;
+    }
   }
   return refund;
 }

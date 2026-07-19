@@ -14,6 +14,7 @@ import {
   saturatingExponentialInteger,
   saturatingLinearInteger,
 } from '../safeNumbers';
+import { canAffordCookieAmount } from '../cookieAmounts';
 
 export interface UpgradeProgress {
   config: UpgradeConfig;
@@ -89,12 +90,11 @@ export function getUpgradeProgress(
         && nextLevel !== undefined
         ? calculateUpgradeLevel(config, nextLevel)
         : undefined);
-  const cookies = clampSafeInteger(state.cookies);
   return {
     config,
     current,
     next,
-    affordable: !!next && cookies >= next.cost,
+    affordable: !!next && canAffordCookieAmount(state.cookies, next.cost),
   };
 }
 

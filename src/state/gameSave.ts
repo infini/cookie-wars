@@ -19,7 +19,12 @@ import {
   MAX_GAME_INTEGER,
   saturatingAdd,
 } from '../domain/safeNumbers';
-import { GameState } from '../types/game';
+import {
+  maxCookieAmount,
+  normalizeCookieAmount,
+  ZERO_COOKIE_AMOUNT,
+} from '../domain/cookieAmounts';
+import { CookieAmount, GameState, StoredCookieAmount, StoredGameState } from '../types/game';
 import { initialGameState } from './gameInitialState';
 import { resolveCookieEvolutionBonusLevels } from './saveMigrations/cookieEvolutionMigration';
 import { resolveBattleMedals } from './saveMigrations/battleMedalMigration';
@@ -63,7 +68,7 @@ function normalizeStoredBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === 'boolean' ? value : fallback;
 }
 
-function normalizeDifficultyWins(saved: Partial<GameState>): Record<string, number> {
+function normalizeDifficultyWins(saved: StoredGameState): Record<string, number> {
   const counts = Object.fromEntries(DIFFICULTIES.map((difficulty) => [difficulty.id, 0]));
   const legacyClearedIds = storedStringArray(saved.clearedDifficultyIds);
   for (const difficulty of DIFFICULTIES) {
@@ -157,10 +162,12 @@ function normalizeDiscLevels(
 }
 
 function normalizeDiscUpgradeSpentCookies(
-  savedSpent: Record<string, number> | undefined,
+  savedSpent: Record<string, StoredCookieAmount> | undefined,
   discLevels: Record<string, number>,
-): Record<string, number> {
-  const normalized = Object.fromEntries(DISCS.map((disc) => [disc.id, 0]));
+): Record<string, CookieAmount> {
+  const normalized: Record<string, CookieAmount> = Object.fromEntries(
+    DISCS.map((disc) => [disc.id, ZERO_COOKIE_AMOUNT]),
+  );
   const savedByCurrentId: Record<string, unknown> = {};
   for (const [savedId, value] of Object.entries(savedSpent ?? {})) {
     const currentId = SAVE_MIGRATIONS.discIdAliases[savedId] ?? savedId;
@@ -171,7 +178,7 @@ function normalizeDiscUpgradeSpentCookies(
     const savedValue = savedByCurrentId[disc.id];
     normalized[disc.id] = savedValue === undefined
       ? calculateDiscUpgradeRefund(disc, discLevels[disc.id])
-      : normalizeStoredInteger(savedValue, { fallback: 0 });
+      : normalizeCookieAmount(savedValue);
   }
   return normalized;
 }
@@ -187,11 +194,14 @@ function unlockedDifficultyIndex(winCounts: Record<string, number>): number {
   return unlockedIndex;
 }
 
-export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): GameState {
+export function mergeSavedGame(saved: StoredGameState & LegacyDiscSave): GameState {
   const {
     discOwned: _legacyDiscOwned,
     discLevel: _legacyDiscLevel,
     rewardClaimedDifficultyIds: legacyRewardClaimedDifficultyIds,
+    cookies: _storedCookies,
+    lifetimeCookies: _storedLifetimeCookies,
+    discUpgradeSpentCookies: _storedDiscUpgradeSpentCookies,
     ...currentSaved
   } = saved;
   const difficultyWinCounts = normalizeDifficultyWins(saved);
@@ -239,14 +249,10 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
     savedBonusLevels: saved.legacyCookieEvolutionBonusLevels,
     savedUpgradeLevels: saved.upgradeLevels,
   });
-  const cookies = normalizeStoredInteger(saved.cookies, {
-    fallback: initialGameState.cookies,
-  });
-  const lifetimeCookies = Math.max(
+  const cookies = normalizeCookieAmount(saved.cookies, initialGameState.cookies);
+  const lifetimeCookies = maxCookieAmount(
     cookies,
-    normalizeStoredInteger(saved.lifetimeCookies, {
-      fallback: initialGameState.lifetimeCookies,
-    }),
+    normalizeCookieAmount(saved.lifetimeCookies, initialGameState.lifetimeCookies),
   );
   const clearedDifficultyIds = DIFFICULTIES
     .filter((difficulty) => difficultyWinCounts[difficulty.id] > 0)
@@ -286,11 +292,12 @@ export function mergeSavedGame(saved: Partial<GameState> & LegacyDiscSave): Game
       initialGameState.autoBattleEnabled,
     ),
     cookiePityMisses: normalizeCookiePityMisses(saved.cookiePityMisses),
+    clickerRobotPityMisses: normalizeCookiePityMisses(saved.clickerRobotPityMisses),
     lastSavedAt: normalizeStoredInteger(saved.lastSavedAt, { fallback: 0 }),
   };
 }
 
-export function restoreSavedGame(saved: Partial<GameState>, now: number): GameState {
+export function restoreSavedGame(saved: StoredGameState, now: number): GameState {
   return settleOfflineProduction(mergeSavedGame(saved), now);
 }
 
@@ -306,7 +313,7 @@ export interface PreparedSavedGame {
  * 정산하거나 저장하지 않아, 사용자가 최신 앱으로 돌아왔을 때 원본을 보존한다.
  */
 export function prepareSavedGame(
-  saved: Partial<GameState>,
+  saved: StoredGameState,
   now: number,
 ): PreparedSavedGame {
   const futureSaveVersion = isFutureSaveVersion(

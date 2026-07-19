@@ -5,9 +5,13 @@ import {
   clampFiniteNumber,
   clampSafeInteger,
   MAX_GAME_INTEGER,
-  saturatingAdd,
   saturatingProductInteger,
 } from './safeNumbers';
+import {
+  addCookieAmounts,
+  maxCookieAmount,
+  normalizeCookieAmount,
+} from './cookieAmounts';
 
 export interface OfflineProductionResult {
   elapsedMs: number;
@@ -77,15 +81,15 @@ export function settleOfflineProduction(state: GameState, now: number): GameStat
     : saturatedFutureCheckpoint
       ? validNow
       : Math.max(savedAt, validNow);
-  const currentCookies = clampSafeInteger(state.cookies);
-  const currentLifetimeCookies = Math.max(
+  const currentCookies = normalizeCookieAmount(state.cookies);
+  const currentLifetimeCookies = maxCookieAmount(
     currentCookies,
-    clampSafeInteger(state.lifetimeCookies),
+    state.lifetimeCookies,
   );
   return {
     ...state,
-    cookies: saturatingAdd(currentCookies, settlement.cookiesEarned),
-    lifetimeCookies: saturatingAdd(currentLifetimeCookies, settlement.cookiesEarned),
+    cookies: addCookieAmounts(currentCookies, settlement.cookiesEarned),
+    lifetimeCookies: addCookieAmounts(currentLifetimeCookies, settlement.cookiesEarned),
     lastSavedAt: nextSavedAt,
   };
 }

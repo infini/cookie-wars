@@ -75,7 +75,9 @@ export function useCookieAudioFeedback({
     if (!soundEnabled) stopCookieSounds();
   }, [soundEnabled, stopCookieSounds]);
 
-  useEffect(() => stopCookieSounds, [stopCookieSounds]);
+  useEffect(() => () => {
+    playbackEpoch.current += 1;
+  }, []);
 
   const playCookieClick = useCallback((kind: CookieClickKind): CookieFeedbackTier => {
     const now = Date.now();

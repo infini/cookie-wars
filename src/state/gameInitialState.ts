@@ -13,6 +13,7 @@ import {
 } from '../domain/gameSelectors';
 import { GameState } from '../types/game';
 import { INITIAL_COOKIE_PITY_MISSES } from '../domain/cookiePity';
+import { ZERO_COOKIE_AMOUNT } from '../domain/cookieAmounts';
 
 const initialDifficultyWinCounts = Object.fromEntries(
   DIFFICULTIES.map((difficulty) => [difficulty.id, 0]),
@@ -20,13 +21,15 @@ const initialDifficultyWinCounts = Object.fromEntries(
 
 export const initialGameState: GameState = {
   saveVersion: SAVE_MIGRATIONS.currentSaveVersion,
-  cookies: 0,
-  lifetimeCookies: 0,
+  cookies: ZERO_COOKIE_AMOUNT,
+  lifetimeCookies: ZERO_COOKIE_AMOUNT,
   upgradeLevels: makeInitialUpgradeLevels(),
   legacyCookieEvolutionBonusLevels: 0,
   ownedDiscIds: [],
   discLevels: makeInitialDiscLevels(),
-  discUpgradeSpentCookies: Object.fromEntries(DISCS.map((disc) => [disc.id, 0])),
+  discUpgradeSpentCookies: Object.fromEntries(
+    DISCS.map((disc) => [disc.id, ZERO_COOKIE_AMOUNT]),
+  ),
   selectedDiscId: DISCS[0].id,
   botCounts: makeInitialBotCounts(),
   selectedDifficultyId: DIFFICULTIES[0].id,
@@ -44,5 +47,6 @@ export const initialGameState: GameState = {
   battleSpeedMultiplier: BATTLE_RULES.defaultBattleSpeedMultiplier,
   autoBattleEnabled: BATTLE_AUTO.defaultEnabled,
   cookiePityMisses: INITIAL_COOKIE_PITY_MISSES,
+  clickerRobotPityMisses: INITIAL_COOKIE_PITY_MISSES,
   lastSavedAt: 0,
 };

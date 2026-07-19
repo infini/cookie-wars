@@ -6,6 +6,7 @@ import {
   saturatingAdd,
   saturatingExponentialInteger,
 } from '../safeNumbers';
+import { canAffordCookieAmount } from '../cookieAmounts';
 
 export interface BotOffer {
   config: BotConfig;
@@ -33,12 +34,11 @@ export function getBotOffer(state: GameState, botId: string): BotOffer | undefin
   if (!config) return undefined;
   const count = clampSafeInteger(state.botCounts[botId]);
   const price = calculateBotPrice(config, count);
-  const cookies = clampSafeInteger(state.cookies);
   return {
     config,
     count,
     price,
-    affordable: count < MAX_GAME_INTEGER && cookies >= price,
+    affordable: count < MAX_GAME_INTEGER && canAffordCookieAmount(state.cookies, price),
   };
 }
 

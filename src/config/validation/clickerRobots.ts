@@ -30,6 +30,22 @@ export function validateClickerRobots(value: unknown): void {
     );
   }
 
+  const rareJudgement = record(config.rareJudgement, `${path}.rareJudgement`);
+  validatePositiveNumberFields(
+    rareJudgement,
+    `${path}.rareJudgement`,
+    ['intervalMs'],
+    { integer: true },
+  );
+  if (
+    (config.productionIntervalMs as number) % (rareJudgement.intervalMs as number) !== 0
+  ) {
+    throw new ConfigValidationError(
+      `${path}.rareJudgement.intervalMs`,
+      'productionIntervalMs를 나누어떨어지게 해야 합니다.',
+    );
+  }
+
   const sound = record(config.sound, `${path}.sound`);
   validatePositiveNumberFields(sound, `${path}.sound`, ['minimumIntervalMs'], {
     integer: true,

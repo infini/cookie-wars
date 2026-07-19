@@ -2,15 +2,17 @@ import type { SoundVolumeLevel } from './audio';
 import type { CookieFragmentKind } from './cookieFragments';
 import type { CookiePityMisses, CriticalPityKind } from './cookiePity';
 
+export type CookieAmount = bigint;
+
 export interface GameState {
   saveVersion: number;
-  cookies: number;
-  lifetimeCookies: number;
+  cookies: CookieAmount;
+  lifetimeCookies: CookieAmount;
   upgradeLevels: Record<string, number>;
   legacyCookieEvolutionBonusLevels: number;
   ownedDiscIds: string[];
   discLevels: Record<string, number>;
-  discUpgradeSpentCookies: Record<string, number>;
+  discUpgradeSpentCookies: Record<string, CookieAmount>;
   selectedDiscId: string;
   botCounts: Record<string, number>;
   selectedDifficultyId: string;
@@ -28,8 +30,20 @@ export interface GameState {
   battleSpeedMultiplier: number;
   autoBattleEnabled: boolean;
   cookiePityMisses: CookiePityMisses;
+  clickerRobotPityMisses: CookiePityMisses;
   lastSavedAt: number;
 }
+
+export type StoredCookieAmount = string | number | bigint;
+
+export type StoredGameState = Omit<
+  Partial<GameState>,
+  'cookies' | 'lifetimeCookies' | 'discUpgradeSpentCookies'
+> & {
+  cookies?: StoredCookieAmount;
+  lifetimeCookies?: StoredCookieAmount;
+  discUpgradeSpentCookies?: Record<string, StoredCookieAmount>;
+};
 
 export interface CookieStats {
   clickPower: number;

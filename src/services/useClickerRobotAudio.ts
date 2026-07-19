@@ -23,6 +23,7 @@ export function useClickerRobotAudio({
   const voice3 = useAudioPlayer(require('../../assets/audio/clicker-hammer-3.ogg'));
   const players = useMemo(() => [voice1, voice2, voice3], [voice1, voice2, voice3]);
   const nextVoice = useRef(0);
+  const playbackEpoch = useRef(0);
 
   useEffect(() => {
     const volume = AUDIO_SETTINGS.levels.find(
@@ -35,18 +36,22 @@ export function useClickerRobotAudio({
 
   useEffect(() => {
     if (!soundEnabled || robotCount <= 0 || clicksPerSecondPerRobot <= 0) {
+      playbackEpoch.current += 1;
       players.forEach((player) => {
         player.pause();
-        void player.seekTo(0).catch(() => undefined);
       });
       return undefined;
     }
     const playNextHit = () => {
       if (AppState.currentState !== 'active') return;
+      const requestedEpoch = playbackEpoch.current;
       const player = players[nextVoice.current % players.length];
       nextVoice.current += 1;
       void player.seekTo(0).then(() => {
-        if (AppState.currentState === 'active') player.play();
+        if (
+          requestedEpoch === playbackEpoch.current
+          && AppState.currentState === 'active'
+        ) player.play();
       }).catch(() => undefined);
     };
     const timer = setInterval(
@@ -55,10 +60,7 @@ export function useClickerRobotAudio({
     );
     return () => {
       clearInterval(timer);
-      players.forEach((player) => {
-        player.pause();
-        void player.seekTo(0).catch(() => undefined);
-      });
+      playbackEpoch.current += 1;
     };
   }, [clicksPerSecondPerRobot, players, robotCount, soundEnabled]);
 }
