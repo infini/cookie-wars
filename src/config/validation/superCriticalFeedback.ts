@@ -20,7 +20,9 @@ export function validateSuperCriticalEffect(
 ): void {
   const path = `${rootPath}.superCriticalEffect`;
   const effect = record(config.superCriticalEffect, path);
-  validateStringFields(effect, path, ['flashColor', 'labelColor', 'labelShadowColor']);
+  validateStringFields(effect, path, [
+    'flashColor', 'labelColor', 'labelShadowColor', 'shockwaveColor',
+  ]);
   [
     'columnGradientColors', 'slashGradientColors', 'ghostSlashColors',
     'lightningColors', 'shardColors', 'riftColors',
@@ -43,15 +45,19 @@ export function validateSuperCriticalEffect(
     'shardMaximumSizePixels', 'labelFontSize', 'labelShadowRadius',
     'riftSegmentCount', 'riftSegmentLengthPixels', 'riftSegmentWidthPixels',
     'riftZigzagPixels', 'riftTurnDegrees', 'riftGlowWidthMultiplier',
+    'emblemSizePixels', 'emblemRotationDegrees',
+    'shockwaveCount', 'shockwaveSizePixels', 'shockwaveBorderWidthPixels',
   ];
   validateNumberFields(effect, path, [
     ...integerFields, 'flashMaximumOpacity', 'compactFlashMaximumOpacity',
     'flashStartScale', 'flashEndScale', 'flashRotationDegrees', 'impactPeakProgress',
-    'impactFadeStartProgress', 'shakeFirstProgress', 'shakeSecondProgress',
+    'impactFadeStartProgress', 'chargeEndProgress', 'secondaryImpactProgress',
+    'shakeFirstProgress', 'shakeSecondProgress',
     'shakeThirdProgress', 'shakeEndProgress', 'shakeReturnRatio', 'columnStartScale',
     'columnPeakScale', 'columnEndScale', 'slashAngleOffsetDegrees',
     'slashAngleStepDegrees', 'slashStartScale', 'slashPeakScale', 'slashEndScale',
-    'slashFadeStartProgress', 'lightningAngleOffsetDegrees',
+    'slashFadeStartProgress', 'slashRevealProgress', 'slashStaggerProgress',
+    'lightningAngleOffsetDegrees',
     'lightningSegmentTurnDegrees', 'lightningRevealProgress',
     'lightningBranchStaggerProgress', 'lightningSegmentStaggerProgress',
     'lightningFadeStartProgress', 'lightningSegmentStartScale', 'shardStartProgress',
@@ -60,7 +66,10 @@ export function validateSuperCriticalEffect(
     'labelPeakScale', 'labelEndScale', 'riftTopRatio',
     'riftHorizontalSpreadRatio', 'riftRevealProgress',
     'riftSegmentStaggerProgress', 'riftFadeStartProgress', 'riftStartScale',
-    'riftEndScale', 'riftGlowMaximumOpacity',
+    'riftEndScale', 'riftGlowMaximumOpacity', 'emblemTopRatio',
+    'emblemStartScale', 'emblemPeakScale', 'emblemEndScale',
+    'emblemFadeStartProgress', 'shockwaveStaggerProgress', 'shockwaveEndScale',
+    'shockwaveCornerRadiusRatio', 'shockwaveRotationDegrees',
   ], { min: 0 });
   integerFields.forEach((field) => numberField(effect, field, path, { integer: true, min: 1 }));
   numberField(effect, 'maximumConcurrentFullEffects', path, { integer: true, min: 1, max: 2 });
@@ -73,23 +82,29 @@ export function validateSuperCriticalEffect(
   numberField(effect, 'shardCount', path, { integer: true, min: 1, max: 24 });
   numberField(effect, 'compactShardCount', path, { integer: true, min: 1, max: 16 });
   numberField(effect, 'riftSegmentCount', path, { integer: true, min: 1, max: 12 });
+  numberField(effect, 'shockwaveCount', path, { integer: true, min: 1, max: 5 });
   [
     'flashMaximumOpacity', 'compactFlashMaximumOpacity', 'shakeReturnRatio',
     'labelTopRatio', 'riftTopRatio', 'riftHorizontalSpreadRatio',
-    'riftGlowMaximumOpacity',
+    'riftGlowMaximumOpacity', 'emblemTopRatio', 'emblemFadeStartProgress',
   ]
     .forEach((field) => numberField(effect, field, path, { min: 0, max: 1 }));
   [
     'impactPeakProgress', 'impactFadeStartProgress', 'shakeFirstProgress',
+    'chargeEndProgress', 'secondaryImpactProgress',
     'shakeSecondProgress', 'shakeThirdProgress', 'shakeEndProgress',
-    'slashFadeStartProgress', 'lightningRevealProgress',
+    'slashFadeStartProgress', 'slashRevealProgress', 'slashStaggerProgress',
     'lightningBranchStaggerProgress', 'lightningSegmentStaggerProgress',
     'lightningFadeStartProgress', 'lightningSegmentStartScale', 'shardStartProgress',
     'shardRevealProgress', 'shardFadeStartProgress',
     'riftRevealProgress', 'riftSegmentStaggerProgress', 'riftFadeStartProgress',
+    'shockwaveStaggerProgress', 'shockwaveCornerRadiusRatio',
   ].forEach((field) => numberField(effect, field, path, { min: 0, max: 1 }));
 
   assertLess(effect, path, 'impactPeakProgress', 'impactFadeStartProgress');
+  assertLess(effect, path, 'chargeEndProgress', 'impactPeakProgress');
+  assertLess(effect, path, 'impactPeakProgress', 'secondaryImpactProgress');
+  assertLess(effect, path, 'secondaryImpactProgress', 'impactFadeStartProgress');
   assertAscending(effect, path, [
     'shakeFirstProgress', 'shakeSecondProgress', 'shakeThirdProgress', 'shakeEndProgress',
   ]);
@@ -103,6 +118,8 @@ export function validateSuperCriticalEffect(
   assertLess(effect, path, 'labelStartScale', 'labelPeakScale');
   assertLess(effect, path, 'riftRevealProgress', 'riftFadeStartProgress');
   assertLess(effect, path, 'riftStartScale', 'riftEndScale');
+  assertLess(effect, path, 'emblemStartScale', 'emblemPeakScale');
+  assertLess(effect, path, 'impactPeakProgress', 'emblemFadeStartProgress');
   if ((effect.compactSlashCount as number) > (effect.slashCount as number)) {
     throw new ConfigValidationError(`${path}.compactSlashCount`, 'slashCount 이하여야 합니다.');
   }
@@ -133,6 +150,24 @@ export function validateSuperCriticalEffect(
     throw new ConfigValidationError(
       `${path}.riftSegmentStaggerProgress`,
       '마지막 천공 균열도 fade 전에 나타나야 합니다.',
+    );
+  }
+  const finalSlashReveal = (effect.impactPeakProgress as number)
+    + ((effect.slashCount as number) - 1) * (effect.slashStaggerProgress as number)
+    + (effect.slashRevealProgress as number);
+  if (finalSlashReveal >= (effect.slashFadeStartProgress as number)) {
+    throw new ConfigValidationError(
+      `${path}.slashStaggerProgress`,
+      '마지막 참격이 fade 전에 펼쳐져야 합니다.',
+    );
+  }
+  const finalShockwaveStart = (effect.impactPeakProgress as number)
+    + ((effect.shockwaveCount as number) - 1)
+      * (effect.shockwaveStaggerProgress as number);
+  if (finalShockwaveStart >= (effect.impactFadeStartProgress as number)) {
+    throw new ConfigValidationError(
+      `${path}.shockwaveStaggerProgress`,
+      '마지막 충격파가 impact fade 전에 시작해야 합니다.',
     );
   }
   if ((effect.durationMs as number) > gainDurationMs) {

@@ -1,7 +1,6 @@
 import React, { useCallback, useRef } from 'react';
 import { Animated, StyleSheet } from 'react-native';
 import { COOKIE_FEEDBACK } from '../../config';
-import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 import type { CookieClickKind, CookieFeedbackTier } from '../../types/game';
 import { formatNumber } from '../../utils/format';
@@ -80,15 +79,27 @@ export function CookieGainFeedback({
 
 const styles = StyleSheet.create({
   floatingText: {
-    position: 'absolute', zIndex: 8, top: 98, fontFamily: fonts.display, fontSize: 34,
-    color: colors.greenDark, textShadowColor: colors.white, textShadowRadius: 5,
+    position: 'absolute', zIndex: 8, top: 98, fontFamily: fonts.regular,
+    fontSize: COOKIE_FEEDBACK.floatingGain.normalFontSize,
+    color: COOKIE_FEEDBACK.floatingGain.normalColor,
+    textShadowColor: COOKIE_FEEDBACK.floatingGain.normalShadowColor,
+    textShadowRadius: COOKIE_FEEDBACK.floatingGain.normalShadowRadius,
   },
   criticalFloatingText: {
-    width: 280, textAlign: 'center', fontSize: 29, color: '#F0182F',
-    textShadowColor: '#FFD35A', textShadowRadius: 8,
+    width: 280,
+    textAlign: 'center',
+    fontSize: COOKIE_FEEDBACK.floatingGain.criticalFontSize,
+    color: COOKIE_FEEDBACK.floatingGain.criticalColor,
+    textShadowColor: COOKIE_FEEDBACK.floatingGain.criticalShadowColor,
+    textShadowRadius: COOKIE_FEEDBACK.floatingGain.criticalShadowRadius,
   },
   superCriticalFloatingText: {
-    width: 310, textAlign: 'center', fontSize: 25, color: '#FFFFFF',
-    textShadowColor: '#9C2BFF', textShadowRadius: 12,
+    width: 310,
+    textAlign: 'center',
+    fontFamily: fonts.extraBold,
+    fontSize: COOKIE_FEEDBACK.floatingGain.superCriticalFontSize,
+    color: COOKIE_FEEDBACK.floatingGain.superCriticalColor,
+    textShadowColor: COOKIE_FEEDBACK.floatingGain.superCriticalShadowColor,
+    textShadowRadius: COOKIE_FEEDBACK.floatingGain.superCriticalShadowRadius,
   },
 });

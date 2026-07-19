@@ -1,8 +1,11 @@
 import {
   ConfigValidationError,
   UnknownRecord,
+  array,
+  assertUnique,
   numberField,
   record,
+  stringValue,
   validatePositiveNumberFields,
 } from './primitives';
 
@@ -23,6 +26,7 @@ export function validateDifficultyExpansion(value: unknown): UnknownRecord {
   [
     'legacyDifficultyCount',
     'extensionDifficultyCount',
+    'difficultySeriesSize',
     'enemyDiscSizeIncreasePerDifficulty',
     'maximumEnemyDiscSize',
     'maximumEnemyDiscSpeed',
@@ -48,6 +52,20 @@ export function validateDifficultyExpansion(value: unknown): UnknownRecord {
       '1 이하여야 합니다.',
     );
   }
+  const prefixes = array(
+    config.extensionSeriesPrefixes,
+    `${path}.extensionSeriesPrefixes`,
+  ).map((item, index) => stringValue(
+    item,
+    `${path}.extensionSeriesPrefixes[${index}]`,
+  ));
+  if (prefixes.length === 0) {
+    throw new ConfigValidationError(
+      `${path}.extensionSeriesPrefixes`,
+      '확장 시리즈가 하나 이상이어야 합니다.',
+    );
+  }
+  assertUnique(prefixes, `${path}.extensionSeriesPrefixes`);
   return config;
 }
 
@@ -69,18 +87,41 @@ export function validateDifficultyExpansionReferences({
   const path = 'DIFFICULTY_EXPANSION';
   const legacyCount = expansion.legacyDifficultyCount as number;
   const extensionCount = expansion.extensionDifficultyCount as number;
-  if (extensionCount !== legacyCount) {
+  const seriesSize = expansion.difficultySeriesSize as number;
+  const seriesPrefixes = expansion.extensionSeriesPrefixes as string[];
+  if (seriesSize !== legacyCount) {
+    throw new ConfigValidationError(
+      `${path}.difficultySeriesSize`,
+      `기본 난이도 수 ${legacyCount}와 같아야 합니다.`,
+    );
+  }
+  if (extensionCount !== seriesSize * seriesPrefixes.length) {
     throw new ConfigValidationError(
       `${path}.extensionDifficultyCount`,
-      `기존 난이도 수 ${legacyCount}와 같아야 합니다.`,
+      `${seriesPrefixes.length}개 확장 시리즈 × ${seriesSize}단계여야 합니다.`,
     );
   }
   if (difficulties.length !== legacyCount + extensionCount) {
     throw new ConfigValidationError(
       'DIFFICULTIES',
-      `기존 ${legacyCount}개와 신규 ${extensionCount}개여야 합니다.`,
+      `기본 ${legacyCount}개와 확장 ${extensionCount}개여야 합니다.`,
     );
   }
+
+  const baseNames = difficulties.slice(0, seriesSize).map((difficulty) => (
+    difficulty.name as string
+  ));
+  difficulties.slice(legacyCount).forEach((difficulty, extensionIndex) => {
+    const seriesIndex = Math.floor(extensionIndex / seriesSize);
+    const baseIndex = extensionIndex % seriesSize;
+    const expectedName = `${seriesPrefixes[seriesIndex]} ${baseNames[baseIndex]}`;
+    if (difficulty.name !== expectedName) {
+      throw new ConfigValidationError(
+        `DIFFICULTIES[${legacyCount + extensionIndex}].name`,
+        `확장 시리즈 이름 '${expectedName}'이어야 합니다.`,
+      );
+    }
+  });
 
   const stageRules = record(battleStageRulesValue, 'BATTLE_STAGE_RULES');
   const progression = record(progressionValue, 'PROGRESSION');

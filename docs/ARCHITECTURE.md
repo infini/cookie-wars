@@ -4,9 +4,9 @@
 
 `App.tsx`는 게임·전투·강화·정보 4개 대분류와 실제 화면 leaf를 조정합니다. 대분류를 누르면 세션 ref에 기억한 마지막 leaf 또는 데이터의 기본 leaf로 한 번에 이동하고, 소메뉴는 leaf를 직접 엽니다. 쿠키 클릭은 `GameScreen`, 전투 개체는 `BattleScreen`에만 존재하므로 두 플레이 방식이 섞이지 않습니다. `DiscScreen`과 `BotScreen`도 독립되어 원반과 쿠키봇 상점이 한 화면에 섞이지 않습니다.
 
-`src/navigation/navigation.json`이 대분류 순서, 소분류 소속, 한국어 라벨, 아이콘, 화면 제목, 기본 leaf와 몬스터 NEW 배지 출처를 관리합니다. `navigation/model.ts`는 중복 ID, 누락 화면, 잘못된 부모·기본 leaf 참조를 시작 시 검증하고 기본/기억 화면 선택과 배지 상향을 순수 함수로 제공합니다. `ScreenLayout`은 공통 상단 정보와 설정, 자식이 둘 이상일 때만 나타나는 `SubmenuNav`, 4개 대분류 `BottomNav`를 조합합니다. 게임·전투에는 소메뉴 네이티브 뷰 자체가 생기지 않아 콘텐츠 영역을 유지합니다.
+`src/navigation/navigation.json`이 대분류 순서, 소분류 소속, 한국어 라벨, 아이콘, 화면 제목, 기본 leaf와 몬스터 NEW 배지 출처를 관리합니다. `navigation/model.ts`는 중복 ID, 누락 화면, 잘못된 부모·기본 leaf 참조를 시작 시 검증하고 기본/기억 화면 선택과 배지 상향을 순수 함수로 제공합니다. `ScreenLayout`은 공통 상단 정보와 설정, 자식이 둘 이상일 때만 나타나는 `SubmenuNav`, 4개 대분류 `BottomNav`를 조합합니다. `TopBar`는 게임 화면에서 부제·잔액 대신 현재 진화 쿠키 이름을 표시하고 다른 화면에서는 기존 화면 제목·잔액을 유지합니다. 게임·전투에는 소메뉴 네이티브 뷰 자체가 생기지 않아 콘텐츠 영역을 유지합니다.
 
-`GameScreen`은 통계 행과 전투 이동 버튼 사이의 중앙 영역 전체를 하나의 쿠키 획득 `Pressable`로 사용합니다. `useImmediateCookiePress`는 터치 시작에 즉시 보상을 주고 같은 터치의 후속 `onPress`만 제거하며, 접근성 서비스처럼 `onPress`만 보내는 입력은 그대로 처리합니다. hit slop·이동 허용 범위·중복 제거 시간은 `cookie-input.json`에서 읽습니다. 일반 획득 텍스트는 `screens/game/CookieGainFeedback`, 종류별로 독립한 크리티컬·슈퍼·조각 획득 연출은 `CookieSpecialFeedback`, 5초 조각 수명과 중복 수령 방지는 `useCookieFragmentCollection`로 분리했습니다. 다른 종류는 최대 4종이 겹쳐지고 같은 종류만 새 ID로 교체되며, 전체 슈퍼 크리티컬일 때만 별도 native-driver 값으로 쿠키 무대를 짧게 흔듭니다. 조각 `Pressable`은 메인 쿠키와 형제인 투명 오버레이에 있으므로 획득 터치가 기본 클릭으로 전파되지 않습니다.
+`GameScreen`은 두 통계 카드 아래의 중앙 영역 전체를 하나의 쿠키 획득 `Pressable`로 사용합니다. 별도 전투 이동 버튼을 제거해 공통 하단 `전투` 메뉴만 이동 책임을 가지며, 다음 진화까지 남은 강화 수와 진행 막대는 중앙 쿠키 위에 간결하게 둡니다. 하단은 전투 훈장·자동 생산·클릭 획득과 두 줄 희귀 보상 아이콘만 조합합니다. `useImmediateCookiePress`는 터치 시작에 즉시 보상을 주고 같은 터치의 후속 `onPress`만 제거하며, 접근성 서비스처럼 `onPress`만 보내는 입력은 그대로 처리합니다. hit slop·이동 허용 범위·중복 제거 시간은 `cookie-input.json`에서 읽습니다. 획득 텍스트는 `screens/game/CookieGainFeedback`, 슈퍼·마그마·전기의 독립 연출은 `CookieSpecialFeedback`, 5초 조각 수명과 중복 수령 방지는 `useCookieFragmentCollection`로 분리했습니다. 다른 종류는 최대 3종이 겹쳐지고 같은 종류만 새 ID로 교체되며, 슈퍼 크리티컬일 때만 별도 native-driver 값으로 쿠키 무대를 짧게 흔듭니다. 일반 크리티컬은 별도 시각 컴포넌트 없이 숫자와 음향만 사용합니다. 조각 `Pressable`은 메인 쿠키와 형제인 투명 오버레이에 있으므로 획득 터치가 기본 클릭으로 전파되지 않습니다.
 
 의존 방향은 아래와 같습니다.
 
@@ -61,8 +61,8 @@ services/storage          engine/useBattleEngine
 - `battle-rewards.json`: 스테이지 진행 승리당 전투 훈장 수와 훈장당 클릭·자동 생산·성 체력 보너스율
 - `progression.json`: 난이도 해금 승수, 최초 클리어 거대 원반 수, 저장·자동 생산 주기
 - `battle-stage-rules.json`: 같은 난이도 안에서 승리마다 적용할 전투 강화식
-- `difficulty-expansion.json`: 기존 캠페인과 같은 수의 Blood Moon 난이도, 등급 경계 +20% 성장식과 이동·원반 상하한
-- `battle-maps.json`: 난이도 ID와 지형·건축이 다른 고유 전투 테마의 일대일 연결
+- `difficulty-expansion.json`: Blood Moon·Black Sun 두 확장 시리즈의 개수·접두어, 등급 경계 +20% 성장식과 이동·원반 상하한
+- `battle-maps.json`: 45개 난이도 ID와 30개 독립 전장 이미지의 연결. Black Sun은 기본 15개 세계에서 강화 재대결
 - `boss-balance.json`: 고성장 자동 공격 DPS에 따른 단일 보스 HP 하한과 즉사 방지
 - `boss-behavior.json`: 보스 전역 공격력·공격 간격·이동 배율과 HP 분노 페이즈
 - `boss-special-attack.json`: 주기 보스 망치 강공격의 예고·지면 충격·발사체·플래시 연출
@@ -83,7 +83,7 @@ services/storage          engine/useBattleEngine
 
 `types/game.ts`도 기존 import를 보존하는 얇은 타입 파사드입니다. 실제 계약은 오디오, 전투 표현, 전투 규칙, 전투 콘텐츠, 성장·상점, 저장 상태, 내비게이션, 시스템 설정 모듈로 나뉩니다. 하위 타입 모듈은 파사드를 역참조하지 않고 저장 상태가 음량 타입만 읽는 한 방향 의존을 유지합니다. 새 설정 필드를 추가할 때는 해당 영역 타입만 변경하고 파사드에서 공개 여부를 결정합니다.
 
-쿠키 진화 종류는 별도로 저장하지 않고 `countsTowardCookieEvolution: true`인 업그레이드의 현재 레벨 합계에 저장된 `legacyCookieEvolutionBonusLevels`를 더해 매번 계산합니다. 강화 화면에 보이는 7종 전체가 기여해 새 게임의 기본 합계가 7이며, 이미 저장된 슈퍼·두 조각 단계도 같은 selector가 읽으므로 별도 마이그레이션 없이 즉시 소급됩니다. 숨김 `cookieSize`만 `false`입니다. `cookies.json`에서 요구 총레벨 이하인 가장 높은 쿠키가 자동 활성화되며 해당 행의 클릭·자동 생산·쿠키 성 체력 배율이 최종 능력치에 적용됩니다. 메인 화면은 같은 selector가 계산한 현재 진화 레벨·다음 쿠키의 필요 레벨·남은 강화 수를 큰 숫자로 표시하고 구간 진행률도 함께 보여 줍니다. 쿠키 이미지는 `cookieSize`의 최고 비율과 JSON의 기준·상한 픽셀 값으로 계산한 기존 최대 크기에 고정합니다.
+쿠키 진화 종류는 별도로 저장하지 않고 `countsTowardCookieEvolution: true`인 업그레이드의 현재 레벨 합계에 저장된 `legacyCookieEvolutionBonusLevels`를 더해 매번 계산합니다. 강화 화면에 보이는 7종 전체가 기여해 새 게임의 기본 합계가 7이며, 이미 저장된 슈퍼·두 조각 단계도 같은 selector가 읽으므로 별도 마이그레이션 없이 즉시 소급됩니다. 숨김 `cookieSize`만 `false`입니다. `cookies.json`에서 요구 총레벨 이하인 가장 높은 쿠키가 자동 활성화되며 해당 행의 클릭·자동 생산·쿠키 성 체력 배율이 최종 능력치에 적용됩니다. 메인 화면은 현재 진화 레벨·현재 쿠키 이름과 다음 진화의 남은 강화 수·구간 진행률을 표시하고, `CookieScreen`은 다음 쿠키 이름·필요 레벨과 전체 도감을 보여 줍니다. 쿠키 이미지는 `cookieSize`의 최고 비율과 JSON의 280px 상한으로 계산한 확대된 최대 크기에 고정합니다.
 
 쿠키 도감은 `FlatList`로 가상화해 80종의 고해상도 이미지를 한꺼번에 마운트하지 않습니다. `assetRegistry.test.ts`는 쿠키·전장·보스·봇·외부 VFX의 모든 이미지 키를 각 정적 `require` 레지스트리와 대조합니다. `validateCookies`는 세 공통 배율의 동일성과 진화 순서에 따른 단조 증가를, `validateCookieExpansion`은 51~80단계의 시작 레벨·12레벨 간격·단계당 ×1.10 반올림을 강제합니다. 쿠키 런타임 이미지는 APK 용량을 억제하도록 투명 WebP를 정적 번들합니다.
 
@@ -91,7 +91,7 @@ services/storage          engine/useBattleEngine
 
 조각 발견과 보상은 `domain/cookieFragments.ts`가 담당합니다. 두 번째 독립 난수를 마그마·전기 순서의 겹치지 않는 정수 구간으로 나눠 클릭 보상 판정과 확률적으로 결합되지 않게 합니다. 클릭 명령은 조각 종류만 반환하고 즉시 보상을 주지 않습니다. UI가 같은 활성 ID를 5초 안에 정확히 한 번 눌렀을 때만 `claimCookieFragment` 명령이 현재 클릭 힘과 테이블 배수를 계산해 `GAIN_COOKIES`를 보내므로, 만료·중복 탭·교체된 조각은 저장 통화를 바꾸지 않습니다.
 
-조각 획득 연출은 게임 판정과 분리됩니다. 마그마는 CC0 16프레임 폭발을 화산 분화구 위에서 한 번 재생하고, 전기는 CC0 번개 11종 중 7종을 서로 다른 위치와 시차로 표시합니다. 화면 비율·프레임 간격·번개 수·위치·수명은 `cookie-fragments.json`에 있고 사운드 테이블은 변경하지 않았습니다.
+조각 획득 연출은 게임 판정과 분리됩니다. 마그마는 화산과 기준점을 맞춘 프로젝트 전용 화염 기둥을 4회 맥동시키고 타원 충격파·상승 불씨를 합성합니다. 전기는 CC0 번개 11종을 서로 다른 위치에서 시차 점멸시키고 마름모 충격파·방사 파편·회전 코어를 합성합니다. 화면 비율·수·위치·수명·키프레임 순서는 `cookie-fragments.json`에 있고 사운드 테이블은 변경하지 않았습니다. 두 동적 컴포넌트는 native-driver 진행값만 소비해 프레임별 React 상태를 만들지 않습니다.
 
 `battleRewardSelectors.ts`는 저장된 `battleMedals`를 안전 정수로 정규화하고 `battle-rewards.json`의 능력별 퍼센트를 곱해 세 영구 배율을 만듭니다. `cookieSelectors.ts`는 강화 값과 현재 쿠키 진화 배율을 먼저 계산한 뒤 이 배율을 클릭 힘·자동 생산·쿠키 성 체력에 각각 마지막으로 적용합니다. 훈장 수는 진화 합계에 들어가지 않아 전투 보상과 쿠키 종류 해금 규칙이 서로 결합되지 않습니다.
 
@@ -101,9 +101,9 @@ services/storage          engine/useBattleEngine
 
 저장할 때마다 `lastSavedAt`을 함께 기록합니다. 다음 실행에서는 저장 데이터를 먼저 이전·정규화하고, `domain/offlineProduction.ts`가 저장 당시 자동 생산 능력과 `lastSavedAt → 현재 시각`의 완료 생산 주기를 계산합니다. 현재 쿠키와 누적 쿠키에 같은 양을 더하고 소비한 체크포인트를 즉시 AsyncStorage에 기록한 다음 화면을 엽니다. 따라서 로딩 직후 앱이 다시 종료되어도 같은 시간이 중복 지급되지 않습니다. 기기 시계가 뒤로 간 경우에는 0개를 지급하고 더 최신 체크포인트를 유지합니다. 실행 중 타이머도 실제 경과 시간을 기준으로 누락된 주기를 따라잡으며 Android가 백그라운드로 갈 때 즉시 저장합니다.
 
-전투 승리 시 `completeBattleTransition`이 난이도 진행 단계와 `rewardClaimedStageIds`의 `난이도ID:전투번호` 키를 함께 확인합니다. 새 스테이지로 진행되는 승리는 `battle-rewards.json`에 따라 전투 훈장 1개를 `battleMedals`에 더하고, 진행 단계가 오르면서 해당 키도 없을 때 거대 원반 1개를 지급합니다. 난이도 진행도를 보상 판정의 우선 기준으로 삼으므로 이미 20승을 완료한 전투는 보상 키가 손상되어 누락됐더라도 재승리 보상이 0입니다. 20번째 최초 승리에서는 `highestUnlockedDifficultyIndex`와 `selectedDifficultyId`를 같은 순수 전이에서 다음 난이도로 올립니다. 결과 모달이 다시 렌더된 뒤 `다음 전투`는 새 선택값의 승리 수 0을 읽어 1번째 전투를 시작하며, 다음 난이도가 없는 `blood moon extreme god`만 현재 선택을 유지합니다. 전투 승리는 현재 쿠키나 누적 쿠키를 직접 변경하지 않습니다. `difficultyWinCounts`는 난이도별 진행 단계, `clearedDifficultyIds`는 최소 한 번 승리한 기록, `highestUnlockedDifficultyIndex`는 순차 해금에 사용합니다. 재도전, 보상, 해금이 서로 독립된 상태입니다.
+전투 승리 시 `completeBattleTransition`이 난이도 진행 단계와 `rewardClaimedStageIds`의 `난이도ID:전투번호` 키를 함께 확인합니다. 새 스테이지로 진행되는 승리는 `battle-rewards.json`에 따라 전투 훈장 1개를 `battleMedals`에 더하고, 진행 단계가 오르면서 해당 키도 없을 때 거대 원반 1개를 지급합니다. 난이도 진행도를 보상 판정의 우선 기준으로 삼으므로 이미 20승을 완료한 전투는 보상 키가 손상되어 누락됐더라도 재승리 보상이 0입니다. 20번째 최초 승리에서는 `highestUnlockedDifficultyIndex`와 `selectedDifficultyId`를 같은 순수 전이에서 다음 난이도로 올립니다. 결과 모달이 다시 렌더된 뒤 `다음 전투`는 새 선택값의 승리 수 0을 읽어 1번째 전투를 시작하며, 다음 난이도가 없는 `black sun extreme god`만 현재 선택을 유지합니다. 전투 승리는 현재 쿠키나 누적 쿠키를 직접 변경하지 않습니다. `difficultyWinCounts`는 난이도별 진행 단계, `clearedDifficultyIds`는 최소 한 번 승리한 기록, `highestUnlockedDifficultyIndex`는 순차 해금에 사용합니다. 재도전, 보상, 해금이 서로 독립된 상태입니다.
 
-저장 버전은 `save-migrations.json`의 `currentSaveVersion`에서 읽습니다. v7 이하 저장은 테이블에 고정한 레거시 ID `cookieSize`의 유효 레벨에서 기본 Lv.1을 뺀 값을 `legacyCookieEvolutionBonusLevels`로 한 번만 이전하고 v8 규칙을 거칩니다. 현재 강화 목록을 순회하지 않으므로 향후 `cookieSize` 행을 제거해도 v7 직행 업데이트가 달라지지 않습니다. v11의 슈퍼 크리티컬과 v12의 마그마·전기 조각 강화는 누락 시 Lv.1로 정규화합니다. v13은 네 실패 횟수 `cookiePityMisses`를 추가하며 이전 저장은 0, 손상 값은 음이 아닌 안전 정수로 복구합니다. v14는 기존 15개 난이도를 모두 완료한 v13 이하 저장을 과거 난이도 선택 위치와 무관하게 최초 Blood Moon 난이도로 한 번 연결합니다. 화면에 보이는 7종 단계는 진화 합계에 그대로 들어가 기존 강화가 자동 소급되며, 새 게임의 진화 기본 합계는 7이고 쿠키 크기만 기여 플래그가 `false`입니다.
+저장 버전은 `save-migrations.json`의 `currentSaveVersion`에서 읽습니다. v7 이하 저장은 테이블에 고정한 레거시 ID `cookieSize`의 유효 레벨에서 기본 Lv.1을 뺀 값을 `legacyCookieEvolutionBonusLevels`로 한 번만 이전하고 v8 규칙을 거칩니다. 현재 강화 목록을 순회하지 않으므로 향후 `cookieSize` 행을 제거해도 v7 직행 업데이트가 달라지지 않습니다. v11의 슈퍼 크리티컬과 v12의 마그마·전기 조각 강화는 누락 시 Lv.1로 정규화합니다. v13은 네 실패 횟수 `cookiePityMisses`를 추가하며 이전 저장은 0, 손상 값은 음이 아닌 안전 정수로 복구합니다. 난이도 확장 이전은 `difficultyExpansionMigrations` 배열을 순서대로 평가해 v14에서 기존 15개 완료 저장을 Blood Moon, v15에서 기존 30개 완료 저장을 Black Sun 첫 난이도로 한 번 연결합니다. 화면에 보이는 7종 단계는 진화 합계에 그대로 들어가 기존 강화가 자동 소급되며, 새 게임의 진화 기본 합계는 7이고 쿠키 크기만 기여 플래그가 `false`입니다.
 
 v10 상태에는 X1·X2·X3 중 선택한 `battleSpeedMultiplier`를 저장합니다. 이전 저장처럼 값이 없거나 허용 목록 밖·비유한 값이면 `battle-rules.json`의 기본 X1로 복구합니다. 쿠키 크리티컬은 기존 `upgradeLevels` 맵을 그대로 사용하므로 이전 저장에 키가 없으면 `cookie-upgrades.json`의 Lv.1로 초기화되고 이후 강화 단계가 일반 강화와 같은 경로로 저장됩니다.
 
@@ -111,7 +111,7 @@ v8 이하 저장은 정규화된 `difficultyWinCounts`를 모두 합산하고 `b
 
 `giantDiscCount`는 이전 저장에 없으면 0으로 초기화하고 이후 획득·사용량을 영구 저장합니다. 이전 버전의 난이도 단위 보상 기록은 해당 난이도의 1번 전투 보상 키로 이전하므로 이미 보상을 받은 전투에서 거대 원반이 중복 지급되지 않습니다. 이전 단일 `discOwned`와 `discLevel`은 첫 번째 원반의 소유 여부와 레벨로 이전합니다. 10종 시절 제거된 원반의 소유·선택·레벨은 대응되는 현재 원반에 합치며 둘 다 레벨이 있으면 더 높은 값을 보존합니다. 제거된 쿠키봇 수량도 대응되는 현재 봇 수량에 더합니다. 이전 몬스터 ID도 새 다등급 몬스터 ID로 바꾸고 존재하지 않는 몬스터 ID는 제거합니다. 기존 `clearedDifficultyIds`는 해당 난이도 1승으로 이전하며, 새 20승 규칙에 맞춰 실제 해금 인덱스를 다시 계산합니다. 존재하지 않거나 잠긴 난이도가 선택되어 있으면 가장 높은 사용 가능 난이도로 안전하게 복구합니다.
 
-현재 앱보다 높은 양의 안전 정수 `saveVersion`만 다운그레이드 상황으로 간주합니다. 알려진 필드만 메모리에서 정규화해 실행하되 오프라인 생산을 정산하거나 AsyncStorage에 다시 저장하지 않는 읽기 전용 호환 모드로 두어, 최신 앱이 만든 원본 저장을 구버전이 덮어쓰지 않습니다. 소수나 비안전 정수처럼 손상된 버전 값은 미래 저장으로 오인하지 않고 현재 v14의 저장 가능한 상태로 복구합니다.
+현재 앱보다 높은 양의 안전 정수 `saveVersion`만 다운그레이드 상황으로 간주합니다. 알려진 필드만 메모리에서 정규화해 실행하되 오프라인 생산을 정산하거나 AsyncStorage에 다시 저장하지 않는 읽기 전용 호환 모드로 두어, 최신 앱이 만든 원본 저장을 구버전이 덮어쓰지 않습니다. 소수나 비안전 정수처럼 손상된 버전 값은 미래 저장으로 오인하지 않고 현재 v15의 저장 가능한 상태로 복구합니다.
 
 ## 전투 엔진
 
@@ -119,7 +119,7 @@ v8 이하 저장은 정규화된 `difficultyWinCounts`를 모두 합산하고 `b
 
 `engine/battleSpeed.ts`는 저장된 전투 속도를 `battle-rules.json`의 X1·X2·X3 허용 목록으로 정규화합니다. 50ms 주기의 타이머가 실제 경과 시간을 `maxDeltaMs`로 제한한 뒤, 한 콜백에서 선택 배수만큼 같은 경과 시간으로 `advanceBattle`을 순차 호출하고 각 호출의 `now`도 한 단계씩 전진시킵니다. 따라서 속도 버튼은 CSS 애니메이션 배속이 아니라 이동·쿨타임·발사·충돌·피해·승패 전체를 실제 시뮬레이션 서브스텝으로 가속합니다. 중간 서브스텝에서 승패가 나면 남은 단계를 실행하지 않습니다.
 
-모든 난이도는 서로 다른 `enemyWaveId`를 참조하고 각 웨이브는 고유 보스 ID 한 개를 가리키며 `enemyCount`는 1로 유지합니다. 30종 보스는 외형·이름·도감 설명만 다르고 기준 전투 능력치는 동일합니다. 난이도와 스테이지 selector가 HP·공격력·이동 속도·원반 레벨 공식을 적용하므로 에셋 교체가 밸런스를 바꾸지 않습니다. 기존 15개는 easy 기준 스테이지 증가량을 각 난이도 기준값에 더합니다. 뒤의 Blood Moon 15개는 `difficulty-expansion.json`에 따라 각각 직전 난이도 20번째의 HP·공격력보다 정확히 20% 높은 값에서 시작하고 적 원반 피해도 난이도마다 20% 증가합니다. 이동·원반 크기·속도·쿨타임은 테이블 상한·하한을 적용합니다.
+기본·Blood Moon 30개 난이도는 서로 다른 `enemyWaveId`와 고유 보스 ID 한 개를 사용하고 `enemyCount`는 1로 유지합니다. Black Sun 15개는 기본 15개 웨이브·보스를 고난도 재대결로 다시 참조합니다. 30종 보스의 기준 전투 능력치는 동일하며 난이도와 스테이지 selector가 HP·공격력·이동 속도·원반 레벨 공식을 적용하므로 에셋 재사용이 밸런스를 낮추지 않습니다. 기존 15개는 easy 기준 스테이지 증가량을 각 난이도 기준값에 더합니다. 뒤의 Blood Moon·Black Sun 30개는 `difficulty-expansion.json`에 따라 각각 직전 난이도 20번째의 HP·공격력보다 정확히 20% 높은 값에서 시작하고 적 원반 피해도 난이도마다 20% 증가합니다. 이동·원반 크기·속도·쿨타임은 테이블 상한·하한을 적용합니다.
 
 단일 보스의 최종 HP는 `calculateBossHealth`가 계산합니다. 테이블 기본 HP를 최소값으로 유지하면서 장착 원반과 활성 쿠키봇의 수량·피해 배율·발사 간격으로 자동 DPS를 구하고, `boss-balance.json`의 목표 생존 시간 및 최소 자동 명중 수를 하한으로 적용합니다. 성장 전력이 낮은 구간은 기존 난이도 체력을 그대로 쓰고, 과거 저장처럼 봇이 수십 대씩 있는 경우에만 보정 HP가 우선됩니다. 수동 성 원반과 소모형 거대 원반은 자동 전력 계산에서 제외해 사용자 조작 보상을 유지합니다.
 
@@ -147,9 +147,9 @@ v8 이하 저장은 정규화된 `difficultyWinCounts`를 모두 합산하고 `b
 
 `useCookieAudioFeedback`은 Freesound CC0 `Crunch` MP3의 3보이스 풀과 연속 클릭 제한만 소유합니다. `useCookieSpecialAudioFeedback`은 일반 크리티컬 2개, 슈퍼 2개, 마그마 2개, 전기 3개의 로컬 Mixkit 플레이어를 종류별 그룹으로 관리합니다. 같은 종류가 다시 발동하면 해당 그룹의 플레이어·예약 타이머·비동기 요청 세대만 취소하고 처음부터 재생하며, 다른 종류는 서로 끊지 않아 시각 정책과 동일하게 최대 네 종류가 합성됩니다. 마그마는 180ms 간격 2회, 전기 천둥은 최대 상대 음량 1.0의 220ms 간격 3회로 테이블에 정의합니다. 시각 수명과 음향 레이어 강도는 낮은 확률일수록 오르도록 교차 테이블로 검증합니다. 화면 전환·사운드 OFF·Provider 해제는 모든 그룹과 예약 타이머를 취소합니다. `FeedbackContext`는 메뉴·전투 사운드와 진동을 조정하고, 전투 종료 시 재생 세대 번호를 올려 모든 액션음의 재시작을 막습니다.
 
-`CookieCriticalEffect`는 하나의 native-driver 진행값으로 교차 참격광, 꺾이는 번개 균열과 회전하는 각진 쿠키 파편을 합성합니다. 원형 코어·확장 링은 렌더하지 않습니다. 전체 이펙트가 과도하게 겹치지 않도록 전체·축약 동시 개수와 획득 텍스트 개수를 테이블에서 제한합니다.
+일반 크리티컬은 전용 시각 컴포넌트를 두지 않고 `CookieGainFeedback`의 노란 획득 숫자와 오디오만 사용합니다. `CookieSuperCriticalEffect`는 하나의 native-driver 진행값으로 충전 마름모, 3회 확장 충격파, 순차 참격, 번개, 회전 엠블럼과 파편을 합성합니다. `SuperCriticalMotionBurst`는 충전·충격파만, `AngularImpactPrimitives`는 참격·번개·파편 생성만 담당합니다.
 
-`CookieSuperCriticalEffect`는 별도 native-driver 진행값으로 각진 섬광, 수직 낙뢰 기둥, X자·수평의 주 참격과 청록·자홍 잔상, 10갈래 번개, 다색 파편 폭발을 합성합니다. 두 효과가 함께 쓰는 `AngularImpactPrimitives`가 참격·번개·파편의 생성 규칙만 담당하고, 일반·슈퍼 컴포넌트는 각 테이블을 조합하는 역할만 맡습니다. 모두 React Native View와 `LinearGradient`로 렌더해 래스터 이펙트 에셋이나 JS 프레임별 상태 갱신을 추가하지 않습니다.
+`MagmaFragmentClaimVisual`은 프로젝트 전용 래스터 화염 기둥을 화산 분화구에 정렬하고 진행값 보간으로 맥동·흔들림을 만듭니다. `MagmaEruptionDynamics`는 타원 충격파와 상승 불씨를 담당합니다. `ElectricFragmentClaimVisual`은 11개 정적 CC0 낙뢰 이미지의 시차 점멸을 조정하고 `ElectricStrikeDynamics`는 마름모 충격파와 방사 파편을 그립니다. 이 세 연출은 React Native `Animated` native driver를 사용하며 JS 타이머나 프레임별 상태 갱신을 추가하지 않습니다.
 
 `useBattleScreenSession`은 저장된 `autoBattleEnabled`를 읽어 idle 상태의 최초 시작, active 상태의 성 쿨타임별 자동 발사, 승리 보상 확정 뒤 다음 전투 시작을 각각 독립 effect로 조정합니다. 패배와 최종 난이도 마지막 전투는 자동 전환 조건에서 제외합니다. 사용자가 HUD나 결과 모달에서 설정을 끄면 각 effect의 cleanup이 예약 진행을 취소합니다. 실제 발사 가능 여부와 피해는 수동 입력과 같은 엔진 명령을 사용하므로 자동 모드가 전투 판정을 우회하지 않습니다.
 
@@ -161,7 +161,7 @@ v8 이하 저장은 정규화된 `difficultyWinCounts`를 모두 합산하고 `b
 
 ## 검증 경계
 
-- `__tests__/config.test.ts`: 게임 설정의 타입·참조·의미 검증, 30개 난이도·맵·보스와 Blood Moon 경계 성장식, 보스·봇 애니메이션 프레임 참조, 80종 쿠키, 크리티컬 보상·피드백과 전투 속도 무결성
+- `__tests__/config.test.ts`: 게임 설정의 타입·참조·의미 검증, 45개 난이도·맵 연결과 Blood Moon·Black Sun 경계 성장식, 보스·봇 애니메이션 프레임 참조, 80종 쿠키, 희귀 보상·피드백과 전투 속도 무결성
 - `__tests__/battleKeepAwake.test.ts`: active 전투만 절전 방지를 켜고 준비·승패 상태에서는 끄는 정책
 - `__tests__/gameReducer.test.ts`: 스테이지별 거대 원반·전투 훈장 최초 보상과 재도전 차단, v9 소급·중복 방지, v10 저장 정규화, X1·X2·X3 순환·복구, 일곱 활성 강화의 무한 성장과 비용 우선 정렬
 - `__tests__/cookieClick.test.ts`: 두 기본 크리티컬 경계, 슈퍼 강화당 +0.025%p와 기존 Lv.20의 0.575% 소급, 확률 상한·무제한 배수 성장

@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Animated, Image, StyleSheet } from 'react-native';
 import { COOKIE_FRAGMENTS } from '../../config';
-import { MAGMA_ERUPTION_FRAMES } from './externalVfxImages';
+import { MagmaEruptionDynamics } from './MagmaEruptionDynamics';
 
 const FX = COOKIE_FRAGMENTS.claimEffect;
 const VOLCANO_ERUPTION = require(
   '../../../assets/images/cookie-fragments/magma-volcano-eruption.webp'
 );
+export const MAGMA_FIRE_PLUME = require('../../../assets/images/vfx/magma-fire-plume.webp');
 
 interface MagmaFragmentClaimVisualProps {
   progress: Animated.Value;
@@ -15,28 +16,59 @@ interface MagmaFragmentClaimVisualProps {
 
 export const MagmaFragmentClaimVisual = React.memo(
   function MagmaFragmentClaimVisual({ progress, size }: MagmaFragmentClaimVisualProps) {
-    const [frameIndex, setFrameIndex] = useState(0);
-
-    useEffect(() => {
-      const timer = setInterval(() => {
-        setFrameIndex((current) => {
-          if (current >= FX.magmaEruptionFrameCount - 1) {
-            clearInterval(timer);
-            return current;
-          }
-          return current + 1;
-        });
-      }, FX.magmaEruptionFrameIntervalMs);
-      return () => clearInterval(timer);
-    }, []);
-
+    const pulseSteps = FX.magmaPlumePulseCount * 2;
+    const pulseInputRange = [0, FX.flashPeakProgress];
+    const pulseScaleRange = [FX.magmaPlumeStartScaleY, FX.magmaPlumePeakScaleY];
+    const pulseSwayRange = [0, 0];
+    Array.from({ length: pulseSteps }, (_, index) => index + 1).forEach((step) => {
+      pulseInputRange.push(
+        FX.flashPeakProgress
+          + (FX.magmaFadeStartProgress - FX.flashPeakProgress) * step / pulseSteps,
+      );
+      pulseScaleRange.push(
+        1 + (step % 2 === 0 ? -1 : 1) * FX.magmaPlumePulseScaleDelta,
+      );
+      pulseSwayRange.push((step % 2 === 0 ? -1 : 1) * FX.magmaPlumeSwayPixels);
+    });
+    pulseInputRange.push(1);
+    pulseScaleRange.push(FX.magmaPlumeEndScaleY);
+    pulseSwayRange.push(0);
     const opacity = progress.interpolate({
-      inputRange: [0, FX.flashPeakProgress, FX.fadeStartProgress, 1],
+      inputRange: [0, FX.flashPeakProgress, FX.magmaFadeStartProgress, 1],
       outputRange: [0, 1, 1, 0],
     });
 
     return (
       <>
+        <Animated.Image
+          source={MAGMA_FIRE_PLUME}
+          resizeMode="contain"
+          style={[
+            styles.plume,
+            {
+              width: size * FX.magmaPlumeSizeRatio,
+              height: size * FX.magmaPlumeSizeRatio,
+              left: size * FX.magmaPlumeLeftRatio,
+              top: size * FX.magmaPlumeTopRatio,
+              opacity,
+              transform: [
+                { translateX: progress.interpolate({
+                  inputRange: pulseInputRange,
+                  outputRange: pulseSwayRange,
+                }) },
+                { translateY: progress.interpolate({
+                  inputRange: [0, FX.flashPeakProgress, 1],
+                  outputRange: [size * FX.magmaPlumeStartOffsetYRatio, 0, 0],
+                }) },
+                { scaleY: progress.interpolate({
+                  inputRange: pulseInputRange,
+                  outputRange: pulseScaleRange,
+                }) },
+              ],
+            },
+          ]}
+        />
+        <MagmaEruptionDynamics progress={progress} size={size} />
         <Animated.View
           style={[
             styles.volcano,
@@ -63,20 +95,6 @@ export const MagmaFragmentClaimVisual = React.memo(
         >
           <Image source={VOLCANO_ERUPTION} resizeMode="contain" style={styles.fill} />
         </Animated.View>
-        <Animated.Image
-          source={MAGMA_ERUPTION_FRAMES[frameIndex]}
-          resizeMode="contain"
-          style={[
-            styles.eruption,
-            {
-              width: size * FX.magmaEruptionSizeRatio,
-              height: size * FX.magmaEruptionSizeRatio,
-              left: size * FX.magmaEruptionLeftRatio,
-              top: size * FX.magmaEruptionTopRatio,
-              opacity,
-            },
-          ]}
-        />
       </>
     );
   },
@@ -84,6 +102,6 @@ export const MagmaFragmentClaimVisual = React.memo(
 
 const styles = StyleSheet.create({
   volcano: { position: 'absolute' },
-  eruption: { position: 'absolute' },
-  fill: { flex: 1 },
+  plume: { position: 'absolute' },
+  fill: { width: '100%', height: '100%' },
 });

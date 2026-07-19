@@ -120,7 +120,7 @@ function validateFeedbackPower(
       path: 'COOKIE_CRITICAL',
       rank: cookieCritical.feedbackPowerRank as number,
       chance: referenceBaseChance,
-      duration: (cookieFeedback.criticalEffect as UnknownRecord).durationMs as number,
+      visualDuration: undefined,
       sound: (feedbackAudio.criticalImpactVolumeMultiplier as number)
         + (feedbackAudio.criticalSparkleVolumeMultiplier as number),
     },
@@ -129,7 +129,7 @@ function validateFeedbackPower(
       rank: cookieSuperCritical.feedbackPowerRank as number,
       chance: ((upgradeById.get(cookieSuperCritical.upgradeId as string) as UnknownRecord)
         .levels as UnknownRecord[])[0].value as number,
-      duration: (cookieFeedback.superCriticalEffect as UnknownRecord).durationMs as number,
+      visualDuration: (cookieFeedback.superCriticalEffect as UnknownRecord).durationMs as number,
       sound: (feedbackAudio.superCriticalImpactVolumeMultiplier as number)
         + (feedbackAudio.superCriticalShockwaveVolumeMultiplier as number),
     },
@@ -138,7 +138,7 @@ function validateFeedbackPower(
       rank: fragment.feedbackPowerRank as number,
       chance: ((upgradeById.get(fragment.upgradeId as string) as UnknownRecord)
         .levels as UnknownRecord[])[0].value as number,
-      duration: fragment.id === 'magma'
+      visualDuration: fragment.id === 'magma'
         ? claimEffect.magmaDurationMs as number
         : claimEffect.electricDurationMs as number,
       sound: fragment.id === 'magma'
@@ -164,10 +164,24 @@ function validateFeedbackPower(
         '낮은 확률일수록 피드백 등급이 높아야 합니다.',
       );
     }
-    if (item.duration <= previous.duration || item.sound <= previous.sound) {
+    if (item.sound <= previous.sound) {
       throw new ConfigValidationError(
         `${item.path}.feedbackPowerRank`,
-        '상위 피드백의 수명과 음향 레이어 강도는 하위보다 커야 합니다.',
+        '상위 피드백의 음향 레이어 강도는 하위보다 커야 합니다.',
+      );
+    }
+  });
+  const visualFeedback = feedbackPower.filter(
+    (item): item is typeof item & { visualDuration: number } => (
+      item.visualDuration !== undefined
+    ),
+  );
+  visualFeedback.slice(1).forEach((item, index) => {
+    const previous = visualFeedback[index];
+    if (item.visualDuration <= previous.visualDuration) {
+      throw new ConfigValidationError(
+        `${item.path}.feedbackPowerRank`,
+        '마그마, 슈퍼 크리티컬, 전기 순으로 시각 연출 수명이 길어야 합니다.',
       );
     }
   });

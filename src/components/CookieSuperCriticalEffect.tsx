@@ -13,6 +13,8 @@ import {
   SlashBurst,
 } from './cookieFeedback/AngularImpactPrimitives';
 import { SuperCriticalSkyRift } from './cookieFeedback/SuperCriticalSkyRift';
+import { SuperCriticalMotionBurst } from './cookieFeedback/SuperCriticalMotionBurst';
+import { CookieRareStatImage } from './CookieRareStatImage';
 
 type SuperCriticalEffectMode = Extract<
   CookieFeedbackTier,
@@ -66,6 +68,7 @@ export const CookieSuperCriticalEffect = React.memo(
           peakProgress={FX.impactPeakProgress}
           fadeStartProgress={FX.impactFadeStartProgress}
         />
+        <SuperCriticalMotionBurst progress={progress} size={size} compact={!full} />
         <SuperCriticalSkyRift progress={progress} size={size} compact={!full} />
         <Animated.View
           style={[
@@ -102,6 +105,8 @@ export const CookieSuperCriticalEffect = React.memo(
           gradientColors={FX.slashGradientColors}
           ghostColors={FX.ghostSlashColors}
           ghostOffsetPixels={FX.ghostSlashOffsetPixels}
+          revealProgress={FX.slashRevealProgress}
+          staggerProgress={FX.slashStaggerProgress}
           peakProgress={FX.impactPeakProgress}
           fadeStartProgress={FX.slashFadeStartProgress}
         />
@@ -138,6 +143,56 @@ export const CookieSuperCriticalEffect = React.memo(
           angleOffsetDegrees={FX.shardAngleOffsetDegrees}
           colors={FX.shardColors}
         />
+        <Animated.View
+          style={[
+            styles.emblem,
+            {
+              left: (size - FX.emblemSizePixels) / 2,
+              top: size * FX.emblemTopRatio,
+              width: FX.emblemSizePixels,
+              height: FX.emblemSizePixels,
+              opacity: progress.interpolate({
+                inputRange: [
+                  0,
+                  FX.chargeEndProgress,
+                  FX.impactPeakProgress,
+                  FX.secondaryImpactProgress,
+                  FX.emblemFadeStartProgress,
+                  1,
+                ],
+                outputRange: [0, 0.45, 1, 0.72, 1, 0],
+              }),
+              transform: [
+                { scale: progress.interpolate({
+                  inputRange: [
+                    0,
+                    FX.chargeEndProgress,
+                    FX.impactPeakProgress,
+                    FX.secondaryImpactProgress,
+                    1,
+                  ],
+                  outputRange: [
+                    FX.emblemPeakScale,
+                    FX.emblemStartScale,
+                    FX.emblemPeakScale,
+                    FX.emblemEndScale,
+                    FX.emblemEndScale,
+                  ],
+                }) },
+                { rotate: progress.interpolate({
+                  inputRange: [0, FX.impactPeakProgress, 1],
+                  outputRange: [
+                    `${-FX.emblemRotationDegrees}deg`,
+                    '0deg',
+                    `${FX.emblemRotationDegrees}deg`,
+                  ],
+                }) },
+              ],
+            },
+          ]}
+        >
+          <CookieRareStatImage kind="superCritical" size={FX.emblemSizePixels} />
+        </Animated.View>
         <Animated.Text
           style={[
             styles.label,
@@ -166,6 +221,7 @@ export const CookieSuperCriticalEffect = React.memo(
 const styles = StyleSheet.create({
   effect: { position: 'absolute', left: '50%', top: '50%', zIndex: 9 },
   lightningColumn: { position: 'absolute', overflow: 'hidden' },
+  emblem: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   fill: { flex: 1 },
   label: { position: 'absolute', textAlign: 'center', fontFamily: fonts.display },
 });

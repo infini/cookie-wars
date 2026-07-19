@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { CookieCriticalEffect } from '../../components/CookieCriticalEffect';
 import { CookieFragmentClaimEffect } from '../../components/CookieFragmentClaimEffect';
 import { CookieSuperCriticalEffect } from '../../components/CookieSuperCriticalEffect';
 import { COOKIE_FEEDBACK, COOKIE_FRAGMENTS } from '../../config';
@@ -9,7 +8,7 @@ import type {
   CookieFragmentKind,
 } from '../../types/game';
 
-export type CookieSpecialFeedbackKind = Exclude<CookieClickKind, 'normal'>
+export type CookieSpecialFeedbackKind = Exclude<CookieClickKind, 'normal' | 'critical'>
   | CookieFragmentKind;
 
 export interface CookieSpecialFeedbackItem {
@@ -23,11 +22,6 @@ export interface CookieSpecialFeedbackItem {
 function getDuration(item: CookieSpecialFeedbackItem): number {
   if (item.kind === 'magma') return COOKIE_FRAGMENTS.claimEffect.magmaDurationMs;
   if (item.kind === 'electric') return COOKIE_FRAGMENTS.claimEffect.electricDurationMs;
-  if (item.kind === 'critical') {
-    return item.feedbackTier === 'criticalCompact'
-      ? COOKIE_FEEDBACK.criticalEffect.compactDurationMs
-      : COOKIE_FEEDBACK.criticalEffect.durationMs;
-  }
   return item.feedbackTier === 'superCriticalCompact'
     ? COOKIE_FEEDBACK.superCriticalEffect.compactDurationMs
     : COOKIE_FEEDBACK.superCriticalEffect.durationMs;
@@ -51,14 +45,6 @@ function CookieSpecialFeedbackEntry({
         kind={item.kind}
         amount={item.amount}
         multiplier={item.multiplier ?? 1}
-      />
-    );
-  }
-  if (item.kind === 'critical') {
-    return (
-      <CookieCriticalEffect
-        key={item.id}
-        mode={item.feedbackTier === 'criticalCompact' ? 'criticalCompact' : 'criticalFull'}
       />
     );
   }

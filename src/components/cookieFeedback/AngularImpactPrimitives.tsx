@@ -67,6 +67,8 @@ interface SlashBurstProps extends ImpactTimeline {
   gradientColors: string[];
   ghostColors?: string[];
   ghostOffsetPixels?: number;
+  revealProgress: number;
+  staggerProgress: number;
 }
 
 export function SlashBurst({
@@ -83,19 +85,23 @@ export function SlashBurst({
   gradientColors,
   ghostColors = [],
   ghostOffsetPixels = 0,
+  revealProgress,
+  staggerProgress,
   peakProgress,
   fadeStartProgress,
 }: SlashBurstProps) {
-  const slashOpacity = progress.interpolate({
-    inputRange: [0, peakProgress, fadeStartProgress, 1],
-    outputRange: [0, 1, 1, 0],
-  });
-  const slashScale = progress.interpolate({
-    inputRange: [0, peakProgress, 1],
-    outputRange: [startScale, peakScale, endScale],
-  });
   return Array.from({ length: count }, (_, slashIndex) => {
     const angle = angleOffsetDegrees + slashIndex * angleStepDegrees;
+    const start = peakProgress + slashIndex * staggerProgress;
+    const revealed = start + revealProgress;
+    const slashOpacity = progress.interpolate({
+      inputRange: [0, start, revealed, fadeStartProgress, 1],
+      outputRange: [0, 0, 1, 1, 0],
+    });
+    const slashScale = progress.interpolate({
+      inputRange: [0, start, revealed, 1],
+      outputRange: [startScale, startScale, peakScale, endScale],
+    });
     return (
       <React.Fragment key={`slash-${slashIndex}`}>
         {ghostColors.map((color, ghostIndex) => {

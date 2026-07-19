@@ -10,20 +10,46 @@ import { CookieImage } from './CookieImage';
 interface TopBarProps {
   title: string;
   cookies: number;
+  activeCookieName: string;
+  gameScreen: boolean;
   onOpenSettings: () => void;
 }
 
-export function TopBar({ title, cookies, onOpenSettings }: TopBarProps) {
+export function TopBar({
+  title,
+  cookies,
+  activeCookieName,
+  gameScreen,
+  onOpenSettings,
+}: TopBarProps) {
   return (
     <LinearGradient colors={gradients.header} style={styles.container}>
       <View style={styles.titleWrap}>
         <Text style={styles.gameTitle}>쿠키전쟁</Text>
-        <Text style={styles.screenTitle}>{title}</Text>
+        {!gameScreen ? <Text style={styles.screenTitle}>{title}</Text> : null}
       </View>
-      <View style={styles.cookiePill}>
-        <CookieImage size={28} />
-        <Text style={styles.cookieCount}>{formatNumber(cookies)}</Text>
-      </View>
+      {gameScreen ? (
+        <View
+          accessible
+          accessibilityRole="text"
+          accessibilityLabel={`현재 쿠키 ${activeCookieName}`}
+          style={styles.cookieNamePill}
+        >
+          <Text
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
+            numberOfLines={1}
+            style={styles.cookieName}
+          >
+            {activeCookieName}
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.cookiePill}>
+          <CookieImage size={28} />
+          <Text style={styles.cookieCount}>{formatNumber(cookies)}</Text>
+        </View>
+      )}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="설정 열기"
@@ -64,6 +90,23 @@ const styles = StyleSheet.create({
     maxWidth: 112,
   },
   cookieCount: { fontFamily: fonts.extraBold, color: colors.ink, fontSize: 14, marginLeft: 4 },
+  cookieNamePill: {
+    minHeight: 42,
+    width: 190,
+    maxWidth: 190,
+    flexShrink: 1,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  cookieName: {
+    fontFamily: fonts.extraBold,
+    color: colors.chocolate,
+    fontSize: 14,
+    textAlign: 'center',
+  },
   settingsButton: {
     width: 46,
     height: 46,

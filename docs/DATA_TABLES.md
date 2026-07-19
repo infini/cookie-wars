@@ -21,7 +21,7 @@
 | `monsters.json` | 적 이미지·등급, 기본 HP·공격, 속도·원반·크기 배율 |
 | `enemy-waves.json` | 난이도별 고유 보스와 전투 구성 연결 |
 | `difficulties.json` | 난이도 순서, 보스 HP·공격 배율·이동 속도 |
-| `difficulty-expansion.json` | Blood Moon 난이도 수, 등급 경계 20% 성장과 이동·적 원반 상한·하한 |
+| `difficulty-expansion.json` | Blood Moon·Black Sun 시리즈 수, 등급 경계 20% 성장과 이동·적 원반 상한·하한 |
 | `boss-balance.json` | 성장한 쿠키봇 군단에 대한 보스 최소 생존 시간·즉사 방지 |
 | `boss-behavior.json` | 보스 전역 공격력·공격 간격·이동 배율과 HP 분노 페이즈 |
 | `boss-special-attack.json` | 보스 주기 망치 강공격의 예고·지면 충격·발사체·플래시 |
@@ -65,7 +65,7 @@
 - `visible`: `false`이면 강화 화면 목록에서 숨김
 - `countsTowardCookieEvolution`: `true`인 행의 현재 레벨만 쿠키 진화 레벨 합계에 포함
 - `maximumLevel`: 선택 항목의 명시적 최고 단계. 없으면 후속 규칙이 존재하는 동안 무한 강화
-- `renderBaseSizePixels`, `renderMaximumSizePixels`: 비율 값을 실제 메인 화면 크기로 바꾸는 기준·상한
+- `renderBaseSizePixels`, `renderMaximumSizePixels`: 비율 값을 실제 메인 화면 크기로 바꾸는 기준·상한. 숨김 `cookieSize` 행의 현재 상한은 확대된 280px
 - `levels[].level`: 단계 번호
 - `levels[].value`: 해당 단계의 실제 능력치
 - `levels[].cost`: 그 단계로 올라갈 때 소모할 쿠키. 첫 단계는 기본 보유이므로 0
@@ -102,7 +102,8 @@
 - `lifetimeMs`: 조각이 등장 동작을 마친 뒤 획득 가능한 시간. 현재 정확히 5,000ms
 - `types[]`: 조각 ID, 연결 강화 ID, 한국어 이름, 기본·레벨당 보상 배수, 확률 상한, 전용 이미지·색상
 - `spawnEffect.*`: 좌우 교대 출현, 최초 크기의 50%인 56px 조각, 체감 터치 범위를 유지하는 40px 여백, 튀어나오는 거리·회전·쿠키 부스러기, 오라, 남은 시간 막대
-- `claimEffect.*`: 화면 기준 크기, CC0 화산 폭발 16프레임 간격·위치·크기, CC0 번개 수·위치·시차·수명과 흔들림
+- `claimEffect.magma*`: 화산·화염 정렬 위치, 화염 4회 맥동·좌우 흔들림, 타원 충격파·불씨의 개수·크기·키프레임
+- `claimEffect.electric*`: CC0 번개 11개의 위치·시차·점멸, 마름모 충격파·방사 파편·회전 코어의 개수·크기·키프레임
 - `audio.*`: Mixkit 화염·강한 근거리 천둥의 상대 음량, 화염·천둥 반복 횟수·간격
 
 한 번의 독립 난수를 테이블 순서의 겹치지 않는 구간으로 나눠 동시에 두 조각이 나오지 않습니다. Lv.1은 마그마 400단위인 0.2%·50배, 전기 100단위인 0.05%·200배입니다. 마그마는 강화마다 +100단위(0.05%p)·+5배, 전기는 +25단위(0.0125%p)·+20배입니다. 네 희귀 보상 모두 `레벨당 확률 증가 ÷ 기본 확률 = 25%`, `레벨당 배수 증가 ÷ 기본 배수 = 10%`이며 교차 테이블 검증이 이 비율과 모든 명시 레벨 값을 강제합니다. 마그마 확률은 Lv.97의 5%, 전기는 Lv.117의 1.5%에서 멈추지만 보상 배수와 강화는 이후에도 무한히 증가합니다. 보상은 수령 시점의 현재 클릭 힘에 조각 배수만 곱하고 크리티컬 배수와 중복 곱하지 않습니다. 저장에는 강화 레벨이 있으므로 기존 사용자도 현재 단계에 해당하는 확률과 새 배수를 즉시 소급 적용받습니다.
@@ -138,7 +139,7 @@
 게임 보상 수치는 포함하지 않고 쿠키 클릭의 소리와 화면 연출만 제어합니다.
 
 - `audio.minimumClickIntervalMs`: 빠른 연속 입력에서 기본 깨짐음이 겹치는 최소 간격. 현재 40ms
-- `audio.minimumFullCriticalIntervalMs`: 전체·축약 시각 연출 등급을 결정하는 일반 크리티컬 기준 간격. 현재 1,650ms
+- `audio.minimumFullCriticalIntervalMs`: 일반 크리티컬 전용 음향의 연속 재생 제어 기준 간격. 일반 크리티컬은 시각 이펙트를 렌더하지 않음
 - `audio.criticalLayerDurationMs`: 충격음과 지연 반짝임의 꼬리가 끝나는 최대 길이. 현재 1,620ms이며 전체 크리티컬 최소 간격은 이 값보다 짧을 수 없습니다.
 - `audio.criticalSparkleDelayMs`: 충격음 뒤 반짝임 레이어 지연. 현재 70ms
 - `audio.voicePlaybackRates`, `voiceVolumeMultipliers`: Freesound `Crunch` 원본을 번갈아 재생하는 세 보이스의 속도와 상대 음량
@@ -146,16 +147,14 @@
 - `audio.minimumFullSuperCriticalIntervalMs`, `superCriticalLayerDurationMs`: 슈퍼 전체·축약 시각 등급 기준 간격과 전용 음향 꼬리 길이. 현재 7,000ms·6,800ms
 - `audio.superCriticalImpactVolumeMultiplier`, `superCriticalShockwaveVolumeMultiplier`, `superCriticalShockwaveDelayMs`: 슈퍼 전용 Mixkit 첫 충격과 `콰광` 전기 폭발의 음량·지연
 - `floatingGain.*`: `+획득량` 텍스트의 동시 표시 상한, 수명, 상승 거리와 크기 키프레임
-- `criticalEffect.durationMs`, `compactDurationMs`, `sizePixels`: 전체·축약 효과의 수명과 기준 크기
-- `criticalEffect.maximumConcurrentFullEffects`, `maximumConcurrentCompactEffects`: 두 효과가 화면에 남을 수 있는 개수 상한
-- `criticalEffect.flash*`, `slash*`: 각진 순간 섬광과 두 방향 교차 참격의 크기·색상·키프레임
-- `criticalEffect.lightning*`, `fragment*`: 여러 갈래로 꺾이는 번개와 회전 쿠키 파편의 개수·거리·색상
-- `superCriticalEffect.column*`, `slash*`, `ghostSlash*`: 수직 낙뢰 기둥과 X자·수평 다색 참격 레이어
-- `superCriticalEffect.lightning*`, `shard*`, `shake*`: 14갈래 번개, 24개 각진 다색 파편 폭발과 쿠키 무대 흔들림
-- `superCriticalEffect.rift*`: 화면 상단에서 아래로 찢어지는 9분절 천공 균열의 위치·굵기·글로우·색상·키프레임
+- `superCriticalEffect.durationMs`, `compactDurationMs`, `sizePixels`: 슈퍼 전체·축약 효과의 수명과 기준 크기
+- `superCriticalEffect.charge*`, `secondaryImpactProgress`, `shockwave*`: 충전 시점, 두 번째 충격과 3회 마름모 충격파의 크기·시차
+- `superCriticalEffect.column*`, `slash*`, `ghostSlash*`: 수직 낙뢰 기둥과 순차 참격 레이어
+- `superCriticalEffect.lightning*`, `shard*`, `shake*`: 8갈래 번개, 12개 각진 파편과 쿠키 무대 흔들림
+- `superCriticalEffect.emblem*`: 중앙 전용 엠블럼의 크기·회전·등장·소멸 키프레임
 - `superCriticalEffect.label*`: 슈퍼 크리티컬 문구의 크기·위치·그림자·스케일
 
-크리티컬 판정은 수치 테이블과 천장 테이블만 사용하고, 판정 결과가 `cookie-feedback.json`의 `normal`, 일반 전체/축약, 슈퍼 전체/축약 표시 정책을 선택합니다. 시각 수명은 일반 930ms < 마그마 1,500ms < 슈퍼 1,800ms < 전기 1,950ms입니다. 사운드 레이어 강도도 일반 `0.72+0.42` < 마그마 `0.92×2` < 슈퍼 `0.98+1.0` < 전기 `1.0×3`으로 정렬됩니다. `feedbackPowerRank` 1~4와 기본 확률 역순·수명 오름차순·음향 강도 오름차순을 교차 테이블 검증으로 강제합니다. 다른 종류는 시각·음향을 함께 합성하고 같은 종류만 새 연출로 교체합니다. 보이스 배열 불일치, 오디오 꼬리보다 짧은 전체 연출 간격, 범위 밖 음량·진행률, 잘못된 키프레임 순서는 설정 검증에서 거부합니다.
+크리티컬 판정은 수치 테이블과 천장 테이블만 사용합니다. 일반 크리티컬은 별도 화면 연출 없이 색이 다른 획득 숫자와 음향만 사용하고, 시각 수명은 마그마 1,500ms < 슈퍼 1,800ms < 전기 2,200ms입니다. 사운드 레이어 강도도 일반 `0.72+0.42` < 마그마 `0.92×2` < 슈퍼 `0.98+1.0` < 전기 `1.0×3`으로 정렬됩니다. `feedbackPowerRank` 1~4와 기본 확률 역순·시각/음향 강도 순서를 교차 테이블 검증으로 강제합니다. 다른 종류는 시각·음향을 함께 합성하고 같은 종류만 새 연출로 교체합니다. 보이스 배열 불일치, 범위 밖 음량·진행률, 역전된 키프레임 순서는 설정 검증에서 거부합니다.
 
 ### `discs.json`과 무한 강화
 
@@ -189,7 +188,7 @@
 
 ## 난이도와 몬스터
 
-`difficulties.json`의 배열 순서가 실제 해금 순서입니다. 기존 easy부터 extreme god까지 15단계 뒤에 `blood moon easy`, `blood moon normal`, …, `blood moon extreme god` 15단계가 이어져 총 30단계입니다.
+`difficulties.json`의 배열 순서가 실제 해금 순서입니다. 기존 easy부터 extreme god까지 15단계, `blood moon easy`부터 `blood moon extreme god` 15단계, `black sun easy`부터 `black sun extreme god` 15단계가 이어져 총 45단계입니다.
 
 - `enemyWaveId`: `enemy-waves.json`의 `id` 참조
 - `enemyCount`: 전투에 등장하는 적 수
@@ -213,7 +212,7 @@
 
 엔진은 먼저 `몬스터 기본 HP × 실효 난이도 HP 배율`을 계산합니다. 그다음 현재 장착 원반과 종류별 쿠키봇 수·피해 배율·발사 간격으로 자동 공격 DPS를 계산합니다. 테이블 기본 HP, `자동 DPS × 목표 생존 시간`, `가장 강한 자동 한 발 × 최소 명중 수` 가운데 가장 큰 값이 최종 보스 HP입니다. 초반처럼 전력이 낮으면 기존 HP가 우선되고, 과도하게 성장해 한 발 처치가 가능한 저장에서만 자동 하한이 크게 작동합니다. 쿠키 성 수동 공격과 소모품 거대 원반은 이 자동 DPS 보정에 포함하지 않습니다.
 
-`enemy-waves.json`에는 난이도와 같은 순서의 30개 보스 결투 행이 있습니다. 각 난이도의 `enemyWaveId`가 고유 웨이브를 가리키고, 웨이브의 `monsterPatternIds`와 `bossMonsterId`는 같은 고유 보스 ID를 사용합니다. `bossEveryEnemies=1`과 `enemyCount=1`이므로 전투에는 해당 보스 한 마리만 생성됩니다. 30종 보스의 기준 HP·공격·속도·원반·크기 값은 동일하고 이름·이미지·설명만 달라, 외형 추가가 현재 난이도 밸런스를 바꾸지 않습니다. `monsters.json`의 추가 필드는 다음과 같습니다.
+`enemy-waves.json`에는 30개 보스 결투 행이 있습니다. 기본·Blood Moon 30개 난이도는 각각 고유 웨이브·보스를 사용하고, Black Sun 15개는 기본 15개 웨이브를 강화 재대결로 참조합니다. 웨이브의 `monsterPatternIds`와 `bossMonsterId`는 같은 고유 보스 ID를 사용합니다. `bossEveryEnemies=1`과 `enemyCount=1`이므로 전투에는 해당 보스 한 마리만 생성됩니다. 30종 보스의 기준 HP·공격·속도·원반·크기 값은 동일하고 난이도 계산이 최종 전투력을 적용하므로 재대결도 이전 단계보다 강합니다. `monsters.json`의 추가 필드는 다음과 같습니다.
 
 - `imageKey`, `rank`: 전투·도감의 이미지와 한국어 등급
 - `moveSpeedMultiplier`: 난이도 이동 속도에 곱하는 개별 속도
@@ -234,11 +233,12 @@
 
 현재 `hpMultiplierPerWin=0.08`, `attackMultiplierPerWin=0.05`, `moveSpeedMultiplierPerWin=0.001`입니다. 이 값은 현재 난이도 자체가 아니라 easy 기준값에 곱한 뒤 각 난이도 기준값에 더하므로, 한 승리마다 실효 HP 배율 0.008, 공격 배율 0.005, 이동 속도 0.012가 일정하게 증가합니다. `enemyDiscLevelEveryWins=20`이라 같은 등급 1~20전투에서는 적 원반 레벨이 유지되고 다음 난이도에서 1레벨 오릅니다. `difficulties.json`의 각 다음 등급 첫 기준값은 이전 등급 20번째보다 위의 한 증가분만큼 높아 등급 경계가 항상 단조 증가합니다. `extraEnemiesPerStep`과 `maximumExtraEnemies`는 모두 0이므로 보스 수는 늘지 않습니다. 승리할 때만 다음 단계로 올라가고 패배는 진행도를 바꾸지 않습니다.
 
-### Blood Moon 난이도 확장
+### Blood Moon·Black Sun 난이도 확장
 
-`difficulty-expansion.json`은 기존 콘텐츠를 수정하지 않고 뒤에 붙는 15개 Blood Moon 난이도의 성장 계약을 관리합니다.
+`difficulty-expansion.json`은 기존 콘텐츠를 수정하지 않고 뒤에 붙는 Blood Moon·Black Sun 각 15개, 총 30개 확장 난이도의 성장 계약을 관리합니다.
 
-- `legacyDifficultyCount`, `extensionDifficultyCount`: 기존 15개와 같은 수의 신규 15개를 강제
+- `legacyDifficultyCount`, `extensionDifficultyCount`: 기존 15개와 신규 30개를 강제
+- `difficultySeriesSize`, `extensionSeriesPrefixes`: 시리즈당 15개와 `blood moon`, `black sun` 접두어 순서를 강제
 - `powerMultiplierPerDifficulty`: 신규 난이도 첫 전투의 HP·공격 배율. 직전 난이도 20번째 전투 기준 현재 ×1.2
 - `moveSpeedMultiplierPerDifficulty`, `maximumMoveSpeed`: 이동속도는 경계마다 ×1.01, 최대 18
 - `enemyDiscDamageMultiplierPerDifficulty`: 다음 적 원반 피해는 반올림한 직전 값 ×1.2
@@ -246,11 +246,11 @@
 - `enemyDiscSpeedMultiplierPerDifficulty`, `maximumEnemyDiscSpeed`: 레벨당 ×1.03, 최대 300
 - `enemyDiscCooldownMultiplierPerDifficulty`, `minimumEnemyDiscCooldownMs`: 레벨당 ×0.97, 최소 900ms
 
-앱 시작 검증은 각 Blood Moon 행의 HP·공격·이동속도와 적 원반 Lv.16~30을 이 공식으로 다시 계산합니다. 행 개수, 20% 경계 성장, 상·하한 중 하나라도 맞지 않으면 해당 JSON 경로를 포함한 설정 오류로 시작을 중단합니다. 따라서 숫자를 바꿀 때는 `difficulties.json`, `enemy-discs.json`, 이 규칙 테이블을 함께 조정해야 합니다.
+앱 시작 검증은 각 Blood Moon·Black Sun 행의 HP·공격·이동속도와 적 원반 Lv.16~45를 이 공식으로 다시 계산합니다. 행 개수, 접두어, 20% 경계 성장, 상·하한 중 하나라도 맞지 않으면 해당 JSON 경로를 포함한 설정 오류로 시작을 중단합니다. 따라서 숫자를 바꿀 때는 `difficulties.json`, `enemy-discs.json`, 이 규칙 테이블을 함께 조정해야 합니다.
 
 ## 전투 배경 테마
 
-`battle-maps.json`은 30개 난이도와 일대일로 연결된 행을 정의합니다. `difficultyId`는 `difficulties.json`의 실제 ID이고 `imageKey`는 React Native 정적 번들 요구사항 때문에 `BattleMapImage.ts`의 `require` 매핑과 함께 추가해야 합니다. 기존 15개 외에 수정 광산, 버섯 숲, 증기 주조소, 심해 산호 도시, 운석 분화구, 장난감 공방, 마법 도서관, 그림자 극장, 연금 온실, 성운 설계실, 거울 미궁, 프랙탈 협곡, 역중력 도시, 영겁 시계, 다중우주 균열이 추가됩니다. 모두 색만 바꾼 변형이 아니라 지형과 가장자리 랜드마크가 다른 독립 원본이며 중앙 70%는 전투 시인성을 위해 단순하게 유지합니다. 같은 난이도의 1~20번째 전투는 진행 일관성을 위해 같은 테마를 유지합니다.
+`battle-maps.json`은 45개 난이도와 일대일인 행을 정의하고 30개 고유 이미지를 사용합니다. `difficultyId`는 `difficulties.json`의 실제 ID이고 `imageKey`는 React Native 정적 번들 요구사항 때문에 `BattleMapImage.ts`의 `require` 매핑에 존재해야 합니다. 기존 15개 외에 수정 광산, 버섯 숲, 증기 주조소, 심해 산호 도시, 운석 분화구, 장난감 공방, 마법 도서관, 그림자 극장, 연금 온실, 성운 설계실, 거울 미궁, 프랙탈 협곡, 역중력 도시, 영겁 시계, 다중우주 균열이 추가됩니다. 모두 색만 바꾼 변형이 아니라 지형과 가장자리 랜드마크가 다른 독립 원본이며 중앙 70%는 전투 시인성을 위해 단순하게 유지합니다. Black Sun 15개는 기본 15개 세계에서 보스와 난이도만 강화한 의도적인 재대결입니다. 같은 난이도의 1~20번째 전투는 진행 일관성을 위해 같은 테마를 유지합니다.
 
 ## 쿠키 진화
 
@@ -456,14 +456,14 @@
 - `currentSaveVersion`: 새 저장에 기록하고 이전 저장을 정규화할 현재 스키마 버전
 - `cookieEvolutionBonusMigrationVersion`: 이전 쿠키 크기 진행도를 영구 진화 보너스로 한 번 옮기는 스키마 경계
 - `battleMedalMigrationVersion`: 이전 난이도 진행도를 전투 훈장으로 한 번 소급하는 스키마 경계
-- `difficultyExpansionMigrationVersion`: 기존 최종 난이도 완료 저장을 첫 Blood Moon 난이도로 연결하는 스키마 경계
+- `difficultyExpansionMigrations[]`: 저장 버전별 완료 난이도 수를 기준으로 다음 확장 시리즈 첫 난이도에 연결하는 스키마 경계 배열
 - `battleMedalsPerLegacyWin`: 이전 저장의 정규화된 승리 1회당 소급 지급할 전투 훈장 수
 - `cookieEvolutionLegacyUpgrade.id`, `baseLevel`, `maximumLevel`: v7 저장에서 읽을 고정 레거시 강화 ID와 유효 레벨 범위
 - `botIdAliases`, `discIdAliases`, `monsterIdAliases`: 제거·변경된 ID를 현재 테이블 ID로 옮기는 대응표
 
-현재 `currentSaveVersion`은 14입니다. 슈퍼 크리티컬·마그마 조각·전기 조각 단계가 없는 이전 저장은 각각 Lv.1, 자동 전투 설정이 없는 저장은 OFF로 복구합니다. v12 이하에 없던 `cookiePityMisses` 4종은 0으로 시작하고, 손상된 음수·소수·비유한값은 음이 아닌 안전 정수로 정규화합니다. v7 이하 저장은 고정 레거시 ID `cookieSize`의 정규화된 현재 레벨에서 기본 레벨 1을 뺀 값을 `legacyCookieEvolutionBonusLevels`에 한 번 기록합니다. 이 규칙은 현재 강화 테이블과 분리되어 향후 숨김 행을 제거하거나 다른 강화의 진화 기여도를 바꿔도 v7 직행 업데이트 결과가 변하지 않습니다.
+현재 `currentSaveVersion`은 15입니다. 슈퍼 크리티컬·마그마 조각·전기 조각 단계가 없는 이전 저장은 각각 Lv.1, 자동 전투 설정이 없는 저장은 OFF로 복구합니다. v12 이하에 없던 `cookiePityMisses` 4종은 0으로 시작하고, 손상된 음수·소수·비유한값은 음이 아닌 안전 정수로 정규화합니다. v7 이하 저장은 고정 레거시 ID `cookieSize`의 정규화된 현재 레벨에서 기본 레벨 1을 뺀 값을 `legacyCookieEvolutionBonusLevels`에 한 번 기록합니다. 이 규칙은 현재 강화 테이블과 분리되어 향후 숨김 행을 제거하거나 다른 강화의 진화 기여도를 바꿔도 v7 직행 업데이트 결과가 변하지 않습니다.
 
-v13 이하 저장이 기존 15개 난이도를 모두 20승 완료했으면 선택해 둔 과거 난이도와 무관하게, v14 최초 복구에서 `blood moon easy`가 해금·선택됩니다. 신규 15개 승리 수는 0으로 채우며 기존 300개 전투 훈장과 완료 기록은 그대로 보존합니다. v14로 저장된 뒤에는 사용자가 선택한 과거 난이도를 존중하므로 재실행 때 다시 강제 이동하지 않습니다.
+v13 이하 저장이 기존 15개 난이도를 모두 20승 완료했으면 v14 복구에서 `blood moon easy`가, v14 이하 저장이 기존 30개를 모두 완료했으면 v15 복구에서 `black sun easy`가 한 번 해금·선택됩니다. 신규 시리즈 승리 수는 0으로 채우며 기존 전투 훈장과 완료·보상 기록은 그대로 보존합니다. 해당 버전으로 저장된 뒤에는 사용자가 선택한 과거 난이도를 존중하므로 재실행 때 다시 강제 이동하지 않습니다.
 
 v8 이하 저장은 각 난이도의 `difficultyWinCounts`를 먼저 `0..winsToUnlockNextDifficulty`로 정규화한 뒤 합산하고 `battleMedalsPerLegacyWin`을 곱해 `battleMedals`를 만듭니다. 현재 값은 완료 승리 1회당 훈장 1개이므로 과거에 보상 없이 진행한 모든 완료 스테이지가 정확히 소급됩니다. v9 이상 저장은 저장된 `battleMedals`를 정규화해 사용하고 승리 수에서 다시 계산하지 않으므로 재실행해도 중복 지급되지 않습니다. 새 게임은 0개에서 시작합니다.
 

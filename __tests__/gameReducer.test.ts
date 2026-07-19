@@ -4,7 +4,6 @@ import {
   BOTS,
   COOKIE_UPGRADES,
   DIFFICULTIES,
-  DIFFICULTY_EXPANSION,
   DISC_UPGRADE_RULES,
   DISCS,
   MONSTERS,
@@ -500,26 +499,22 @@ describe('게임 저장 상태', () => {
     expect(state.difficultyWinCounts[DIFFICULTIES[0].id]).toBe(20);
   });
 
-  test('기존 15개를 모두 완료한 저장은 첫 신규 난이도로 바로 이어진다', () => {
-    const legacyDifficulties = DIFFICULTIES.slice(
-      0,
-      DIFFICULTY_EXPANSION.legacyDifficultyCount,
-    );
-    const legacyFinal = legacyDifficulties[legacyDifficulties.length - 1];
+  test.each(SAVE_MIGRATIONS.difficultyExpansionMigrations)(
+    '$completedDifficultyCount개를 완료한 v$saveVersion 이전 저장은 다음 시리즈로 이어진다',
+    ({ saveVersion, completedDifficultyCount }) => {
+    const completedDifficulties = DIFFICULTIES.slice(0, completedDifficultyCount);
     const restored = mergeSavedGame({
-      saveVersion: SAVE_MIGRATIONS.difficultyExpansionMigrationVersion - 1,
-      selectedDifficultyId: legacyDifficulties[0].id,
-      difficultyWinCounts: Object.fromEntries(legacyDifficulties.map((difficulty) => [
+      saveVersion: saveVersion - 1,
+      selectedDifficultyId: completedDifficulties[0].id,
+      difficultyWinCounts: Object.fromEntries(completedDifficulties.map((difficulty) => [
         difficulty.id,
         PROGRESSION.winsToUnlockNextDifficulty,
       ])),
-      battleMedals: legacyDifficulties.length * PROGRESSION.winsToUnlockNextDifficulty,
+      battleMedals: completedDifficulties.length * PROGRESSION.winsToUnlockNextDifficulty,
     });
 
-    expect(restored.highestUnlockedDifficultyIndex)
-      .toBe(DIFFICULTY_EXPANSION.legacyDifficultyCount);
-    expect(restored.selectedDifficultyId)
-      .toBe(DIFFICULTIES[DIFFICULTY_EXPANSION.legacyDifficultyCount].id);
+    expect(restored.highestUnlockedDifficultyIndex).toBe(completedDifficultyCount);
+    expect(restored.selectedDifficultyId).toBe(DIFFICULTIES[completedDifficultyCount].id);
     expect(restored.difficultyWinCounts[restored.selectedDifficultyId]).toBe(0);
   });
 

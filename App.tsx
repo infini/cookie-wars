@@ -15,6 +15,7 @@ import { DiscScreen } from './src/screens/DiscScreen';
 import { GameScreen } from './src/screens/GameScreen';
 import { MonsterScreen } from './src/screens/MonsterScreen';
 import { UpgradeScreen } from './src/screens/UpgradeScreen';
+import { getCookie } from './src/config';
 import {
   getScreenTitle,
   rememberMenuLeaf,
@@ -41,7 +42,7 @@ function LoadingScreen() {
 }
 
 function GameShell() {
-  const { state, hydrated } = useGame();
+  const { state, stats, hydrated } = useGame();
   const feedback = useFeedback();
   const [activeTab, setActiveTab] = useState<TabId>('game');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -65,7 +66,7 @@ function GameShell() {
 
   const renderScreen = () => {
     switch (activeTab) {
-      case 'game': return <GameScreen onGoBattle={() => changeTab('battle')} />;
+      case 'game': return <GameScreen />;
       case 'battle': return <BattleScreen onReturnToGame={() => changeTab('game', false)} />;
       case 'cookie': return <CookieScreen />;
       case 'upgrade': return <UpgradeScreen />;
@@ -85,6 +86,7 @@ function GameShell() {
       <ScreenLayout
         title={getScreenTitle(activeTab)}
         cookies={state.cookies}
+        activeCookieName={getCookie(stats.activeCookieId).name}
         activeTab={activeTab}
         onChangeMainMenu={changeMainMenu}
         onChangeTab={changeTab}

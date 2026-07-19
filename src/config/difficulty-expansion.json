@@ -1,6 +1,8 @@
 {
   "legacyDifficultyCount": 15,
-  "extensionDifficultyCount": 15,
+  "extensionDifficultyCount": 30,
+  "difficultySeriesSize": 15,
+  "extensionSeriesPrefixes": ["blood moon", "black sun"],
   "powerMultiplierPerDifficulty": 1.2,
   "moveSpeedMultiplierPerDifficulty": 1.01,
   "maximumMoveSpeed": 18,

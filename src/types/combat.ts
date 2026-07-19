@@ -20,6 +20,8 @@ export interface DifficultyConfig {
 export interface DifficultyExpansionConfig {
   legacyDifficultyCount: number;
   extensionDifficultyCount: number;
+  difficultySeriesSize: number;
+  extensionSeriesPrefixes: string[];
   powerMultiplierPerDifficulty: number;
   moveSpeedMultiplierPerDifficulty: number;
   maximumMoveSpeed: number;

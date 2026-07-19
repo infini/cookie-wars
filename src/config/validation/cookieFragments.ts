@@ -95,45 +95,84 @@ function validateClaimEffect(config: UnknownRecord, path: string): void {
   const effectPath = `${path}.claimEffect`;
   const effect = record(config.claimEffect, effectPath);
   const integerFields = [
-    'magmaDurationMs', 'electricDurationMs', 'sizePixels',
+    'magmaDurationMs', 'electricDurationMs', 'magmaSizePixels', 'electricSizePixels',
     'magmaFlashRotationDegrees', 'electricFlashRotationDegrees',
-    'magmaEruptionFrameCount', 'magmaEruptionFrameIntervalMs',
+    'magmaPlumePulseCount', 'magmaPlumeSwayPixels',
+    'magmaShockwaveCount', 'magmaShockwaveBorderWidthPixels',
+    'magmaEmberCount', 'magmaEmberSizePixels',
     'electricBoltCount', 'electricBoltRotationDegrees',
-    'rewardFontSize', 'rewardShadowRadius', 'magmaShakeDistancePixels',
+    'electricPulseCount', 'electricPulseBorderWidthPixels',
+    'electricPulseRotationDegrees', 'electricSparkCount', 'electricSparkSizePixels',
+    'electricSparkCornerRadiusPixels',
+    'rewardShadowRadius', 'magmaShakeDistancePixels',
     'electricShakeDistancePixels',
   ];
   validateNumberFields(effect, effectPath, [
-    ...integerFields, 'screenWidthRatio', 'screenHeightRatio',
-    'flashMaximumOpacity', 'flashStartScale', 'flashEndScale',
+    ...integerFields, 'magmaScreenWidthRatio', 'magmaScreenHeightRatio',
+    'electricScreenWidthRatio', 'electricScreenHeightRatio',
+    'magmaFlashMaximumOpacity', 'electricFlashMaximumOpacity',
+    'flashStartScale', 'flashEndScale',
     'flashPeakProgress', 'flashFadeProgress',
-    'magmaEruptionSizeRatio', 'magmaEruptionLeftRatio', 'magmaEruptionTopRatio',
+    'magmaPlumeSizeRatio', 'magmaPlumeLeftRatio', 'magmaPlumeTopRatio',
+    'magmaPlumeStartScaleY', 'magmaPlumePeakScaleY', 'magmaPlumeEndScaleY',
+    'magmaPlumeStartOffsetYRatio', 'magmaPlumePulseScaleDelta',
     'magmaVolcanoSizeRatio', 'magmaVolcanoLeftRatio', 'magmaVolcanoTopRatio',
     'magmaVolcanoStartOffsetYRatio', 'magmaVolcanoEndOffsetYRatio',
     'magmaVolcanoPeakScale', 'magmaVolcanoSettleProgress',
+    'magmaCraterCenterXRatio', 'magmaCraterCenterYRatio',
+    'magmaCraterGlowSizeRatio', 'magmaCraterGlowEndScale',
+    'magmaShockwaveStaggerProgress', 'magmaShockwaveEndScale',
+    'magmaShockwaveWidthRatio', 'magmaShockwaveHeightRatio',
+    'magmaEmberStaggerProgress',
+    'magmaEmberRiseRatio', 'magmaEmberSpreadRatio',
+    'magmaEmberRotationTurns',
     'electricHorizontalInsetRatio', 'electricTopRatio',
     'electricBoltWidthRatio', 'electricBoltHeightRatio', 'electricBoltStartScale',
     'electricRevealProgress', 'electricBoltStaggerProgress',
-    'electricBoltVisibleProgress',
+    'electricBoltVisibleProgress', 'electricBoltFlickerRatio',
+    'electricBoltFlickerMinimumOpacity', 'electricBoltEchoOpacity',
+    'electricCoreSizeRatio', 'electricCoreTopRatio',
+    'electricCoreStartScale', 'electricCorePeakScale', 'electricCoreEndScale',
+    'electricCoreRotationTurns', 'electricPulseStaggerProgress',
+    'electricPulseSizeRatio', 'electricPulseEndScale',
+    'electricPulseCornerRadiusRatio',
+    'electricSparkHeightMultiplier',
+    'electricSparkEndDistanceRatio',
     'rewardTopRatio', 'rewardPeakScale', 'rewardStartScale',
-    'rewardEndScale', 'fadeStartProgress',
+    'rewardEndScale', 'magmaFadeStartProgress', 'electricFadeStartProgress',
   ], { min: 0 });
   integerFields.forEach((field) => numberField(effect, field, effectPath, {
     integer: true,
     min: field.endsWith('RotationDegrees') ? 0 : 1,
   }));
+  numberField(effect, 'rewardFontSize', effectPath, { min: 1 });
   [
-    'flashMaximumOpacity', 'flashPeakProgress', 'flashFadeProgress',
-    'rewardTopRatio', 'fadeStartProgress', 'magmaEruptionSizeRatio',
-    'magmaEruptionLeftRatio', 'magmaEruptionTopRatio', 'magmaVolcanoSizeRatio',
+    'magmaFlashMaximumOpacity', 'electricFlashMaximumOpacity',
+    'flashPeakProgress', 'flashFadeProgress', 'rewardTopRatio',
+    'magmaFadeStartProgress', 'electricFadeStartProgress', 'magmaPlumeSizeRatio',
+    'magmaPlumeLeftRatio', 'magmaPlumeTopRatio', 'magmaPlumeStartOffsetYRatio',
+    'magmaVolcanoSizeRatio',
     'magmaVolcanoLeftRatio', 'magmaVolcanoTopRatio',
     'magmaVolcanoStartOffsetYRatio', 'magmaVolcanoEndOffsetYRatio',
     'magmaVolcanoSettleProgress', 'electricHorizontalInsetRatio',
+    'magmaCraterCenterXRatio', 'magmaCraterCenterYRatio',
+    'magmaCraterGlowSizeRatio', 'magmaShockwaveStaggerProgress',
+    'magmaShockwaveWidthRatio', 'magmaShockwaveHeightRatio',
+    'magmaEmberStaggerProgress', 'magmaEmberRiseRatio', 'magmaEmberSpreadRatio',
     'electricTopRatio', 'electricBoltWidthRatio', 'electricBoltHeightRatio',
     'electricBoltStartScale',
     'electricRevealProgress', 'electricBoltStaggerProgress',
     'electricBoltVisibleProgress',
+    'electricBoltFlickerRatio', 'electricBoltFlickerMinimumOpacity',
+    'electricBoltEchoOpacity', 'electricPulseStaggerProgress',
+    'electricPulseSizeRatio', 'electricPulseCornerRadiusRatio',
+    'electricSparkEndDistanceRatio',
+    'electricCoreSizeRatio', 'electricCoreTopRatio',
   ].forEach((field) => numberField(effect, field, effectPath, { min: 0, max: 1 }));
-  ['screenWidthRatio', 'screenHeightRatio'].forEach((field) => numberField(
+  [
+    'magmaScreenWidthRatio', 'magmaScreenHeightRatio',
+    'electricScreenWidthRatio', 'electricScreenHeightRatio',
+  ].forEach((field) => numberField(
     effect,
     field,
     effectPath,
@@ -142,10 +181,38 @@ function validateClaimEffect(config: UnknownRecord, path: string): void {
   assertAscending(effect, effectPath, ['flashPeakProgress', 'flashFadeProgress']);
   assertAscending(effect, effectPath, ['flashStartScale', 'flashEndScale']);
   assertAscending(effect, effectPath, ['rewardStartScale', 'rewardPeakScale']);
-  if ((effect.flashFadeProgress as number) >= (effect.fadeStartProgress as number)) {
+  assertAscending(effect, effectPath, ['magmaPlumeStartScaleY', 'magmaPlumePeakScaleY']);
+  assertAscending(effect, effectPath, ['electricCoreStartScale', 'electricCorePeakScale']);
+  numberField(effect, 'magmaPlumePulseCount', effectPath, { integer: true, min: 2, max: 8 });
+  numberField(effect, 'magmaShockwaveCount', effectPath, { integer: true, min: 1, max: 5 });
+  numberField(effect, 'magmaEmberCount', effectPath, { integer: true, min: 1, max: 24 });
+  numberField(effect, 'electricPulseCount', effectPath, { integer: true, min: 1, max: 5 });
+  numberField(effect, 'electricSparkCount', effectPath, { integer: true, min: 1, max: 24 });
+  if (
+    (effect.flashFadeProgress as number) >= (effect.magmaFadeStartProgress as number)
+    || (effect.flashFadeProgress as number) >= (effect.electricFadeStartProgress as number)
+  ) {
     throw new ConfigValidationError(
-      `${effectPath}.fadeStartProgress`,
-      'flashFadeProgress보다 커야 합니다.',
+      `${effectPath}.magmaFadeStartProgress`,
+      '두 fade 시작 시점은 flashFadeProgress보다 커야 합니다.',
+    );
+  }
+  if (
+    (effect.electricCoreTopRatio as number) + (effect.electricCoreSizeRatio as number) > 1
+  ) {
+    throw new ConfigValidationError(
+      `${effectPath}.electricCoreSizeRatio`,
+      '전기 코어가 효과 캔버스를 벗어나지 않아야 합니다.',
+    );
+  }
+  if (
+    (effect.magmaPlumeLeftRatio as number) + (effect.magmaPlumeSizeRatio as number) > 1
+    || (effect.magmaVolcanoLeftRatio as number)
+      + (effect.magmaVolcanoSizeRatio as number) > 1
+  ) {
+    throw new ConfigValidationError(
+      `${effectPath}.magmaPlumeSizeRatio`,
+      '화염 기둥과 화산이 효과 캔버스의 가로 영역 안에 있어야 합니다.',
     );
   }
   const finalLightningStart = (effect.electricRevealProgress as number)
@@ -153,17 +220,29 @@ function validateClaimEffect(config: UnknownRecord, path: string): void {
       * (effect.electricBoltStaggerProgress as number);
   if (
     finalLightningStart + (effect.electricBoltVisibleProgress as number)
-      >= (effect.fadeStartProgress as number)
+      >= (effect.electricFadeStartProgress as number)
   ) {
     throw new ConfigValidationError(
       `${effectPath}.electricBoltVisibleProgress`,
       '마지막 외부 번개가 fadeStartProgress 전에 끝나야 합니다.',
     );
   }
-  if ((effect.magmaEruptionFrameCount as number) !== 16) {
+  const finalEmberStart = (effect.flashPeakProgress as number)
+    + ((effect.magmaEmberCount as number) - 1)
+      * (effect.magmaEmberStaggerProgress as number);
+  if (finalEmberStart >= (effect.magmaFadeStartProgress as number)) {
     throw new ConfigValidationError(
-      `${effectPath}.magmaEruptionFrameCount`,
-      '외부 폭발 atlas의 16프레임과 같아야 합니다.',
+      `${effectPath}.magmaEmberStaggerProgress`,
+      '마지막 불티가 마그마 fade 전에 시작해야 합니다.',
+    );
+  }
+  const finalElectricPulseStart = (effect.flashPeakProgress as number)
+    + ((effect.electricPulseCount as number) - 1)
+      * (effect.electricPulseStaggerProgress as number);
+  if (finalElectricPulseStart >= (effect.electricFadeStartProgress as number)) {
+    throw new ConfigValidationError(
+      `${effectPath}.electricPulseStaggerProgress`,
+      '마지막 전기 충격파가 전기 fade 전에 시작해야 합니다.',
     );
   }
   validateColorArray(effect, effectPath, 'magmaColors', 2);

@@ -84,8 +84,8 @@
     "countsTowardCookieEvolution": false,
     "enabled": false,
     "visible": false,
-    "renderBaseSizePixels": 190,
-    "renderMaximumSizePixels": 224,
+    "renderBaseSizePixels": 216,
+    "renderMaximumSizePixels": 280,
     "levels": [
       { "level": 1, "value": 100, "cost": 0 },
       { "level": 2, "value": 106, "cost": 40 },

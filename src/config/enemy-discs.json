@@ -28,5 +28,20 @@
   { "level": 27, "damage": 408, "size": 48, "speed": 300, "cooldownMs": 1042 },
   { "level": 28, "damage": 490, "size": 48, "speed": 300, "cooldownMs": 1011 },
   { "level": 29, "damage": 588, "size": 48, "speed": 300, "cooldownMs": 981 },
-  { "level": 30, "damage": 706, "size": 48, "speed": 300, "cooldownMs": 952 }
+  { "level": 30, "damage": 706, "size": 48, "speed": 300, "cooldownMs": 952 },
+  { "level": 31, "damage": 847, "size": 48, "speed": 300, "cooldownMs": 923 },
+  { "level": 32, "damage": 1016, "size": 48, "speed": 300, "cooldownMs": 900 },
+  { "level": 33, "damage": 1219, "size": 48, "speed": 300, "cooldownMs": 900 },
+  { "level": 34, "damage": 1463, "size": 48, "speed": 300, "cooldownMs": 900 },
+  { "level": 35, "damage": 1756, "size": 48, "speed": 300, "cooldownMs": 900 },
+  { "level": 36, "damage": 2107, "size": 48, "speed": 300, "cooldownMs": 900 },
+  { "level": 37, "damage": 2528, "size": 48, "speed": 300, "cooldownMs": 900 },
+  { "level": 38, "damage": 3034, "size": 48, "speed": 300, "cooldownMs": 900 },
+  { "level": 39, "damage": 3641, "size": 48, "speed": 300, "cooldownMs": 900 },
+  { "level": 40, "damage": 4369, "size": 48, "speed": 300, "cooldownMs": 900 },
+  { "level": 41, "damage": 5243, "size": 48, "speed": 300, "cooldownMs": 900 },
+  { "level": 42, "damage": 6292, "size": 48, "speed": 300, "cooldownMs": 900 },
+  { "level": 43, "damage": 7550, "size": 48, "speed": 300, "cooldownMs": 900 },
+  { "level": 44, "damage": 9060, "size": 48, "speed": 300, "cooldownMs": 900 },
+  { "level": 45, "damage": 10872, "size": 48, "speed": 300, "cooldownMs": 900 }
 ]

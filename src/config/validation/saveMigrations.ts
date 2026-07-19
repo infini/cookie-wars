@@ -1,6 +1,8 @@
 import {
   ConfigValidationError,
   UnknownRecord,
+  array,
+  assertUnique,
   numberField,
   record,
   stringValue,
@@ -23,10 +25,47 @@ export function validateSaveMigrations(value: unknown): UnknownRecord {
     min: 1,
     max: currentSaveVersion,
   });
-  numberField(config, 'difficultyExpansionMigrationVersion', path, {
-    integer: true,
-    min: 1,
-    max: currentSaveVersion,
+  const expansionMigrations = array(
+    config.difficultyExpansionMigrations,
+    `${path}.difficultyExpansionMigrations`,
+  ).map((item, index) => {
+    const itemPath = `${path}.difficultyExpansionMigrations[${index}]`;
+    const migration = record(item, itemPath);
+    return {
+      saveVersion: numberField(migration, 'saveVersion', itemPath, {
+        integer: true,
+        min: 1,
+        max: currentSaveVersion,
+      }),
+      completedDifficultyCount: numberField(
+        migration,
+        'completedDifficultyCount',
+        itemPath,
+        { integer: true, min: 1 },
+      ),
+    };
+  });
+  if (expansionMigrations.length === 0) {
+    throw new ConfigValidationError(
+      `${path}.difficultyExpansionMigrations`,
+      '난이도 확장 이전 규칙이 하나 이상이어야 합니다.',
+    );
+  }
+  assertUnique(
+    expansionMigrations.map((migration) => migration.saveVersion),
+    `${path}.difficultyExpansionMigrations.saveVersion`,
+  );
+  expansionMigrations.slice(1).forEach((migration, index) => {
+    const previous = expansionMigrations[index];
+    if (
+      migration.saveVersion <= previous.saveVersion
+      || migration.completedDifficultyCount <= previous.completedDifficultyCount
+    ) {
+      throw new ConfigValidationError(
+        `${path}.difficultyExpansionMigrations[${index + 1}]`,
+        '저장 버전과 완료 난이도 수가 이전 행보다 커야 합니다.',
+      );
+    }
   });
   numberField(config, 'battleMedalsPerLegacyWin', path, {
     integer: true,

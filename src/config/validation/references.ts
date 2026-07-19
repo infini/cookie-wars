@@ -48,6 +48,16 @@ export function validateReferences({
   const bossAnimationIds = new Set(bossAnimations.map((item) => item.id as string));
   const botAnimationIds = new Set(botAnimations.map((item) => item.id as string));
 
+  (migrations.difficultyExpansionMigrations as UnknownRecord[]).forEach((migration, index) => {
+    const completedCount = migration.completedDifficultyCount as number;
+    if (completedCount >= difficulties.length) {
+      throw new ConfigValidationError(
+        `SAVE_MIGRATIONS.difficultyExpansionMigrations[${index}].completedDifficultyCount`,
+        '다음 난이도가 존재하도록 전체 난이도 수보다 작아야 합니다.',
+      );
+    }
+  });
+
   validateCookieSpecialReferences({
     upgrades,
     upgradeRules,

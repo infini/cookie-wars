@@ -28,5 +28,20 @@
   { "id": "fractal-crystal-canyon", "difficultyId": "blood-moon-medium-god", "name": "프랙탈 수정 협곡", "imageKey": "medium-infinity-fractal-canyon" },
   { "id": "gravity-inverted-city", "difficultyId": "blood-moon-hard-god", "name": "역중력 반전 도시", "imageKey": "hard-infinity-inverted-city" },
   { "id": "eternal-clock-loop", "difficultyId": "blood-moon-insane-god", "name": "영겁의 시계 고리", "imageKey": "insane-infinity-eternal-clock" },
-  { "id": "ultimate-multiverse-rift", "difficultyId": "blood-moon-extreme-god", "name": "궁극의 다중우주 균열", "imageKey": "extreme-infinity-multiverse-rift" }
+  { "id": "ultimate-multiverse-rift", "difficultyId": "blood-moon-extreme-god", "name": "궁극의 다중우주 균열", "imageKey": "extreme-infinity-multiverse-rift" },
+  { "id": "black-sun-sunny-meadow", "difficultyId": "black-sun-easy", "name": "검은 태양의 햇살 비스킷 초원", "imageKey": "easy-sunny-meadow" },
+  { "id": "black-sun-caramel-vale", "difficultyId": "black-sun-normal", "name": "검은 태양의 카라멜 수확 계곡", "imageKey": "normal-caramel-vale" },
+  { "id": "black-sun-frostpine", "difficultyId": "black-sun-hard", "name": "검은 태양의 서리소나무 요새", "imageKey": "hard-frostpine" },
+  { "id": "black-sun-jungle-ruins", "difficultyId": "black-sun-harder", "name": "검은 태양의 침수 코코아 유적", "imageKey": "harder-jungle-ruins" },
+  { "id": "black-sun-stormcliff", "difficultyId": "black-sun-insane", "name": "검은 태양의 폭풍 절벽 성채", "imageKey": "insane-stormcliff" },
+  { "id": "black-sun-ember-gate", "difficultyId": "black-sun-easy-demon", "name": "검은 태양의 불씨 악마 관문", "imageKey": "easy-demon-ember-gate" },
+  { "id": "black-sun-toxic-marsh", "difficultyId": "black-sun-medium-demon", "name": "검은 태양의 독사탕 늪", "imageKey": "medium-demon-toxic-marsh" },
+  { "id": "black-sun-catacomb", "difficultyId": "black-sun-hard-demon", "name": "검은 태양의 뼈설탕 지하묘지", "imageKey": "hard-demon-catacomb" },
+  { "id": "black-sun-blood-wasteland", "difficultyId": "black-sun-insane-demon", "name": "검은 태양의 핏빛달 황무지", "imageKey": "insane-demon-blood-moon" },
+  { "id": "black-sun-inferno", "difficultyId": "black-sun-extreme-demon", "name": "검은 태양의 흑요석 지옥", "imageKey": "extreme-demon-inferno" },
+  { "id": "black-sun-cloud-sanctuary", "difficultyId": "black-sun-easy-god", "name": "검은 태양의 천공 구름 성역", "imageKey": "easy-god-cloud-sanctuary" },
+  { "id": "black-sun-crystal-temple", "difficultyId": "black-sun-medium-god", "name": "검은 태양의 별수정 신전", "imageKey": "medium-god-crystal-temple" },
+  { "id": "black-sun-time-observatory", "difficultyId": "black-sun-hard-god", "name": "검은 태양의 태고 시간 천문대", "imageKey": "hard-god-time-observatory" },
+  { "id": "black-sun-thunder-realm", "difficultyId": "black-sun-insane-god", "name": "검은 태양의 천둥 타이탄 영역", "imageKey": "insane-god-thunder-titan" },
+  { "id": "black-sun-void-throne", "difficultyId": "black-sun-extreme-god", "name": "검은 태양의 신성 공허 왕좌", "imageKey": "extreme-god-divine-void" }
 ]

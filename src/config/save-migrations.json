@@ -1,8 +1,11 @@
 {
-  "currentSaveVersion": 14,
+  "currentSaveVersion": 15,
   "cookieEvolutionBonusMigrationVersion": 8,
   "battleMedalMigrationVersion": 9,
-  "difficultyExpansionMigrationVersion": 14,
+  "difficultyExpansionMigrations": [
+    { "saveVersion": 14, "completedDifficultyCount": 15 },
+    { "saveVersion": 15, "completedDifficultyCount": 30 }
+  ],
   "battleMedalsPerLegacyWin": 1,
   "cookieEvolutionLegacyUpgrade": {
     "id": "cookieSize",

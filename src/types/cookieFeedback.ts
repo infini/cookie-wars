@@ -24,66 +24,24 @@ export interface CookieAudioFeedbackConfig {
 export interface FloatingGainFeedbackConfig {
   durationMs: number;
   maximumConcurrent: number;
+  normalFontSize: number;
+  criticalFontSize: number;
+  superCriticalFontSize: number;
+  normalColor: string;
+  criticalColor: string;
+  superCriticalColor: string;
+  normalShadowColor: string;
+  criticalShadowColor: string;
+  superCriticalShadowColor: string;
+  normalShadowRadius: number;
+  criticalShadowRadius: number;
+  superCriticalShadowRadius: number;
   holdUntilProgress: number;
   risePixels: number;
   startScale: number;
   peakAtProgress: number;
   peakScale: number;
   endScale: number;
-}
-
-export interface CookieCriticalEffectConfig {
-  durationMs: number;
-  compactDurationMs: number;
-  sizePixels: number;
-  maximumConcurrentFullEffects: number;
-  maximumConcurrentCompactEffects: number;
-  flashMaximumOpacity: number;
-  compactFlashMaximumOpacity: number;
-  flashStartScale: number;
-  flashEndScale: number;
-  flashRotationDegrees: number;
-  impactPeakProgress: number;
-  impactFadeStartProgress: number;
-  slashCount: number;
-  compactSlashCount: number;
-  slashLengthPixels: number;
-  slashWidthPixels: number;
-  slashAngleOffsetDegrees: number;
-  slashAngleStepDegrees: number;
-  slashStartScale: number;
-  slashPeakScale: number;
-  slashEndScale: number;
-  slashFadeStartProgress: number;
-  slashGradientColors: string[];
-  lightningBranchCount: number;
-  compactLightningBranchCount: number;
-  lightningSegmentCount: number;
-  lightningSegmentLengthPixels: number;
-  lightningSegmentWidthPixels: number;
-  lightningStartDistancePixels: number;
-  lightningAngleOffsetDegrees: number;
-  lightningSegmentTurnDegrees: number;
-  lightningZigzagOffsetPixels: number;
-  lightningRevealProgress: number;
-  lightningBranchStaggerProgress: number;
-  lightningSegmentStaggerProgress: number;
-  lightningFadeStartProgress: number;
-  lightningSegmentStartScale: number;
-  lightningColors: string[];
-  fragmentCount: number;
-  fragmentStartProgress: number;
-  fragmentRevealProgress: number;
-  fragmentFadeStartProgress: number;
-  fragmentStartDistancePixels: number;
-  fragmentEndDistancePixels: number;
-  fragmentMinimumSizePixels: number;
-  fragmentMaximumSizePixels: number;
-  fragmentRotationTurns: number;
-  fragmentAngleOffsetDegrees: number;
-  fragmentColors: string[];
-  compactScale: number;
-  flashColor: string;
 }
 
 export interface CookieSuperCriticalEffectConfig {
@@ -99,6 +57,8 @@ export interface CookieSuperCriticalEffectConfig {
   flashRotationDegrees: number;
   impactPeakProgress: number;
   impactFadeStartProgress: number;
+  chargeEndProgress: number;
+  secondaryImpactProgress: number;
   shakeFirstProgress: number;
   shakeSecondProgress: number;
   shakeThirdProgress: number;
@@ -121,6 +81,8 @@ export interface CookieSuperCriticalEffectConfig {
   slashPeakScale: number;
   slashEndScale: number;
   slashFadeStartProgress: number;
+  slashRevealProgress: number;
+  slashStaggerProgress: number;
   slashGradientColors: string[];
   ghostSlashColors: string[];
   ghostSlashOffsetPixels: number;
@@ -173,6 +135,21 @@ export interface CookieSuperCriticalEffectConfig {
   labelStartScale: number;
   labelPeakScale: number;
   labelEndScale: number;
+  emblemSizePixels: number;
+  emblemTopRatio: number;
+  emblemStartScale: number;
+  emblemPeakScale: number;
+  emblemEndScale: number;
+  emblemFadeStartProgress: number;
+  emblemRotationDegrees: number;
+  shockwaveCount: number;
+  shockwaveSizePixels: number;
+  shockwaveBorderWidthPixels: number;
+  shockwaveStaggerProgress: number;
+  shockwaveEndScale: number;
+  shockwaveCornerRadiusRatio: number;
+  shockwaveRotationDegrees: number;
+  shockwaveColor: string;
   flashColor: string;
   labelColor: string;
   labelShadowColor: string;
@@ -181,6 +158,5 @@ export interface CookieSuperCriticalEffectConfig {
 export interface CookieFeedbackConfig {
   audio: CookieAudioFeedbackConfig;
   floatingGain: FloatingGainFeedbackConfig;
-  criticalEffect: CookieCriticalEffectConfig;
   superCriticalEffect: CookieSuperCriticalEffectConfig;
 }

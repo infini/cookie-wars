@@ -24,6 +24,9 @@ export const CookieFragmentClaimEffect = React.memo(
     const viewport = useWindowDimensions();
     const config = getCookieFragment(kind);
     const duration = kind === 'magma' ? FX.magmaDurationMs : FX.electricDurationMs;
+    const fadeStartProgress = kind === 'magma'
+      ? FX.magmaFadeStartProgress
+      : FX.electricFadeStartProgress;
     const shakeDistance = kind === 'magma'
       ? FX.magmaShakeDistancePixels
       : FX.electricShakeDistancePixels;
@@ -39,13 +42,17 @@ export const CookieFragmentClaimEffect = React.memo(
     }, [duration, progress]);
 
     const opacity = progress.interpolate({
-      inputRange: [0, FX.flashPeakProgress, FX.fadeStartProgress, 1],
+      inputRange: [0, FX.flashPeakProgress, fadeStartProgress, 1],
       outputRange: [0, 1, 1, 0],
     });
     const size = Math.max(
-      FX.sizePixels,
-      viewport.width * FX.screenWidthRatio,
-      viewport.height * FX.screenHeightRatio,
+      kind === 'magma' ? FX.magmaSizePixels : FX.electricSizePixels,
+      viewport.width * (kind === 'magma'
+        ? FX.magmaScreenWidthRatio
+        : FX.electricScreenWidthRatio),
+      viewport.height * (kind === 'magma'
+        ? FX.magmaScreenHeightRatio
+        : FX.electricScreenHeightRatio),
     );
     return (
       <Animated.View
@@ -70,7 +77,9 @@ export const CookieFragmentClaimEffect = React.memo(
           progress={progress}
           size={size}
           color={kind === 'magma' ? config.glowColor : FX.electricColors[0]}
-          maximumOpacity={FX.flashMaximumOpacity}
+          maximumOpacity={kind === 'magma'
+            ? FX.magmaFlashMaximumOpacity
+            : FX.electricFlashMaximumOpacity}
           startScale={FX.flashStartScale}
           endScale={FX.flashEndScale}
           rotationDegrees={kind === 'magma'

@@ -12,6 +12,7 @@ import { TopBar } from './TopBar';
 interface ScreenLayoutProps {
   title: string;
   cookies: number;
+  activeCookieName: string;
   activeTab: TabId;
   onChangeMainMenu: (menuId: MainMenuId) => void;
   onChangeTab: (tab: TabId) => void;
@@ -24,6 +25,7 @@ export function ScreenLayout({
   children,
   title,
   cookies,
+  activeCookieName,
   activeTab,
   onChangeMainMenu,
   onChangeTab,
@@ -35,7 +37,13 @@ export function ScreenLayout({
   return (
     <LinearGradient colors={gradients.app} style={styles.root}>
       <View style={[styles.safe, { paddingTop: insets.top + 6, paddingBottom: Math.max(insets.bottom, 6) }]}>
-        <TopBar title={title} cookies={cookies} onOpenSettings={onOpenSettings} />
+        <TopBar
+          title={title}
+          cookies={cookies}
+          activeCookieName={activeCookieName}
+          gameScreen={activeTab === 'game'}
+          onOpenSettings={onOpenSettings}
+        />
         <SubmenuNav
           activeTab={activeTab}
           onChange={onChangeTab}

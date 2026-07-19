@@ -1,9 +1,4 @@
-import {
-  DIFFICULTIES,
-  DIFFICULTY_EXPANSION,
-  PROGRESSION,
-  SAVE_MIGRATIONS,
-} from '../../config';
+import { DIFFICULTIES, PROGRESSION, SAVE_MIGRATIONS } from '../../config';
 import { clampSafeInteger } from '../../domain/safeNumbers';
 
 interface DifficultySelectionMigrationOptions {
@@ -27,14 +22,17 @@ export function resolveSelectedDifficultyAfterExpansion({
     return fallbackId;
   }
 
-  const legacyFinalIndex = DIFFICULTY_EXPANSION.legacyDifficultyCount - 1;
-  const firstExpansionIndex = DIFFICULTY_EXPANSION.legacyDifficultyCount;
-  const legacyFinal = DIFFICULTIES[legacyFinalIndex];
-  const shouldAdvanceLegacyCompletion = clampSafeInteger(savedVersion)
-    < SAVE_MIGRATIONS.difficultyExpansionMigrationVersion
-    && highestUnlockedDifficultyIndex >= firstExpansionIndex
-    && difficultyWinCounts[legacyFinal.id] >= PROGRESSION.winsToUnlockNextDifficulty;
-  return shouldAdvanceLegacyCompletion
-    ? DIFFICULTIES[firstExpansionIndex].id
-    : DIFFICULTIES[selectedIndex].id;
+  const normalizedSaveVersion = clampSafeInteger(savedVersion);
+  const migration = [...SAVE_MIGRATIONS.difficultyExpansionMigrations]
+    .reverse()
+    .find(({ saveVersion, completedDifficultyCount }) => {
+      const completedFinal = DIFFICULTIES[completedDifficultyCount - 1];
+      return normalizedSaveVersion < saveVersion
+        && highestUnlockedDifficultyIndex >= completedDifficultyCount
+        && difficultyWinCounts[completedFinal.id] >= PROGRESSION.winsToUnlockNextDifficulty;
+    });
+  if (migration && selectedIndex < migration.completedDifficultyCount) {
+    return DIFFICULTIES[migration.completedDifficultyCount].id;
+  }
+  return DIFFICULTIES[selectedIndex].id;
 }

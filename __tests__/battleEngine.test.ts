@@ -5,6 +5,7 @@ import {
   BOSS_SPECIAL_ATTACK,
   BOTS,
   DIFFICULTIES,
+  DIFFICULTY_EXPANSION,
   DISCS,
   MONSTERS,
   getEnemyDisc,
@@ -183,7 +184,7 @@ describe('전투 엔진', () => {
     expect(enemies[0].y).toBe(BATTLE_RULES.enemyStartY);
   });
 
-  test('모든 난이도는 고유한 보스 한 마리를 사용하며 전투 수치는 동일 공식으로 계산한다', () => {
+  test('black sun은 기본 보스 15종과 강화 재대결하며 전투 수치는 동일 공식으로 계산한다', () => {
     const bossIds = new Set<string>();
     DIFFICULTIES.forEach((difficulty) => {
       const enemies = createBattleEnemies(difficulty, 1000);
@@ -193,7 +194,7 @@ describe('전투 엔진', () => {
       expect(enemies[0].sizeMultiplier).toBeGreaterThan(1);
       bossIds.add(enemies[0].monsterId);
     });
-    expect(bossIds.size).toBe(DIFFICULTIES.length);
+    expect(bossIds.size).toBe(DIFFICULTY_EXPANSION.legacyDifficultyCount * 2);
   });
 
   test('성 앞에서 멈춘 적도 빠른 상위 원반에 정상적으로 피해를 받는다', () => {

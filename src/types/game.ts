@@ -6,7 +6,6 @@ export type {
 } from './audio';
 export type {
   CookieAudioFeedbackConfig,
-  CookieCriticalEffectConfig,
   CookieFeedbackConfig,
   CookieFeedbackTier,
   CookieSuperCriticalEffectConfig,

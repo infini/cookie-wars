@@ -5,10 +5,10 @@ import {
   numberField,
   numberValue,
   record,
+  stringValue,
   validateNumberFields,
 } from './primitives';
 import { assertLess } from './feedbackEffectPrimitives';
-import { validateCriticalEffect } from './criticalFeedback';
 import { validateSuperCriticalEffect } from './superCriticalFeedback';
 
 function validateCookieAudio(config: UnknownRecord, path: string): UnknownRecord {
@@ -58,6 +58,12 @@ function validateCookieAudio(config: UnknownRecord, path: string): UnknownRecord
       'criticalLayerDurationMs 이상이어야 합니다.',
     );
   }
+  if ((audio.criticalSparkleDelayMs as number) >= (audio.criticalLayerDurationMs as number)) {
+    throw new ConfigValidationError(
+      `${audioPath}.criticalSparkleDelayMs`,
+      'criticalLayerDurationMs보다 짧아야 합니다.',
+    );
+  }
   if (
     (audio.minimumFullSuperCriticalIntervalMs as number)
     < (audio.superCriticalLayerDurationMs as number)
@@ -74,9 +80,16 @@ function validateFloatingGain(config: UnknownRecord, path: string): UnknownRecor
   const gainPath = `${path}.floatingGain`;
   const gain = record(config.floatingGain, gainPath);
   validateNumberFields(gain, gainPath, [
-    'durationMs', 'maximumConcurrent', 'holdUntilProgress', 'risePixels', 'startScale',
+    'durationMs', 'maximumConcurrent', 'normalFontSize', 'criticalFontSize',
+    'superCriticalFontSize', 'normalShadowRadius', 'criticalShadowRadius',
+    'superCriticalShadowRadius', 'holdUntilProgress', 'risePixels', 'startScale',
     'peakAtProgress', 'peakScale', 'endScale',
   ], { min: 0 });
+  ['normalColor', 'criticalColor', 'superCriticalColor', 'normalShadowColor',
+    'criticalShadowColor', 'superCriticalShadowColor']
+    .forEach((field) => stringValue(gain[field], `${gainPath}.${field}`));
+  ['normalFontSize', 'criticalFontSize', 'superCriticalFontSize']
+    .forEach((field) => numberField(gain, field, gainPath, { min: Number.EPSILON }));
   numberField(gain, 'durationMs', gainPath, { integer: true, min: 1 });
   numberField(gain, 'maximumConcurrent', gainPath, { integer: true, min: 1, max: 8 });
   ['holdUntilProgress', 'peakAtProgress'].forEach((field) => (
@@ -91,12 +104,6 @@ export function validateCookieFeedback(value: unknown): UnknownRecord {
   const config = record(value, path);
   const audio = validateCookieAudio(config, path);
   const gain = validateFloatingGain(config, path);
-  validateCriticalEffect(
-    config,
-    path,
-    gain.durationMs as number,
-    audio.criticalSparkleDelayMs as number,
-  );
   validateSuperCriticalEffect(
     config,
     path,

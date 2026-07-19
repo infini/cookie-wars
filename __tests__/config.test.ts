@@ -45,7 +45,7 @@ import {
 import { getBattleDifficulty } from '../src/domain/gameSelectors';
 
 describe('데이터 테이블', () => {
-  test('기존 15개 뒤에 신규 15개 난이도를 순서대로 확장한다', () => {
+  test('기본·blood moon·black sun 15단계를 순서대로 확장한다', () => {
     expect(DIFFICULTIES.map((difficulty) => difficulty.name)).toEqual([
       'easy',
       'normal',
@@ -77,13 +77,31 @@ describe('데이터 테이블', () => {
       'blood moon hard god',
       'blood moon insane god',
       'blood moon extreme god',
+      'black sun easy',
+      'black sun normal',
+      'black sun hard',
+      'black sun harder',
+      'black sun insane',
+      'black sun easy demon',
+      'black sun medium demon',
+      'black sun hard demon',
+      'black sun insane demon',
+      'black sun extreme demon',
+      'black sun easy god',
+      'black sun medium god',
+      'black sun hard god',
+      'black sun insane god',
+      'black sun extreme god',
     ]);
   });
 
-  test('신규 난이도는 직전 난이도 20번째 전투보다 전투력이 20% 높게 시작한다', () => {
+  test('두 확장 시리즈는 직전 난이도 20번째 전투보다 전투력이 20% 높게 시작한다', () => {
     const legacyCount = DIFFICULTY_EXPANSION.legacyDifficultyCount;
-    expect(DIFFICULTY_EXPANSION.extensionDifficultyCount).toBe(legacyCount);
-    expect(DIFFICULTIES).toHaveLength(legacyCount * 2);
+    expect(DIFFICULTY_EXPANSION.difficultySeriesSize).toBe(legacyCount);
+    expect(DIFFICULTY_EXPANSION.extensionSeriesPrefixes)
+      .toEqual(['blood moon', 'black sun']);
+    expect(DIFFICULTY_EXPANSION.extensionDifficultyCount).toBe(legacyCount * 2);
+    expect(DIFFICULTIES).toHaveLength(legacyCount * 3);
     expect(DIFFICULTY_EXPANSION.powerMultiplierPerDifficulty).toBe(1.2);
     DIFFICULTIES.slice(legacyCount).forEach((difficulty, extensionIndex) => {
       const previous = DIFFICULTIES[legacyCount + extensionIndex - 1];
@@ -116,12 +134,18 @@ describe('데이터 테이블', () => {
     expect(ENEMY_DISCS).toHaveLength(DIFFICULTIES.length);
   });
 
-  test('각 난이도는 고유한 보스 웨이브를 참조한다', () => {
-    expect(ENEMY_WAVES).toHaveLength(DIFFICULTIES.length);
-    expect(new Set(DIFFICULTIES.map((difficulty) => difficulty.enemyWaveId)).size)
-      .toBe(DIFFICULTIES.length);
+  test('기존 30개 전투는 고유 보스이고 black sun은 기본 15종과 재대결한다', () => {
+    const reusableContentCount = DIFFICULTY_EXPANSION.legacyDifficultyCount * 2;
+    expect(ENEMY_WAVES).toHaveLength(reusableContentCount);
+    expect(new Set(DIFFICULTIES.slice(0, reusableContentCount)
+      .map((difficulty) => difficulty.enemyWaveId)).size)
+      .toBe(reusableContentCount);
     expect(new Set(ENEMY_WAVES.map((wave) => wave.bossMonsterId)).size)
-      .toBe(DIFFICULTIES.length);
+      .toBe(reusableContentCount);
+    expect(DIFFICULTIES.slice(reusableContentCount).map((difficulty) => (
+      difficulty.enemyWaveId
+    ))).toEqual(DIFFICULTIES.slice(0, DIFFICULTY_EXPANSION.difficultySeriesSize)
+      .map((difficulty) => difficulty.enemyWaveId));
     ENEMY_WAVES.forEach((wave) => {
       expect(wave.monsterPatternIds).toEqual([wave.bossMonsterId]);
       expect(wave.bossEveryEnemies).toBe(1);
@@ -150,16 +174,19 @@ describe('데이터 테이블', () => {
     expect(MONSTERS.slice(0, 4).map((monster) => monster.rank))
       .toEqual(['졸개', '정예', '중장갑', '원거리']);
     expect(MONSTERS.filter((monster) => monster.rank === '보스'))
-      .toHaveLength(DIFFICULTIES.length);
+      .toHaveLength(ENEMY_WAVES.length);
   });
 
   test('진행·음량·상점 값은 데이터 테이블에서 제공한다', () => {
     expect(PROGRESSION.winsToUnlockNextDifficulty).toBe(20);
     expect(PROGRESSION.giantDiscRewardPerFirstClear).toBe(1);
-    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(14);
+    expect(SAVE_MIGRATIONS.currentSaveVersion).toBe(15);
     expect(SAVE_MIGRATIONS.cookieEvolutionBonusMigrationVersion).toBe(8);
     expect(SAVE_MIGRATIONS.battleMedalMigrationVersion).toBe(9);
-    expect(SAVE_MIGRATIONS.difficultyExpansionMigrationVersion).toBe(14);
+    expect(SAVE_MIGRATIONS.difficultyExpansionMigrations).toEqual([
+      { saveVersion: 14, completedDifficultyCount: 15 },
+      { saveVersion: 15, completedDifficultyCount: 30 },
+    ]);
     expect(SAVE_MIGRATIONS.battleMedalsPerLegacyWin).toBe(1);
     expect(BATTLE_REWARDS).toEqual({
       battleMedalsPerStageClear: 1,
@@ -210,8 +237,8 @@ describe('데이터 테이블', () => {
       enabled: false,
       visible: false,
       countsTowardCookieEvolution: false,
-      renderBaseSizePixels: 190,
-      renderMaximumSizePixels: 224,
+      renderBaseSizePixels: 216,
+      renderMaximumSizePixels: 280,
     });
     expect(
       COOKIE_UPGRADES
@@ -292,10 +319,12 @@ describe('데이터 테이블', () => {
       hitSlopPixels: 40,
     });
     expect(COOKIE_FRAGMENTS.claimEffect).toMatchObject({
-      magmaEruptionFrameCount: 16,
-      electricBoltCount: 7,
-      screenWidthRatio: 1,
-      screenHeightRatio: 0.62,
+      magmaPlumeSizeRatio: 0.72,
+      electricBoltCount: 11,
+      magmaScreenWidthRatio: 0.78,
+      magmaScreenHeightRatio: 0.38,
+      electricScreenWidthRatio: 1.3,
+      electricScreenHeightRatio: 0.82,
     });
     expect(BATTLE_AUTO.nextBattleDelayMs).toBeGreaterThan(0);
     expect(COOKIE_INPUT.pressRetentionOffsetPixels)
@@ -307,11 +336,20 @@ describe('데이터 테이블', () => {
     });
     expect(COOKIE_FEEDBACK.audio.voicePlaybackRates).toHaveLength(3);
     expect(COOKIE_FEEDBACK.audio.voiceVolumeMultipliers).toHaveLength(3);
+    expect(COOKIE_FEEDBACK.floatingGain).toMatchObject({
+      normalFontSize: 17,
+      criticalFontSize: 14.5,
+      superCriticalFontSize: 12.5,
+      normalColor: '#FFFFFF',
+      criticalColor: '#FFD84A',
+      superCriticalColor: '#FF405A',
+    });
+    expect(COOKIE_FRAGMENTS.claimEffect.rewardFontSize).toBe(13.5);
+    expect(COOKIE_FRAGMENTS.types.map((fragment) => fragment.labelColor))
+      .toEqual(['#FF7A00', '#A855F7']);
     expect(COOKIE_FEEDBACK.audio.minimumFullCriticalIntervalMs)
       .toBeGreaterThanOrEqual(COOKIE_FEEDBACK.audio.criticalLayerDurationMs);
-    expect(COOKIE_FEEDBACK.criticalEffect.maximumConcurrentFullEffects).toBe(2);
-    expect(COOKIE_FEEDBACK.criticalEffect.durationMs)
-      .toBeLessThanOrEqual(COOKIE_FEEDBACK.floatingGain.durationMs);
+    expect(COOKIE_FEEDBACK).not.toHaveProperty('criticalEffect');
     expect(COOKIE_FEEDBACK.audio.minimumFullSuperCriticalIntervalMs)
       .toBeGreaterThanOrEqual(COOKIE_FEEDBACK.audio.superCriticalLayerDurationMs);
     expect(COOKIE_FEEDBACK.superCriticalEffect.durationMs)
@@ -327,7 +365,6 @@ describe('데이터 테이블', () => {
       .toBeGreaterThan(COOKIE_FEEDBACK.audio.criticalImpactVolumeMultiplier);
     expect(COOKIE_FEEDBACK.audio.superCriticalShockwaveVolumeMultiplier)
       .toBeGreaterThan(COOKIE_FEEDBACK.audio.criticalSparkleVolumeMultiplier);
-    expect(COOKIE_FEEDBACK.criticalEffect.durationMs).toBe(930);
     expect(COOKIE_FEEDBACK.superCriticalEffect.durationMs).toBe(1_800);
     expect([
       COOKIE_CRITICAL.feedbackPowerRank,
@@ -336,11 +373,28 @@ describe('데이터 테이블', () => {
       COOKIE_FRAGMENTS.types.find((item) => item.id === 'electric')?.feedbackPowerRank,
     ]).toEqual([1, 2, 3, 4]);
     expect([
-      COOKIE_FEEDBACK.criticalEffect.durationMs,
       COOKIE_FRAGMENTS.claimEffect.magmaDurationMs,
       COOKIE_FEEDBACK.superCriticalEffect.durationMs,
       COOKIE_FRAGMENTS.claimEffect.electricDurationMs,
-    ]).toEqual([930, 1_500, 1_800, 1_950]);
+    ]).toEqual([1_500, 1_800, 2_200]);
+    expect(COOKIE_FRAGMENTS.claimEffect.magmaScreenHeightRatio)
+      .toBeLessThan(COOKIE_FRAGMENTS.claimEffect.electricScreenHeightRatio);
+    expect(COOKIE_FRAGMENTS.claimEffect.magmaFlashMaximumOpacity)
+      .toBeLessThan(COOKIE_FRAGMENTS.claimEffect.electricFlashMaximumOpacity);
+    expect(COOKIE_FRAGMENTS.claimEffect.electricBoltCount).toBe(11);
+    expect(COOKIE_FRAGMENTS.claimEffect.magmaPlumePulseCount).toBeGreaterThanOrEqual(4);
+    expect(COOKIE_FRAGMENTS.claimEffect.magmaShockwaveCount).toBeGreaterThanOrEqual(3);
+    expect(COOKIE_FRAGMENTS.claimEffect.magmaEmberCount).toBeGreaterThanOrEqual(16);
+    expect(COOKIE_FRAGMENTS.claimEffect.electricBoltFlickerMinimumOpacity)
+      .toBeLessThan(COOKIE_FRAGMENTS.claimEffect.electricBoltEchoOpacity);
+    expect(COOKIE_FRAGMENTS.claimEffect.electricPulseCount).toBeGreaterThanOrEqual(3);
+    expect(COOKIE_FRAGMENTS.claimEffect.electricSparkCount).toBeGreaterThanOrEqual(18);
+    expect(COOKIE_FEEDBACK.superCriticalEffect.chargeEndProgress)
+      .toBeLessThan(COOKIE_FEEDBACK.superCriticalEffect.impactPeakProgress);
+    expect(COOKIE_FEEDBACK.superCriticalEffect.secondaryImpactProgress)
+      .toBeGreaterThan(COOKIE_FEEDBACK.superCriticalEffect.impactPeakProgress);
+    expect(COOKIE_FEEDBACK.superCriticalEffect.shockwaveCount).toBeGreaterThanOrEqual(3);
+    expect(COOKIE_FEEDBACK.superCriticalEffect.slashStaggerProgress).toBeGreaterThan(0);
     expect(BOSS_BALANCE.playerPowerBaseSurvivalSeconds).toBeGreaterThan(0);
     expect(BOSS_BALANCE.hpMultiplierReference).toBeGreaterThan(0);
     expect(BOSS_BALANCE.maximumPowerScaledSurvivalSeconds)
@@ -353,7 +407,7 @@ describe('데이터 테이블', () => {
     expect(BOSS_BEHAVIOR.enrageHealthRatio).toBe(0.5);
     expect(BOSS_SPECIAL_ATTACK.intervalMs).toBe(5000);
     expect(BOSS_SPECIAL_ATTACK.windupMs).toBeGreaterThan(0);
-    expect(BOSS_ANIMATION.sets).toHaveLength(DIFFICULTIES.length);
+    expect(BOSS_ANIMATION.sets).toHaveLength(ENEMY_WAVES.length);
     expect(BOSS_ANIMATION.walkFrameSequence).toHaveLength(4);
     expect(BOSS_ANIMATION.impactHoldMs).toBeGreaterThan(0);
     expect(BOT_ANIMATION.sets).toHaveLength(BOTS.length);
@@ -368,15 +422,20 @@ describe('데이터 테이블', () => {
     expect(BATTLE_RULES.defaultBattleSpeedMultiplier).toBe(1);
   });
 
-  test('각 난이도는 색상 변경이 아닌 고유 전장 테마를 사용한다', () => {
+  test('기존 30개 고유 전장과 black sun 재대결 전장을 난이도별로 연결한다', () => {
     expect(BATTLE_MAPS).toHaveLength(DIFFICULTIES.length);
-    expect(new Set(BATTLE_MAPS.map((map) => map.imageKey)).size).toBe(BATTLE_MAPS.length);
+    expect(new Set(BATTLE_MAPS.map((map) => map.imageKey)).size)
+      .toBe(DIFFICULTY_EXPANSION.legacyDifficultyCount * 2);
     expect(new Set(BATTLE_MAPS.map((map) => map.name)).size).toBe(BATTLE_MAPS.length);
     expect(new Set(BATTLE_MAPS.map((map) => map.difficultyId)).size)
       .toBe(DIFFICULTIES.length);
     DIFFICULTIES.forEach((difficulty) => {
       expect(getBattleMapForDifficulty(difficulty.id).difficultyId).toBe(difficulty.id);
     });
+    const blackSunStart = DIFFICULTY_EXPANSION.legacyDifficultyCount * 2;
+    expect(BATTLE_MAPS.slice(blackSunStart).map((map) => map.imageKey))
+      .toEqual(BATTLE_MAPS.slice(0, DIFFICULTY_EXPANSION.difficultySeriesSize)
+        .map((map) => map.imageKey));
   });
 
   test('길 없는 보스 전장의 위치와 공격 반경은 데이터 테이블에서 제공한다', () => {
@@ -695,10 +754,10 @@ describe('데이터 테이블 런타임 검증', () => {
     );
 
     const difficultyMigrationAfterCurrentVersion = cloneConfig();
-    difficultyMigrationAfterCurrentVersion.SAVE_MIGRATIONS.difficultyExpansionMigrationVersion =
-      SAVE_MIGRATIONS.currentSaveVersion + 1;
+    difficultyMigrationAfterCurrentVersion.SAVE_MIGRATIONS
+      .difficultyExpansionMigrations.at(-1).saveVersion = SAVE_MIGRATIONS.currentSaveVersion + 1;
     expect(() => validateGameConfig(difficultyMigrationAfterCurrentVersion)).toThrow(
-      'SAVE_MIGRATIONS.difficultyExpansionMigrationVersion',
+      'SAVE_MIGRATIONS.difficultyExpansionMigrations',
     );
 
     const invalidLegacyMedalReward = cloneConfig();
@@ -916,7 +975,8 @@ describe('데이터 테이블 런타임 검증', () => {
     expect(() => validateGameConfig(invalidRank)).toThrow('feedbackPowerRank');
 
     const invalidDuration = cloneConfig();
-    invalidDuration.COOKIE_FRAGMENTS.claimEffect.magmaDurationMs = 900;
+    invalidDuration.COOKIE_FRAGMENTS.claimEffect.magmaDurationMs =
+      invalidDuration.COOKIE_FEEDBACK.superCriticalEffect.durationMs;
     expect(() => validateGameConfig(invalidDuration)).toThrow('feedbackPowerRank');
   });
 
@@ -943,32 +1003,33 @@ describe('데이터 테이블 런타임 검증', () => {
     );
   });
 
-  test('크리티컬 연출이 획득 텍스트보다 오래 남도록 설정하면 거부한다', () => {
+  test('크리티컬 반짝임 예약이 오디오 레이어보다 늦으면 거부한다', () => {
     const invalid = cloneConfig();
-    invalid.COOKIE_FEEDBACK.criticalEffect.durationMs =
-      invalid.COOKIE_FEEDBACK.floatingGain.durationMs + 1;
+    invalid.COOKIE_FEEDBACK.audio.criticalSparkleDelayMs =
+      invalid.COOKIE_FEEDBACK.audio.criticalLayerDurationMs;
     expect(() => validateGameConfig(invalid)).toThrow(
-      'COOKIE_FEEDBACK.criticalEffect.durationMs',
+      'COOKIE_FEEDBACK.audio.criticalSparkleDelayMs',
     );
   });
 
   test.each([
-    ['COOKIE_FEEDBACK.criticalEffect.lightningFadeStartProgress', (config: any) => {
-      config.COOKIE_FEEDBACK.criticalEffect.lightningFadeStartProgress =
-        config.COOKIE_FEEDBACK.criticalEffect.lightningRevealProgress;
-    }],
     ['COOKIE_FEEDBACK.superCriticalEffect.shakeEndProgress', (config: any) => {
       config.COOKIE_FEEDBACK.superCriticalEffect.shakeEndProgress =
         config.COOKIE_FEEDBACK.superCriticalEffect.shakeThirdProgress;
-    }],
-    ['COOKIE_FEEDBACK.criticalEffect.compactDurationMs', (config: any) => {
-      config.COOKIE_FEEDBACK.criticalEffect.compactDurationMs =
-        config.COOKIE_FEEDBACK.floatingGain.durationMs + 1;
     }],
   ])('%s의 보간 범위가 잘못되면 거부한다', (path, breakRange) => {
     const invalid = cloneConfig();
     breakRange(invalid);
     expect(() => validateGameConfig(invalid)).toThrow(path);
+  });
+
+  test('전기 연출 수명이 슈퍼 크리티컬보다 짧으면 거부한다', () => {
+    const invalid = cloneConfig();
+    invalid.COOKIE_FRAGMENTS.claimEffect.electricDurationMs =
+      invalid.COOKIE_FEEDBACK.superCriticalEffect.durationMs;
+    expect(() => validateGameConfig(invalid)).toThrow(
+      'COOKIE_FRAGMENTS.types.electric.feedbackPowerRank',
+    );
   });
 
   test('보너스·추가 수량·최초 지연처럼 0이 의미 있는 설정은 계속 허용한다', () => {
